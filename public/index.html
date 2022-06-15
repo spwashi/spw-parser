@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+    <link rel="stylesheet" href="app.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/d3/7.3.0/d3.js"
+            integrity="sha512-nkC97gUNsbPjaWQm5GVpreTVy9IJO+z13y1M8mM+1BJRjfp9sz+1ixWu4+1mOMUzIt72pVD9rwjxJKV8LdlvjA=="
+            crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+</head>
+<body>
+    <div id="root"></div>
+    <script src="app.js"></script>
+    <script src="parse.js"></script>
+    <script>
+      const log = [];
+
+      function submitForm(event) {
+        event.preventDefault();
+        let form      = event.target;
+        let formInput = form.elements.formInput;
+        let value;
+        try {
+          value = JSON.stringify(parse(formInput.value), null, 3);
+        } catch (e) {
+          form.elements.parsed.value = value
+        }
+      }
+    </script>
+    <form method="get" onsubmit="submitForm(event)">
+        <label>
+            Please enter the string you want to parse
+            <textarea type="text" name="formInput"></textarea>
+        </label>
+        <br>
+        <button type="submit">Submit Form</button>
+        <br>
+        <output name="parsed"></output>
+    </form>
+</body>
+</html>

@@ -1,0 +1,10 @@
+{
+  "name": "redo",
+  "version": "1.0.0",
+  "dependencies": {
+    "serve": "^13.0.2"
+  },
+  "scripts": {
+    "serve": "serve public"
+  }
+}

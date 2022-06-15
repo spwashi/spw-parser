@@ -1,0 +1,10 @@
+output {
+    white-space: pre;
+}
+body {
+    background: lightblue;
+}
+#root {
+    background: yellow;
+    padding: 1rem;
+}
