@@ -15,44 +15,63 @@
     <div id="root"></div>
     <script src="app.js"></script>
     <script src="parse.js"></script>
-    <script>
-      const log = [];
-
-      function run(formInput) {
-        let value;
-        let status = 'success';
-        try {
-          const out = parse(formInput.value);
-          value     = JSON.stringify(out, null, 3);
-        } catch (e) {
-          value  = e.message;
-          status = 'error';
-        }
-        return {value, status};
-      }
-
-      function submitForm(event) {
-        event.preventDefault();
-        const form            = event.target;
-        const formInput       = form.elements.formInput;
-        const output          = form.elements.parsed;
-        const {value, status} = run(formInput);
-        output.className      = status;
-        output.value          = value
-      }
-    </script>
     <form method="get" onsubmit="submitForm(event)">
         <h1>Please enter the string you want to parse</h1>
         <label>
             <textarea autofocus
                       name="formInput"
-                      onfocus="this.value = window.localStorage.getItem('text-to-parse')"
-                      onchange="window.localStorage.setItem('text-to-parse', this.value)"></textarea>
+                      onfocus="this.value = window.localStorage.getItem('text-to-parse'); submitButton.style.display='block'"
+                      onchange="window.localStorage.setItem('text-to-parse', this.value); "></textarea>
         </label>
         <br>
-        <button type="submit">parse</button>
+        <button id="submitButton" type="submit">parse</button>
+        <button id="next" style="display:none;" type="button" onclick="advance(); submitButton.style.display = 'none'">
+            step
+        </button>
         <br>
-        <output name="parsed"></output>
+        <output id="output" name="parsed"></output>
     </form>
+
+    <script>
+      let generator;
+
+      const button = document.getElementById('next');
+
+      let all = [];
+
+      function submitForm(event) {
+        event.preventDefault();
+        all                        = [];
+        const form                 = event.target;
+        const formInput            = form.elements.formInput;
+        generator                  = parse(formInput.value, true);
+        button.style.display       = 'block';
+        submitButton.style.display = 'none';
+        button.focus()
+      }
+
+      function advance() {
+        const output = document.getElementById('output');
+        if (!generator) return;
+        let value, status = 'success';
+        try {
+          let {value: out, done} = generator.next();
+          if (done) {
+            button.style.display = 'none';
+            value                = JSON.stringify(all, null, 3);
+          } else {
+            value = JSON.stringify(out, null, 3);
+            all.push(out);
+          }
+        } catch (e) {
+          value  = e.message;
+          status = 'error';
+        }
+        output.className = status;
+        output.value     = value;
+        return {value, status};
+      }
+
+    </script>
 </body>
 </html>

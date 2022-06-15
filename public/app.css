@@ -32,6 +32,8 @@ output {
     margin: 1rem;
     position: relative;
     width: 300px;
+    max-height: 300px;
+    overflow: auto;
 }
 output:empty {
     display: none;
