@@ -43,7 +43,10 @@
     <form method="get" onsubmit="submitForm(event)">
         <h1>Please enter the string you want to parse</h1>
         <label>
-            <textarea autofocus name="formInput"></textarea>
+            <textarea autofocus
+                      name="formInput"
+                      onfocus="this.value = window.localStorage.getItem('text-to-parse')"
+                      onchange="window.localStorage.setItem('text-to-parse', this.value)"></textarea>
         </label>
         <br>
         <button type="submit">parse</button>
