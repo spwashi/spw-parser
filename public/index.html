@@ -4,6 +4,9 @@
     <meta charset="UTF-8">
     <title>Title</title>
     <link rel="stylesheet" href="app.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono&display=swap" rel="stylesheet">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/d3/7.3.0/d3.js"
             integrity="sha512-nkC97gUNsbPjaWQm5GVpreTVy9IJO+z13y1M8mM+1BJRjfp9sz+1ixWu4+1mOMUzIt72pVD9rwjxJKV8LdlvjA=="
             crossorigin="anonymous" referrerpolicy="no-referrer"></script>
@@ -15,25 +18,35 @@
     <script>
       const log = [];
 
-      function submitForm(event) {
-        event.preventDefault();
-        let form      = event.target;
-        let formInput = form.elements.formInput;
+      function run(formInput) {
         let value;
+        let status = 'success';
         try {
           value = JSON.stringify(parse(formInput.value), null, 3);
         } catch (e) {
-          form.elements.parsed.value = value
+          value  = e.message;
+          status = 'error';
         }
+        return {value, status};
+      }
+
+      function submitForm(event) {
+        event.preventDefault();
+        const form            = event.target;
+        const formInput       = form.elements.formInput;
+        const output          = form.elements.parsed;
+        const {value, status} = run(formInput);
+        output.className      = status;
+        output.value          = value
       }
     </script>
     <form method="get" onsubmit="submitForm(event)">
+        <h1>Please enter the string you want to parse</h1>
         <label>
-            Please enter the string you want to parse
-            <textarea type="text" name="formInput"></textarea>
+            <textarea autofocus name="formInput"></textarea>
         </label>
         <br>
-        <button type="submit">Submit Form</button>
+        <button type="submit">parse</button>
         <br>
         <output name="parsed"></output>
     </form>

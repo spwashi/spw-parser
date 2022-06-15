@@ -3,8 +3,47 @@ output {
 }
 body {
     background: lightblue;
+    font-family: "JetBrains Mono", monospace;
+    display: flex;
+    flex-direction: row;
+    justify-content: center;
+
 }
-#root {
-    background: yellow;
+form {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex-direction: column;
+}
+textarea, form {
+    width: 500px;
     padding: 1rem;
+}
+h1 {
+    text-align: center;
+}
+button {
+    font-family: "JetBrains Mono", monospace;
+}
+output {
+    border: thin solid navy;
+    padding: 1rem;
+    display: block;
+    margin: 1rem;
+    position: relative;
+    width: 300px;
+}
+output:empty {
+    display: none;
+}
+output:before {
+    content: '';
+    position: absolute;
+    right: 110%;
+    height: 10px;
+    width: 10px;
+    background: green;
+}
+.error:before {
+    background: red;
 }
