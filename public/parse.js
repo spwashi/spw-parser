@@ -73,7 +73,7 @@ function parse(input, asGenerator = false) {
         _check = canContinueString;
       }
       if (!tok.length) return false;
-      return tok.length ? {type: 'string', token: tok.join('')} : false;
+      return tok.length ? {type: 'anchor', token: tok.join('')} : false;
     }
 
     let prev;
@@ -128,7 +128,10 @@ function test() {
     let out, expected;
     {
       out      = parse('boon');
-      expected = JSON.stringify(['b', 'o', 'o', 'n', {type: 'string', token: 'boon'}]);
+      expected = JSON.stringify([{"char": "b", "pos": {"offset": 0}}, {"char": "o", "pos": {"offset": 1}}, {"char": "o", "pos": {"offset": 2}}, {"char": "n", "pos": {"offset": 3}}, {
+        "type":  "anchor",
+        "token": "boon"
+      }]);
       assert(
         JSON.stringify(out) === expected,
         'should have received: ' + expected + '. Actually received: ' + JSON.stringify(out)
@@ -138,11 +141,11 @@ function test() {
     {
       error = null;
       try {
-        out = parse('boon-boon-boon');
+        out = parse('boon_boon_boon');
       } catch (e) {
         error = e;
       }
-      assert(error === null)
+      assert(error === null, 'expected null error')
     }
   }
 
