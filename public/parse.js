@@ -1,5 +1,9 @@
+const FatalError = class extends Error {
+
+}
+
 function parse(string) {
   alert(string);
 
-  throw new Error('Cannot parse strings');
+  throw new FatalError('Cannot parse strings');
 }
