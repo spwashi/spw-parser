@@ -22,7 +22,8 @@
         let value;
         let status = 'success';
         try {
-          value = JSON.stringify(parse(formInput.value), null, 3);
+          const out = parse(formInput.value);
+          value     = JSON.stringify(out, null, 3);
         } catch (e) {
           value  = e.message;
           status = 'error';
