@@ -35,10 +35,14 @@
     <script>
       test();
       let generator;
+      let error;
 
       const button = document.getElementById('next');
 
       let all = [];
+
+
+      const output = document.getElementById('output');
 
       function submitForm(event) {
         event.preventDefault();
@@ -48,12 +52,14 @@
         generator                  = parse(formInput.value, true);
         button.style.display       = 'block';
         submitButton.style.display = 'none';
-        button.focus()
+        button.focus();
+        error            = null;
+        output.value     = '';
+        output.className = '';
       }
 
       function advance() {
-        const output = document.getElementById('output');
-        if (!generator) return;
+        if (!generator || error) return;
         let value, status = 'success';
         try {
           let {value: out, done} = generator.next();
@@ -65,6 +71,7 @@
             all.push(out);
           }
         } catch (e) {
+          error  = true;
           value  = e.message;
           status = 'error';
         }
