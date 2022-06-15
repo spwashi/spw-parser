@@ -122,7 +122,7 @@ function test() {
     } catch (e) {
       error = e;
     }
-    assert(error.message.split(':')[0] === ERROR_UNKNOWN_TOKEN);
+    assert(error.message.split(':')[0] === ERROR_UNKNOWN_TOKEN, 'wrong error');
 
 
     let out, expected;
@@ -159,7 +159,8 @@ function test() {
     assert(error.message === ERROR_MUST_BE_STRING, 'Did not throw correct error.');
   }
 
-  function assert(_test, msg = 'Failing Test') {
+  function assert(_test, msg) {
+    if (!msg) throw new Error('Expected a message')
     if (_test) return;
     alert('Error!' + (msg));
     throw new Error(msg);
