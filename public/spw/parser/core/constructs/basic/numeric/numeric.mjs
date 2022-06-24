@@ -1,0 +1,27 @@
+import {beginsNumeric}    from "./checks/char/beginsNumeric.mjs";
+import {continuesNumeric} from "./checks/char/continuesNumeric.mjs";
+
+export function* numeric(cursor, activeTok) {
+  if (activeTok) {
+    yield '[passing numeric]';
+    return activeTok;
+  }
+
+  const tok  = [];
+  let _check = beginsNumeric, started;
+  while (cursor.curr() && _check(cursor.curr())) {
+    if ((!started) && (started = true)) yield '--beginning numeric--;'
+
+    tok.push(cursor.curr());
+    yield cursor.pos();
+    cursor.advance();
+
+    _check = continuesNumeric;
+  }
+
+  if (!tok.length) return false;
+
+  yield '--exiting numeric--';
+
+  return tok.length ? {type: 'numeric', token: tok.join('')} : false;
+}

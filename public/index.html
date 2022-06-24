@@ -14,8 +14,8 @@
 <body>
     <div id="root"></div>
     <script src="app.js"></script>
-    <script src="parse.js"></script>
-    <form method="get" onsubmit="submitForm(event)">
+    <script type="module" src="spw/index.mjs"></script>
+    <form id="form">
         <h1>Please enter the string you want to parse</h1>
         <label>
             <textarea autofocus
@@ -31,18 +31,18 @@
         <br>
         <output id="output" name="parsed"></output>
     </form>
-
     <script>
-      test();
       let generator;
       let error;
 
-      const button = document.getElementById('next');
+      const button       = document.getElementById('next');
+      const submitButton = document.getElementById('submitButton');
 
-      let all = [];
-
+      document.getElementById('form').onsubmit = submitForm;
 
       const output = document.getElementById('output');
+
+      let all = [];
 
       function submitForm(event) {
         event.preventDefault();
@@ -79,7 +79,6 @@
         output.value     = value;
         return {value, status};
       }
-
     </script>
 </body>
 </html>
