@@ -1,5 +1,5 @@
-import {beginsNumeric}    from "./checks/char/beginsNumeric.mjs";
-import {continuesNumeric} from "./checks/char/continuesNumeric.mjs";
+import {beginsNumeric}    from "./checks/cursor/beginsNumeric.mjs";
+import {continuesNumeric} from "./checks/cursor/continuesNumeric.mjs";
 
 export function* numeric(cursor, activeTok) {
   if (activeTok) {

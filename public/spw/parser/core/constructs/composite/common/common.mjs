@@ -1,20 +1,22 @@
-import {isPhrasalDelimiter}       from "./checks/cursor/isPhrasalDelimiter.mjs";
-import {permittedConstituents}    from "./components/components.mjs";
-import {movePastPhrasalDelimiter} from "./util/movePastPhrasalDelimiter.mjs";
+import {isCommonDelimiter}     from "./checks/cursor/isCommonDelimiter.mjs";
+import {permittedConstituents} from "./components/components.mjs";
+import {movePastPhrasalDelimiter} from "../phrasal/util/movePastPhrasalDelimiter.mjs";
 
-export function* phrasal(cursor, activeTok) {
+export function* common(cursor, activeTok) {
   if (!activeTok) {
-    yield '[passing phrasal]';
+    yield '[passing common]';
     return false;
   }
 
   let tok     = [activeTok];
   let started = false;
   let curr    = cursor.pos().offset;
-  while (isPhrasalDelimiter(cursor)) {
+  while (isCommonDelimiter(cursor)) {
     if ((!started) && (started = true)) {
-      yield '--beginning phrasal--;'
+      yield '--beginning common--;'
     }
+
+    cursor.advance();
 
     yield* movePastPhrasalDelimiter(cursor);
 
@@ -31,7 +33,7 @@ export function* phrasal(cursor, activeTok) {
   if (tok.length === 1) {
     return curr !== cursor.pos().offset ? false : activeTok;
   }
-  yield '--exiting phrasal--';
-  return {type: 'phrasal', token: tok};
+  yield '--exiting common--';
+  return {type: 'common', token: tok};
 }
 

@@ -11,7 +11,8 @@ console.log(
     parse('2 2'),
     parse('one one'),
     parse('one 2 one'),
+    parse('one one, one'),
   ]
 );
 
-// debugger;
+debugger;

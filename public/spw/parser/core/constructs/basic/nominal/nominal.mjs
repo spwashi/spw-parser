@@ -1,5 +1,5 @@
-import {beginsNominal}    from "./checks/char/beginsNominal.mjs";
-import {continuesNominal} from "./checks/char/continuesNominal.mjs";
+import {beginsNominal}    from "./checks/cursor/beginsNominal.mjs";
+import {continuesNominal} from "./checks/cursor/continuesNominal.mjs";
 
 export function* nominal(cursor, activeTok) {
   if (activeTok) {
