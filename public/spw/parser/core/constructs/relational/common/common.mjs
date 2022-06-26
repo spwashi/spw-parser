@@ -1,6 +1,6 @@
 import {isCommonDelimiter}     from "./checks/cursor/isCommonDelimiter.mjs";
 import {permittedConstituents} from "./components/components.mjs";
-import {movePastPhrasalDelimiter} from "../phrasal/util/movePastPhrasalDelimiter.mjs";
+import {movePastSpaces}        from "../phrasal/motions/movePastSpaces.mjs";
 
 export function* common(cursor, activeTok) {
   if (!activeTok) {
@@ -18,7 +18,7 @@ export function* common(cursor, activeTok) {
 
     cursor.advance();
 
-    yield* movePastPhrasalDelimiter(cursor);
+    yield* movePastSpaces(cursor);
 
     let token = false;
     for (let generator of permittedConstituents) {
@@ -34,6 +34,6 @@ export function* common(cursor, activeTok) {
     return curr !== cursor.pos().offset ? false : activeTok;
   }
   yield '--exiting common--';
-  return {type: 'common', token: tok};
+  return {kind: 'common', token: tok};
 }
 

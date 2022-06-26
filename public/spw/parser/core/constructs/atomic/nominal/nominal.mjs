@@ -7,8 +7,8 @@ export function* nominal(cursor, activeTok) {
     return activeTok;
   }
 
-  const tok = [];
-  let _check  = beginsNominal, started;
+  const tok  = [];
+  let _check = beginsNominal, started;
   while (cursor.curr() && _check(cursor.curr())) {
     if ((!started) && (started = true)) yield '--beginning nominal--;'
 
@@ -23,5 +23,8 @@ export function* nominal(cursor, activeTok) {
 
   yield '--exiting nominal--';
 
-  return tok.length ? {type: 'nominal', token: tok.join('')} : false;
+  return {
+    kind: 'nominal',
+    key:  tok.join(''),
+  };
 }

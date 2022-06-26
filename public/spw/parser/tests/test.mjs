@@ -21,7 +21,7 @@ function test() {
     {
       let out, expected;
       out      = parse('boon');
-      expected = JSON.stringify({"type": "nominal", "token": "boon"});
+      expected = JSON.stringify({"kind": "nominal", "key": "boon"});
       assert(
         JSON.stringify(out) === expected,
         'should have received: ' + expected + '. Actually received: ' + JSON.stringify(out)
@@ -35,7 +35,7 @@ function test() {
     try {
       parse(2)
     } catch (e) {
-      error = e;
+      error = e
     }
     assert(error.message === ERROR_INPUT_MUST_BE_STRING, 'Did not throw correct error.');
   }

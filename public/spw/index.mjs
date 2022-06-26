@@ -4,14 +4,38 @@ if (typeof window !== "undefined") window.parse = parse;
 
 console.log(
   [
-    parse('this is something'),
+    '--false',
     parse(' '),
+
+    '--nominal',
     parse('something'),
+
+    '--numeric',
     parse('2'),
+
+    '--phrases',
     parse('2 2'),
     parse('one one'),
     parse('one 2 one'),
+    parse('this is something'),
+
+    '--common',
     parse('one one, one'),
+
+    '--ordinal',
+    parse('one one, one; one one'),
+
+    '--containers',
+    parse('{one}'),
+    parse('{ something }'),
+    parse('{_boon something }_other'),
+    parse('{_boon something }_other another'),
+
+    '--operators',
+    parse('one*one'),
+    parse('one *one'),
+    parse('one* one'),
+    parse('one * one'),
   ]
 );
 

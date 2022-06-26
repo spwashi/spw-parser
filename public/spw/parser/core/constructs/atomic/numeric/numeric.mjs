@@ -23,5 +23,8 @@ export function* numeric(cursor, activeTok) {
 
   yield '--exiting numeric--';
 
-  return tok.length ? {type: 'numeric', token: tok.join('')} : false;
+  return {
+    kind:     'numeric',
+    integral: parseInt(tok.join('')),
+  };
 }

@@ -1,6 +1,6 @@
 import {isPhrasalDelimiter}       from "./checks/cursor/isPhrasalDelimiter.mjs";
-import {permittedConstituents}    from "./components/components.mjs";
-import {movePastPhrasalDelimiter} from "./util/movePastPhrasalDelimiter.mjs";
+import {permittedConstituents} from "./components/components.mjs";
+import {movePastSpaces}        from "./motions/movePastSpaces.mjs";
 
 export function* phrasal(cursor, activeTok) {
   if (!activeTok) {
@@ -8,15 +8,15 @@ export function* phrasal(cursor, activeTok) {
     return false;
   }
 
-  let tok     = [activeTok];
-  let started = false;
-  let curr    = cursor.pos().offset;
+  let tok         = [activeTok];
+  let started     = false;
+  let startOffset = cursor.pos().offset;
   while (isPhrasalDelimiter(cursor)) {
     if ((!started) && (started = true)) {
       yield '--beginning phrasal--;'
     }
 
-    yield* movePastPhrasalDelimiter(cursor);
+    yield* movePastSpaces(cursor);
 
     let token = false;
     for (let generator of permittedConstituents) {
@@ -29,9 +29,10 @@ export function* phrasal(cursor, activeTok) {
   }
 
   if (tok.length === 1) {
-    return curr !== cursor.pos().offset ? false : activeTok;
+    cursor.reset(startOffset);
+    return activeTok;
   }
   yield '--exiting phrasal--';
-  return {type: 'phrasal', token: tok};
+  return {kind: 'phrasal', token: tok};
 }
 
