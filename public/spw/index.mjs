@@ -12,6 +12,7 @@ console.log(
 
     '--numeric',
     parse('2'),
+    parse('2.2'),
 
     '--phrases',
     parse('2 2'),
