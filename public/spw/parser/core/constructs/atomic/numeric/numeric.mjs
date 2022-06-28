@@ -1,11 +1,15 @@
 import {beginsNumeric}    from "./checks/cursor/beginsNumeric.mjs";
 import {continuesNumeric} from "./checks/cursor/continuesNumeric.mjs";
+import {Cursor}           from "../../../cursor.mjs";
 
-export function* numeric(cursor, activeTok) {
+export function* numeric(startingCursor, activeTok) {
   if (activeTok) {
     yield '[passing numeric]';
     return activeTok;
   }
+
+  const cursor = new Cursor(startingCursor);
+  cursor.token({kind: 'numeric'});
 
   const integral = [];
   let _check     = beginsNumeric, started;
@@ -42,9 +46,10 @@ export function* numeric(cursor, activeTok) {
 
   yield '--exiting numeric--';
 
-  return {
-    kind:       'numeric',
-    integral:   parseInt(integral.join('')),
-    fractional: fractional.length ? parseFloat(`.${fractional.join()}`) : undefined
-  };
+  startingCursor.setOffset(cursor.offset);
+
+  return cursor.token({
+                        integral:   integral.length ? parseInt(integral.join('')) : integral,
+                        fractional: fractional.length ? parseFloat(`.${fractional.join()}`) : undefined
+                      });
 }

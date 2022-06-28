@@ -1,17 +1,44 @@
-export function Cursor({i = 0, input = undefined, prev = undefined}) {
-  this.i     = i;
-  this._i    = i;
-  this.prev  = prev;
-  this.input = input || prev?.input;
+export class Cursor {
+  #token;
+
+  constructor(prev) {
+    this.offset = prev?.offset || 0;
+    this.start  = this.offset;
+    this.input  = prev?.input;
+    if (prev instanceof Cursor) {
+      this.parent = prev;
+    }
+    this.#token = null;
+  }
+
+  setOffset(i) { return this.offset = i ?? this.start; }
+
+  curr() { return this.input[this.offset]; }
+
+  advance() {
+    return this.offset = this.offset + 1;
+  }
+
+  pos() {
+    return {
+      char:   this.curr(),
+      offset: this.offset,
+    };
+  }
+
+  token(token = {}) {
+    if (this.#token) {
+      return Object.assign(this.#token, token);
+    }
+    return this.#token = Object.assign(token, {cursor: this});
+  }
+
+  toJSON() {
+    return {
+      start: this.start,
+      end:   this.offset,
+      text:  this.input.slice(this.start, this.offset),
+    }
+  }
 }
 
-Cursor.prototype.reset   = function (i) { return this.i = i ?? this._i; };
-Cursor.prototype.curr    = function () { return this.input[this.i]; };
-Cursor.prototype.advance = function () { return this.i = this.i + 1; };
-Cursor.prototype.pos     = function () {
-  return {
-    char:   this.curr(),
-    offset: this.i,
-    prev:   this.prev,
-  };
-}

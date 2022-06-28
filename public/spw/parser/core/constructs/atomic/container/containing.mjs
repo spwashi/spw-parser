@@ -1,44 +1,31 @@
-import {isContainerStart}         from "./checks/cursor/isContainerStart.mjs";
-import {getContainerEndDelimiter} from "./util/containerDelimiterMap.mjs";
-import {movePastSpaces}           from "../../relational/phrasal/motions/movePastSpaces.mjs";
-import {permittedConstituents}    from "./components/components.mjs";
-import {nominal}                  from "../nominal/nominal.mjs";
-import {numeric}                  from "../numeric/numeric.mjs";
+import {isContainerStart}             from "./checks/cursor/isContainerStart.mjs";
+import {movePastSpaces}               from "../../relational/phrasal/motions/movePastSpaces.mjs";
+import {permittedConstituents}        from "./components/components.mjs";
+import {operational}                  from "../../operational/operational.mjs";
+import {containerDelimitingOperators} from "../../operational/operators/operators.mjs";
+import {Cursor}                       from "../../../cursor.mjs";
 
-function* readLabel(cursor) {
-  let label = false;
-  if (cursor.curr() === '_') {
-    cursor.advance();
-    for (let generator of [nominal, numeric, containing]) {
-      label = yield* generator(cursor, label);
-    }
-  }
-  return label;
-}
-
-export function* containing(cursor, activeTok) {
+export function* containing(startingCursor, activeTok) {
   if (activeTok) {
     yield '[passing containing]';
     return activeTok;
   }
-  if (!isContainerStart(cursor)) {
+  if (!isContainerStart(startingCursor)) {
     yield '[not containing]';
     return false;
   }
 
-  // head
+  const cursor = new Cursor(startingCursor)
+  cursor.token({kind: 'containing'});
 
-  const head = cursor.curr();
-  cursor.advance();
+  // head
+  const head     = cursor.curr();
+  const operator = yield* operational(cursor, null, containerDelimitingOperators);
 
   // head label
 
-  const label     = yield* readLabel(cursor);
-  const headToken = {
-    kind:      'container-head',
-    delimiter: head,
-    label:     label ? label : undefined,
-  };
+  const label     = operator.label?.key;
+  const headToken = operator;
 
   if (headToken) yield headToken;
 
@@ -49,7 +36,7 @@ export function* containing(cursor, activeTok) {
   // tail (expectation)
 
   let tail, tailToken;
-  const endDelimiterChar = getContainerEndDelimiter(head);
+  const endDelimiterChar = containerDelimitingOperators[head]?.opposite;
 
   // body
 
@@ -61,13 +48,8 @@ export function* containing(cursor, activeTok) {
 
     // tail delimiter check
     if ((cursor.curr() === endDelimiterChar) && (tail = cursor.curr())) {
-      cursor.advance()
-      const tailLabel  = yield* readLabel(cursor);
-      const _tailToken = {
-        kind:      'container-tail',
-        delimiter: tail,
-        label:     tailLabel ? tailLabel : undefined
-      };
+      const _tailToken = yield* operational(cursor, null, containerDelimitingOperators);
+      const tailLabel  = _tailToken.label?.key;
 
       if ((tailLabel && label) && (tailLabel !== label)) {
         yield _tailToken;
@@ -91,11 +73,11 @@ export function* containing(cursor, activeTok) {
   }
 
   yield '--exiting containing--';
+  startingCursor.setOffset(cursor.offset);
 
-  return {
-    kind: 'containing',
-    head: headToken,
-    body: body,
-    tail: tailToken,
-  };
+  return cursor.token({
+                        head: headToken,
+                        body: body,
+                        tail: tailToken
+                      });
 }

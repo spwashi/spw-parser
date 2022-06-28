@@ -1,20 +1,25 @@
 import {isPhrasalDelimiter}    from "./checks/cursor/isPhrasalDelimiter.mjs";
 import {permittedConstituents} from "./components/components.mjs";
 import {movePastSpaces}        from "./motions/movePastSpaces.mjs";
+import {Cursor}                from "../../../cursor.mjs";
 
-export function* phrasal(cursor, activeTok) {
-  if (!activeTok) {
+export function* phrasal(startingCursor, head) {
+  if (!head) {
     yield '[passing phrasal]';
     return false;
   }
+  const cursor = new Cursor(startingCursor);
+  cursor.token({kind: 'phrasal'})
 
-  let body        = [activeTok];
-  let started     = false;
-  let startOffset = cursor.pos().offset;
+  let body    = [];
+  let started = false;
+  let tail;
   while (isPhrasalDelimiter(cursor)) {
     if ((!started) && (started = true)) {
       yield '--beginning phrasal--;'
     }
+
+    tail && body.push(tail);
 
     yield* movePastSpaces(cursor);
 
@@ -24,19 +29,19 @@ export function* phrasal(cursor, activeTok) {
     }
     if (!token) break;
     yield token;
-
-    body.push(token);
+    tail = token;
   }
 
-  if (body.length === 1) {
+  if (!tail) {
     yield '[not phrasal]';
-    cursor.reset(startOffset);
-    return activeTok;
+    return head;
   }
+  startingCursor.setOffset(cursor.offset);
   yield '--exiting phrasal--';
-  return {
-    kind: 'phrasal',
-    body: body
-  };
+  return cursor.token({
+                        head: head,
+                        body: body.length ? body : undefined,
+                        tail: tail
+                      });
 }
 

@@ -1,47 +1,47 @@
 import {parse} from "./parser/parse.mjs";
-import util    from 'util';
 
-debugger;
-const out = [
+let out =/**/ [
   '--false',
   parse(' '),
 
   '--nominal',
-  parse('something'),
+  parse('one'),
 
   '--numeric',
   parse('2'),
   parse('2.2'),
 
-  '--phrases',
+  '--phrasal',
   parse('2 2'),
-  parse('one one'),
-  parse('one 2 one'),
-  parse('this is something'),
+  parse('one two'),
+  parse('one 2 three'),
+  parse('onw two three'),
 
   '--common',
-  parse('one one, one'),
+  parse('one two, three'),
 
   '--ordinal',
-  parse('one one, one; one one'),
+  parse('one two, three; four five'),
 
-  '--containers',
+  '--containing',
   parse('{one}'),
   parse('{ something }'),
-  parse('{_boon something }_other'),
-  parse('{_boon something }_other another'),
+  parse('{_one two }_three'),
+  parse('{_one two }_three four'),
 
-  '--operators',
-  parse('something@another'),
+  '--operational',
 
-  parse('one*one'),
-  parse('one *one'),
-  parse('one* one'),
-  parse('one * one'),
 
+  parse('one*two'),
+  parse('one *two'),
+  parse('one* two'),
+  parse('one * two'),
+  parse('one *_two three '),
+
+  parse('one@two'),
   parse('one * two@three'),
 ];
 
-console.log(util.inspect(out, {depth: undefined, colors: true}));
-
+out = JSON.parse(JSON.stringify(out));
+console.log(out);
 debugger;

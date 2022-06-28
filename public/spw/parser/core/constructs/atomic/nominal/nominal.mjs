@@ -1,33 +1,36 @@
 import {beginsNominal}    from "./checks/cursor/beginsNominal.mjs";
 import {continuesNominal} from "./checks/cursor/continuesNominal.mjs";
+import {Cursor}           from "../../../cursor.mjs";
 
-export function* nominal(cursor, activeTok) {
+export function* nominal(startingCursor, activeTok) {
   if (activeTok) {
     yield '[passing nominal]';
     return activeTok;
   }
 
-  const tok  = [];
+  const cursor = new Cursor(startingCursor);
+  cursor.token({kind: 'nominal'});
+
+  const key  = [];
   let _check = beginsNominal, started;
   while (cursor.curr() && _check(cursor.curr())) {
-    if ((!started) && (started = true)) yield '--beginning nominal--;'
+    if ((!started) && (started = true)) yield '--beginning nominal--'
 
-    tok.push(cursor.curr());
+    key.push(cursor.curr());
     yield cursor.pos();
     cursor.advance();
 
     _check = continuesNominal;
   }
 
-  if (!tok.length) {
+  if (!key.length) {
     yield '[not nominal]';
     return false;
   }
 
   yield '--exiting nominal--';
 
-  return {
-    kind: 'nominal',
-    key:  tok.join(''),
-  };
+  startingCursor.setOffset(cursor.offset);
+
+  return cursor.token({key: key.join('')})
 }

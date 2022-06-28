@@ -1,23 +1,30 @@
-import {isCommonDelimiter}     from "./checks/cursor/isCommonDelimiter.mjs";
-import {permittedConstituents} from "./components/components.mjs";
-import {movePastSpaces}        from "../phrasal/motions/movePastSpaces.mjs";
+import {isCommonDelimiter}         from "./checks/cursor/isCommonDelimiter.mjs";
+import {permittedConstituents}     from "./components/components.mjs";
+import {movePastSpaces}            from "../phrasal/motions/movePastSpaces.mjs";
+import {Cursor}                    from "../../../cursor.mjs";
+import {operational}               from "../../operational/operational.mjs";
+import {commonDelimitingOperators} from "../../operational/operators/operators.mjs";
 
-export function* common(cursor, activeTok) {
+export function* common(startingCursor, activeTok) {
   if (!activeTok) {
     yield '[passing common]';
     return false;
   }
 
-  let body     = [activeTok];
-  let started = false;
-  let curr    = cursor.pos().offset;
+  const cursor = new Cursor(startingCursor);
+  cursor.token({kind: 'common'});
+
+  let body      = [activeTok];
+  let operators = [];
+  let started   = false;
+  let curr      = cursor.pos().offset;
   while (isCommonDelimiter(cursor)) {
     if ((!started) && (started = true)) {
       yield '--beginning common--;'
     }
 
-    cursor.advance();
-
+    const operator = yield* operational(cursor, null, commonDelimitingOperators);
+    operators.push(operator);
     yield* movePastSpaces(cursor);
 
     let token = false;
@@ -33,10 +40,13 @@ export function* common(cursor, activeTok) {
   if (body.length === 1) {
     return curr !== cursor.pos().offset ? false : activeTok;
   }
-  yield '--exiting common--';
-  return {
-    kind: 'common',
-    body: body,
-  };
-}
 
+  startingCursor.setOffset(cursor.offset);
+
+  yield '--exiting common--';
+
+  return cursor.token({
+                        operators: operators,
+                        body:      body.length ? body : undefined,
+                      });
+}

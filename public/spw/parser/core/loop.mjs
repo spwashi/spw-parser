@@ -15,6 +15,6 @@ export function* loopGenerators(cursor, generators = ALL_GENERATORS) {
 
     // track history
     prev   = token;
-    cursor = new Cursor({i: cursor.i, prev: cursor})
+    cursor = new Cursor(cursor)
   }
 }
