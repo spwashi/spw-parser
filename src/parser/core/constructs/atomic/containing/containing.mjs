@@ -29,6 +29,19 @@ export function* containing(startingCursor, activeTok) {
 
   if (headToken) yield headToken;
 
+  let {tailToken, body} = yield* bodyLoop(cursor, head, label);
+
+  yield '--exiting containing--';
+  startingCursor.setOffset(cursor.offset);
+
+  return cursor.token({
+                        head: headToken,
+                        body: body,
+                        tail: tailToken
+                      });
+}
+
+function* bodyLoop(cursor, head, label) {
   // leading spaces
 
   yield* movePastSpaces(cursor);
@@ -71,13 +84,5 @@ export function* containing(startingCursor, activeTok) {
 
     body.push(token);
   }
-
-  yield '--exiting containing--';
-  startingCursor.setOffset(cursor.offset);
-
-  return cursor.token({
-                        head: headToken,
-                        body: body,
-                        tail: tailToken
-                      });
+  return {tailToken, body};
 }

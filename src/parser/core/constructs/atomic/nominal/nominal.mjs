@@ -11,17 +11,7 @@ export function* nominal(startingCursor, activeTok) {
   const cursor = new Cursor(startingCursor);
   cursor.token({kind: 'nominal'});
 
-  const key  = [];
-  let _check = beginsNominal, started;
-  while (cursor.curr() && _check(cursor.curr())) {
-    if ((!started) && (started = true)) yield '--beginning nominal--'
-
-    key.push(cursor.curr());
-    yield cursor.pos();
-    cursor.advance();
-
-    _check = continuesNominal;
-  }
+  const key = yield* bodyLoop(cursor);
 
   if (!key.length) {
     yield '[not nominal]';
@@ -33,4 +23,19 @@ export function* nominal(startingCursor, activeTok) {
   startingCursor.setOffset(cursor.offset);
 
   return cursor.token({key: key.join('')})
+}
+
+function* bodyLoop(cursor) {
+  const key  = [];
+  let _check = beginsNominal, started;
+  while (cursor.curr() && _check(cursor.curr())) {
+    if ((!started) && (started = true)) yield '--beginning nominal--'
+
+    key.push(cursor.curr());
+    yield cursor.pos();
+    cursor.advance();
+
+    _check = continuesNominal;
+  }
+  return key;
 }

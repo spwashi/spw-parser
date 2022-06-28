@@ -11,6 +11,24 @@ export function* numeric(startingCursor, activeTok) {
   const cursor = new Cursor(startingCursor);
   cursor.token({kind: 'numeric'});
 
+  let {integral, fractional} = yield* bodyLoop(cursor);
+
+  if (!(integral.length || fractional.length)) {
+    yield '[not numeric]';
+    return false;
+  }
+
+  yield '--exiting numeric--';
+
+  startingCursor.setOffset(cursor.offset);
+
+  return cursor.token({
+                        integral:   integral.length ? parseInt(integral.join('')) : integral,
+                        fractional: fractional.length ? parseFloat(`.${fractional.join()}`) : undefined
+                      });
+}
+
+function* bodyLoop(cursor) {
   const integral = [];
   let _check     = beginsNumeric, started;
   while (cursor.curr() && _check(cursor.curr())) {
@@ -38,18 +56,5 @@ export function* numeric(startingCursor, activeTok) {
       cursor.advance();
     }
   }
-
-  if (!(integral.length || fractional.length)) {
-    yield '[not numeric]';
-    return false;
-  }
-
-  yield '--exiting numeric--';
-
-  startingCursor.setOffset(cursor.offset);
-
-  return cursor.token({
-                        integral:   integral.length ? parseInt(integral.join('')) : integral,
-                        fractional: fractional.length ? parseFloat(`.${fractional.join()}`) : undefined
-                      });
+  return {integral, fractional};
 }

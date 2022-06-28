@@ -11,6 +11,22 @@ export function* phrasal(startingCursor, head) {
   const cursor = new Cursor(startingCursor);
   cursor.token({kind: 'phrasal'})
 
+  let {body, tail} = yield* bodyLoop(cursor);
+
+  if (!tail) {
+    yield '[not phrasal]';
+    return head;
+  }
+  startingCursor.setOffset(cursor.offset);
+  yield '--exiting phrasal--';
+  return cursor.token({
+                        head: head,
+                        body: body.length ? body : undefined,
+                        tail: tail
+                      });
+}
+
+function* bodyLoop(cursor) {
   let body    = [];
   let started = false;
   let tail;
@@ -31,17 +47,6 @@ export function* phrasal(startingCursor, head) {
     yield token;
     tail = token;
   }
-
-  if (!tail) {
-    yield '[not phrasal]';
-    return head;
-  }
-  startingCursor.setOffset(cursor.offset);
-  yield '--exiting phrasal--';
-  return cursor.token({
-                        head: head,
-                        body: body.length ? body : undefined,
-                        tail: tail
-                      });
+  return {body, tail};
 }
 

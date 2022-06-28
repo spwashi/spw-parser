@@ -6,11 +6,36 @@ import {pragmaticOperators}    from "./operators/operators.mjs";
 import {Cursor}                from "../../cursor.mjs";
 
 export function* operational(startingCursor, activeTok, permittedOperators = pragmaticOperators) {
-  let body     = [];
-  let prev;
-  let started  = false;
   const cursor = new Cursor(startingCursor);
   cursor.token({kind: 'operational',});
+
+  let {body, prev, origOpType} = yield* bodyLoop(cursor, permittedOperators);
+
+  if (origOpType?.kind === 'delimiter') {
+    startingCursor.setOffset(cursor.offset);
+    return cursor.token();
+  }
+
+  if (!prev) {
+    yield '[not operational]';
+    return activeTok || false;
+  }
+  startingCursor.setOffset(cursor.offset);
+
+  yield '--exiting operational--';
+
+  return cursor.token({
+                        head: activeTok ? activeTok : undefined,
+                        body: body.length ? body : undefined,
+                        tail: prev ? prev : undefined,
+                      })
+}
+
+function* bodyLoop(cursor, permittedOperators) {
+  let body    = [];
+  let prev;
+  let started = false;
+
   yield* movePastSpaces(cursor);
   let opType, origOpType;
   let label;
@@ -43,24 +68,6 @@ export function* operational(startingCursor, activeTok, permittedOperators = pra
 
   cursor.token({operators: operators});
   if (label) cursor.token({label: label})
-
-  if (origOpType?.kind === 'delimiter') {
-    startingCursor.setOffset(cursor.offset);
-    return cursor.token();
-  }
-
-  if (!prev) {
-    yield '[not operational]';
-    return activeTok || false;
-  }
-  startingCursor.setOffset(cursor.offset);
-
-  yield '--exiting operational--';
-
-  return cursor.token({
-                        head: activeTok ? activeTok : undefined,
-                        body: body.length ? body : undefined,
-                        tail: prev ? prev : undefined,
-                      })
+  return {body, prev, origOpType};
 }
 

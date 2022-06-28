@@ -12,30 +12,9 @@ export function* ordinal(startingCursor, activeTok) {
   }
 
   const cursor = new Cursor(startingCursor);
+  const curr   = cursor.pos().offset;
   cursor.token({kind: 'ordinal'});
-
-  let body      = [activeTok];
-  let operators = [];
-  let started   = false;
-  let curr      = cursor.pos().offset;
-  while (isOrdinalDelimiter(cursor)) {
-    if ((!started) && (started = true)) {
-      yield '--beginning ordinal--;'
-    }
-
-    const operator = yield* operational(cursor, null, ordinalDelimitingOperators);
-    operators.push(operator);
-    yield* movePastSpaces(cursor);
-
-    let token = false;
-    for (let generator of permittedConstituents) {
-      token = yield* generator(cursor, token);
-    }
-    if (!token) break;
-    yield token;
-
-    body.push(token);
-  }
+  const {body, operators} = yield* bodyLoop(cursor, activeTok);
 
   if (body.length === 1) {
     return curr !== cursor.pos().offset ? false : activeTok;
@@ -49,4 +28,29 @@ export function* ordinal(startingCursor, activeTok) {
                         operators: operators,
                         body:      body.length ? body : undefined,
                       });
+}
+
+function* bodyLoop(cursor, activeTok) {
+  const body      = [activeTok];
+  const operators = [];
+  let started     = false;
+  while (isOrdinalDelimiter(cursor)) {
+    if ((!started) && (started = true)) {
+      yield '--beginning ordinal--;'
+    }
+
+    const operator = yield* operational(cursor, null, ordinalDelimitingOperators);
+    operators.push(operator);
+    yield* movePastSpaces(cursor);
+
+    let token = false;
+    for (const generator of permittedConstituents) {
+      token = yield* generator(cursor, token);
+    }
+    if (!token) break;
+    yield token;
+
+    body.push(token);
+  }
+  return {body, operators};
 }

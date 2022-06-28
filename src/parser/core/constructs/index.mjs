@@ -4,7 +4,7 @@ import {phrasal}     from "./relational/phrasal/phrasal.mjs";
 import {common}      from "./relational/common/common.mjs";
 import {ordinal}     from "./relational/ordinal/ordinal.mjs";
 import {operational} from "./operational/operational.mjs";
-import {containing}  from "./atomic/container/containing.mjs";
+import {containing}  from "./atomic/containing/containing.mjs";
 
 const atomic      = [numeric, nominal, containing];
 const relational  = [phrasal, common, ordinal];

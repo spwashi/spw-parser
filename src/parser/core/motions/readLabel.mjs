@@ -1,6 +1,6 @@
 import {nominal}    from "../constructs/atomic/nominal/nominal.mjs";
 import {numeric}    from "../constructs/atomic/numeric/numeric.mjs";
-import {containing} from "../constructs/atomic/container/containing.mjs";
+import {containing} from "../constructs/atomic/containing/containing.mjs";
 
 export function* readLabel(cursor) {
   let label = false;
