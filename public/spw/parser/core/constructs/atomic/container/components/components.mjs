@@ -3,11 +3,11 @@ import {numeric}     from "../../numeric/numeric.mjs";
 import {phrasal}     from "../../../relational/phrasal/phrasal.mjs";
 import {common}      from "../../../relational/common/common.mjs";
 import {ordinal}     from "../../../relational/ordinal/ordinal.mjs";
-import {container} from "../container.mjs";
-import {operation} from "../../../operational/operation/operation.mjs";
+import {containing}  from "../containing.mjs";
+import {operational} from "../../../operational/operation/operational.mjs";
 
 export const permittedConstituents = [
-  nominal, numeric, container,
+  nominal, numeric, containing,
   phrasal, common, ordinal,
-  operation
+  operational
 ];

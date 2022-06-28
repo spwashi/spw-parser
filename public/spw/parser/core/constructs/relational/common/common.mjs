@@ -8,7 +8,7 @@ export function* common(cursor, activeTok) {
     return false;
   }
 
-  let tok     = [activeTok];
+  let body     = [activeTok];
   let started = false;
   let curr    = cursor.pos().offset;
   while (isCommonDelimiter(cursor)) {
@@ -27,13 +27,16 @@ export function* common(cursor, activeTok) {
     if (!token) break;
     yield token;
 
-    tok.push(token);
+    body.push(token);
   }
 
-  if (tok.length === 1) {
+  if (body.length === 1) {
     return curr !== cursor.pos().offset ? false : activeTok;
   }
   yield '--exiting common--';
-  return {kind: 'common', token: tok};
+  return {
+    kind: 'common',
+    body: body,
+  };
 }
 

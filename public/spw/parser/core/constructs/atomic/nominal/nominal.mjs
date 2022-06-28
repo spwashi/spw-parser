@@ -19,7 +19,10 @@ export function* nominal(cursor, activeTok) {
     _check = continuesNominal;
   }
 
-  if (!tok.length) return false;
+  if (!tok.length) {
+    yield '[not nominal]';
+    return false;
+  }
 
   yield '--exiting nominal--';
 

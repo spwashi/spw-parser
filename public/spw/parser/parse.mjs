@@ -30,3 +30,4 @@ export function parse(input, asGenerator = false) {
   }
 }
 
+if (typeof window !== "undefined") window.parse = parse;

@@ -35,7 +35,10 @@ export function* numeric(cursor, activeTok) {
     }
   }
 
-  if (!integral.length) return false;
+  if (!(integral.length || fractional.length)) {
+    yield '[not numeric]';
+    return false;
+  }
 
   yield '--exiting numeric--';
 

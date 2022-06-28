@@ -9,19 +9,22 @@ function* readLabel(cursor) {
   let label = false;
   if (cursor.curr() === '_') {
     cursor.advance();
-    for (let generator of [nominal, numeric, container]) {
+    for (let generator of [nominal, numeric, containing]) {
       label = yield* generator(cursor, label);
     }
   }
   return label;
 }
 
-export function* container(cursor, activeTok) {
+export function* containing(cursor, activeTok) {
   if (activeTok) {
-    yield '[passing container]';
+    yield '[passing containing]';
     return activeTok;
   }
-  if (!isContainerStart(cursor)) return false;
+  if (!isContainerStart(cursor)) {
+    yield '[not containing]';
+    return false;
+  }
 
   // head
 
@@ -32,11 +35,12 @@ export function* container(cursor, activeTok) {
 
   const label     = yield* readLabel(cursor);
   const headToken = {
-    kind:      'head',
+    kind:      'container-head',
     delimiter: head,
     label:     label ? label : undefined,
   };
 
+  if (headToken) yield headToken;
 
   // leading spaces
 
@@ -52,25 +56,25 @@ export function* container(cursor, activeTok) {
   let started;
   const body = [];
   while (cursor.curr()) {
-    if ((!started) && (started = true)) yield '--beginning container--;'
+    if ((!started) && (started = true)) yield '--beginning containing--;'
     yield* movePastSpaces(cursor);
 
     // tail delimiter check
     if ((cursor.curr() === endDelimiterChar) && (tail = cursor.curr())) {
       cursor.advance()
-      const tailLabel = yield* readLabel(cursor);
-      const token     = {
-        kind:      'tail',
+      const tailLabel  = yield* readLabel(cursor);
+      const _tailToken = {
+        kind:      'container-tail',
         delimiter: tail,
         label:     tailLabel ? tailLabel : undefined
       };
 
       if ((tailLabel && label) && (tailLabel !== label)) {
-        yield token;
-        body.push(token);
+        yield _tailToken;
+        body.push(_tailToken);
         continue;
       }
-      tailToken = token;
+      tailToken = _tailToken;
       break;
     }
 
@@ -86,11 +90,10 @@ export function* container(cursor, activeTok) {
     body.push(token);
   }
 
-  yield '--exiting container--';
-
+  yield '--exiting containing--';
 
   return {
-    kind: 'container',
+    kind: 'containing',
     head: headToken,
     body: body,
     tail: tailToken,
