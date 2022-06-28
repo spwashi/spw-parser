@@ -5,6 +5,6 @@
     "serve": "^13.0.2"
   },
   "scripts": {
-    "serve": "serve public"
+    "serve": "serve src"
   }
 }
