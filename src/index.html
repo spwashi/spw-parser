@@ -10,11 +10,11 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/d3/7.3.0/d3.js"
             integrity="sha512-nkC97gUNsbPjaWQm5GVpreTVy9IJO+z13y1M8mM+1BJRjfp9sz+1ixWu4+1mOMUzIt72pVD9rwjxJKV8LdlvjA=="
             crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+    <script src="lib/d3.js"></script>
+    <script type="module" src="parser/parse.mjs"></script>
 </head>
 <body>
     <div id="root"></div>
-    <script src="../public/app.js"></script>
-    <script type="module" src="parser/parse.mjs"></script>
     <form id="form">
         <h1>Please enter the string you want to parse</h1>
         <label>
@@ -25,50 +25,158 @@
         </label>
         <br>
         <button id="submitButton" type="submit">parse</button>
-        <button id="next" style="display:none;" type="button" onclick="advance(); submitButton.style.display = 'none'">
-            step
-        </button>
+        <button id="next" style="display:none;" type="button" onclick="advance();">step</button>
+        <button id="play" style="display:none;" type="button" onclick="playAll();">play</button>
         <br>
+        <svg id="svg-output"></svg>
         <output id="output" name="parsed"></output>
     </form>
     <script>
       let generator;
       let error;
 
-      const button       = document.getElementById('next');
-      const submitButton = document.getElementById('submitButton');
+      const advanceButton = document.getElementById('next');
+      const playButton    = document.getElementById('play');
+      const submitButton  = document.getElementById('submitButton');
 
       document.getElementById('form').onsubmit = submitForm;
 
       const output = document.getElementById('output');
 
-      let all = [];
+      let all   = [];
+      const svg = d3.select('#svg-output').append('g');
+
+      function resetGenerator() {
+        const form         = document.getElementById('form');
+        const formInput    = form.elements.formInput;
+        const text         = formInput.value;
+        generator          = parse(text, true);
+        playButton.onclick = playAll;
+        return text;
+      }
 
       function submitForm(event) {
-        event.preventDefault();
-        all                        = [];
-        const form                 = event.target;
-        const formInput            = form.elements.formInput;
-        generator                  = parse(formInput.value, true);
-        button.style.display       = 'block';
-        submitButton.style.display = 'none';
-        button.focus();
+        event?.preventDefault();
+        all                         = [];
+        const text                  = resetGenerator();
+        advanceButton.style.display = 'block';
+        playButton.style.display    = 'block';
+        submitButton.style.display  = 'none';
+        advanceButton.focus();
         error            = null;
         output.value     = '';
         output.className = '';
+
+        const gs     = svg.selectAll('g')
+                          .data(text.split('').map((c, i) => ({text: c, offset: i})))
+                          .join(d => d.append('g'),
+                                d => d,
+                                d => d.remove())
+                          .classed('char', true);
+        const offset = (mult = 1) => d => `${d.offset * mult}ch`;
+
+        let newlines = 1;
+        let x        = 0;
+        let map      = new Map;
+        gs.append('rect')
+          .attr('x', d => {
+            const val = x++ * 1.7;
+            map.set(d, {...(map.get(d) || {}), x: val});
+            if (d.text === '\n') {
+              x = 0;
+            }
+            return val + 'ch';
+          })
+          .attr('width', d => d.text === '\n' ? '2.5ch' : '1.5ch')
+          .attr('height', '1.5rem')
+          .style('fill', 'white')
+          .attr('y', d => {
+            const val = (2 * newlines);
+
+            if (d.text === '\n') {
+              newlines++;
+              x = 0;
+            }
+            map.set(d, {...(map.get(d) || {}), y: val});
+
+
+            return val + 'rem';
+          });
+        gs.append('text')
+          .text(d => `${d.text === '\n' ? '\\n' : d.text}`)
+          .attr('x', d => map.get(d).x + 'ch')
+          .attr('y', d => (map.get(d).y + 1) + 'rem')
+          .attr('dx', '.2ch')
+          .style('text-align', 'center')
+      }
+
+      function playAll() {
+        let paused;
+        let play;
+
+        playButton.innerText = 'pause';
+        playButton.onclick   = () => {
+          playButton.innerText = 'play';
+          paused               = true;
+          playButton.onclick   = playAll;
+        }
+
+        play = () =>
+          setTimeout(() => {
+            if (paused) return;
+            let out = advance();
+            if (!out.value) {
+              alert('here')
+              paused = true;
+              return;
+            }
+            if (out.done) return;
+            play && play();
+          }, 75);
+
+        play()
       }
 
       function advance() {
-        if (!generator || error) return;
+        if (!generator || error) {
+          return {
+            done: true
+          }
+        }
         let value, status = 'success';
+        let done          = true;
         try {
-          let {value: out, done} = generator.next();
-          if (done) {
-            button.style.display = 'none';
-            value                = JSON.stringify(all, null, 3);
-          } else {
-            value = JSON.stringify(out, null, 3);
+          let {value: out, done: _done} = generator.next();
+
+          done = _done;
+          if (!_done) {
+            value = out;
+            if (!out) {
+              error  = true;
+              status = 'error';
+            }
             all.push(out);
+            out && svg.selectAll('.char')
+                      .style('fill', d => (d.offset === out.offset) ? 'white' : 'black')
+                      .select('rect')
+                      .style('fill', d => (d.offset === out.offset) ? 'red' : 'white');
+          } else {
+            let played;
+            advanceButton.onclick = () => {
+              if (!played) {
+                resetGenerator();
+                played = true;
+              }
+              advance();
+            }
+
+            value                = all;
+            generator            = undefined;
+            playButton.onclick   = () => {
+              resetGenerator();
+              playAll();
+            }
+            playButton.innerText = 'play';
           }
         } catch (e) {
           error  = true;
@@ -76,8 +184,8 @@
           status = 'error';
         }
         output.className = status;
-        output.value     = value;
-        return {value, status};
+        output.value     = JSON.stringify(value, null, 3);
+        return {value, status, done: done};
       }
     </script>
 </body>

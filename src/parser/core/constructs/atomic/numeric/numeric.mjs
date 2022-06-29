@@ -1,10 +1,11 @@
 import {beginsNumeric}    from "./checks/cursor/beginsNumeric.mjs";
 import {continuesNumeric} from "./checks/cursor/continuesNumeric.mjs";
 import {Cursor}           from "../../../cursor.mjs";
+import {_debug}           from "../../../constants.mjs";
 
 export function* numeric(startingCursor, activeTok) {
   if (activeTok) {
-    yield '[passing numeric]';
+    _debug && (yield '[passing numeric]');
     return activeTok;
   }
 
@@ -14,11 +15,11 @@ export function* numeric(startingCursor, activeTok) {
   let {integral, fractional} = yield* bodyLoop(cursor);
 
   if (!(integral.length || fractional.length)) {
-    yield '[not numeric]';
+    _debug && (yield '[not numeric]');
     return false;
   }
 
-  yield '--exiting numeric--';
+  _debug && (yield '--exiting numeric--');
 
   startingCursor.setOffset(cursor.offset);
 
@@ -34,7 +35,7 @@ function* bodyLoop(cursor) {
   while (cursor.curr() && _check(cursor.curr())) {
     if ((!started) && (started = true)) {
       _check = continuesNumeric;
-      yield '--beginning numeric--;'
+      _debug && (yield '--beginning numeric--;');
     }
 
     integral.push(cursor.curr());
@@ -49,7 +50,7 @@ function* bodyLoop(cursor) {
     while (cursor.curr() && _check(cursor.curr())) {
       if (!started && (started = true)) {
         _check = continuesNumeric;
-        yield '--continuing numeric: fractional--;'
+        _debug && (yield '--continuing numeric: fractional--;');
       }
       fractional.push(cursor.curr());
       yield cursor.pos();

@@ -1,10 +1,11 @@
 import {beginsNominal}    from "./checks/cursor/beginsNominal.mjs";
 import {continuesNominal} from "./checks/cursor/continuesNominal.mjs";
 import {Cursor}           from "../../../cursor.mjs";
+import {_debug}           from "../../../constants.mjs";
 
 export function* nominal(startingCursor, activeTok) {
   if (activeTok) {
-    yield '[passing nominal]';
+    _debug && (yield '[passing nominal]');
     return activeTok;
   }
 
@@ -14,11 +15,11 @@ export function* nominal(startingCursor, activeTok) {
   const key = yield* bodyLoop(cursor);
 
   if (!key.length) {
-    yield '[not nominal]';
+    _debug && (yield '[not nominal]');
     return false;
   }
 
-  yield '--exiting nominal--';
+  _debug && (yield '--exiting nominal--');
 
   startingCursor.setOffset(cursor.offset);
 
@@ -29,7 +30,7 @@ function* bodyLoop(cursor) {
   const key  = [];
   let _check = beginsNominal, started;
   while (cursor.curr() && _check(cursor.curr())) {
-    if ((!started) && (started = true)) yield '--beginning nominal--'
+    if ((!started) && (started = true)) _debug && (yield '--beginning nominal--');
 
     key.push(cursor.curr());
     yield cursor.pos();

@@ -4,10 +4,11 @@ import {movePastSpaces}            from "../phrasal/motions/movePastSpaces.mjs";
 import {Cursor}                    from "../../../cursor.mjs";
 import {operational}               from "../../operational/operational.mjs";
 import {commonDelimitingOperators} from "../../operational/operators/operators.mjs";
+import {_debug}                    from "../../../constants.mjs";
 
 export function* common(startingCursor, activeTok) {
   if (!activeTok) {
-    yield '[passing common]';
+    _debug && (yield '[passing common]');
     return false;
   }
 
@@ -22,7 +23,7 @@ export function* common(startingCursor, activeTok) {
 
   startingCursor.setOffset(cursor.offset);
 
-  yield '--exiting common--';
+  _debug && (yield '--exiting common--');
 
   return cursor.token({
                         operators: operators,
@@ -37,7 +38,7 @@ function* bodyLoop(cursor, activeTok) {
   let curr      = cursor.pos().offset;
   while (isCommonDelimiter(cursor)) {
     if ((!started) && (started = true)) {
-      yield '--beginning common--;'
+      _debug && (yield '--beginning common--;');
     }
 
     const operator = yield* operational(cursor, null, commonDelimitingOperators);

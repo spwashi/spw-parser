@@ -4,10 +4,11 @@ import {movePastSpaces}             from "../phrasal/motions/movePastSpaces.mjs"
 import {operational}                from "../../operational/operational.mjs";
 import {ordinalDelimitingOperators} from "../../operational/operators/operators.mjs";
 import {Cursor}                     from "../../../cursor.mjs";
+import {_debug}                     from "../../../constants.mjs";
 
 export function* ordinal(startingCursor, activeTok) {
   if (!activeTok) {
-    yield '[passing ordinal]';
+    _debug && (yield '[passing ordinal]');
     return false;
   }
 
@@ -22,7 +23,7 @@ export function* ordinal(startingCursor, activeTok) {
 
   startingCursor.setOffset(cursor.offset);
 
-  yield '--exiting ordinal--';
+  _debug && (yield '--exiting ordinal--');
 
   return cursor.token({
                         operators: operators,
@@ -36,7 +37,7 @@ function* bodyLoop(cursor, activeTok) {
   let started     = false;
   while (isOrdinalDelimiter(cursor)) {
     if ((!started) && (started = true)) {
-      yield '--beginning ordinal--;'
+      _debug && (yield '--beginning ordinal--;');
     }
 
     const operator = yield* operational(cursor, null, ordinalDelimitingOperators);

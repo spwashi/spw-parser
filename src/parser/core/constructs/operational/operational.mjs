@@ -4,6 +4,7 @@ import {movePastSpaces}        from "../relational/phrasal/motions/movePastSpace
 import {readLabel}             from "../../motions/readLabel.mjs";
 import {pragmaticOperators}    from "./operators/operators.mjs";
 import {Cursor}                from "../../cursor.mjs";
+import {_debug}                from "../../constants.mjs";
 
 export function* operational(startingCursor, activeTok, permittedOperators = pragmaticOperators) {
   const cursor = new Cursor(startingCursor);
@@ -17,12 +18,12 @@ export function* operational(startingCursor, activeTok, permittedOperators = pra
   }
 
   if (!prev) {
-    yield '[not operational]';
+    _debug && (yield '[not operational]');
     return activeTok || false;
   }
   startingCursor.setOffset(cursor.offset);
 
-  yield '--exiting operational--';
+  _debug && (yield '--exiting operational--');
 
   return cursor.token({
                         head: activeTok ? activeTok : undefined,
@@ -44,11 +45,12 @@ function* bodyLoop(cursor, permittedOperators) {
     if ((!started) && (started = true)) {
       origOpType = opType;
       cursor.token({prototype: origOpType})
-      yield '--beginning operational--;'
+      _debug && (yield '--beginning operational--;');
     }
 
     prev && body.push(prev);
     operators.push(cursor.pos());
+    yield cursor.pos();
     cursor.advance();
 
     label = yield* readLabel(cursor);

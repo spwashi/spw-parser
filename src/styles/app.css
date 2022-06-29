@@ -6,16 +6,16 @@ body {
     font-family: "JetBrains Mono", monospace;
     display: flex;
     flex-direction: row;
-    justify-content: center;
-
+    justify-content: flex-start;
 }
 form {
     display: flex;
     justify-content: center;
     align-items: center;
     flex-direction: column;
+    padding: 1rem;
 }
-textarea, form {
+textarea {
     width: 500px;
     padding: 1rem;
 }
@@ -32,8 +32,9 @@ output {
     margin: 1rem;
     position: relative;
     width: 300px;
-    max-height: 300px;
+    height: 300px;
     overflow: auto;
+    resize: both;
 }
 output:empty {
     display: none;
@@ -49,4 +50,9 @@ output:before {
 }
 .error:before {
     background: red;
+}
+#svg-output {
+    width: 900px;
+    height: 10rem;
+    outline: green;
 }

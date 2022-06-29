@@ -2,10 +2,11 @@ import {isPhrasalDelimiter}    from "./checks/cursor/isPhrasalDelimiter.mjs";
 import {permittedConstituents} from "./components/components.mjs";
 import {movePastSpaces}        from "./motions/movePastSpaces.mjs";
 import {Cursor}                from "../../../cursor.mjs";
+import {_debug}                from "../../../constants.mjs";
 
 export function* phrasal(startingCursor, head) {
   if (!head) {
-    yield '[passing phrasal]';
+    _debug && (yield '[passing phrasal]');
     return false;
   }
   const cursor = new Cursor(startingCursor);
@@ -14,11 +15,11 @@ export function* phrasal(startingCursor, head) {
   let {body, tail} = yield* bodyLoop(cursor);
 
   if (!tail) {
-    yield '[not phrasal]';
+    _debug && (yield '[not phrasal]');
     return head;
   }
   startingCursor.setOffset(cursor.offset);
-  yield '--exiting phrasal--';
+  _debug && (yield '--exiting phrasal--');
   return cursor.token({
                         head: head,
                         body: body.length ? body : undefined,
@@ -32,7 +33,7 @@ function* bodyLoop(cursor) {
   let tail;
   while (isPhrasalDelimiter(cursor)) {
     if ((!started) && (started = true)) {
-      yield '--beginning phrasal--;'
+      _debug && (yield '--beginning phrasal--;');
     }
 
     tail && body.push(tail);
