@@ -25,8 +25,8 @@
         </label>
         <br>
         <button id="submitButton" type="submit">parse</button>
-        <button id="next" style="display:none;" type="button" onclick="advance();">step</button>
         <button id="play" style="display:none;" type="button" onclick="playAll();">play</button>
+        <button id="next" style="display:none;" type="button" onclick="advance();">step</button>
         <br>
         <svg id="svg-output"></svg>
         <output id="output" name="parsed"></output>
@@ -47,9 +47,11 @@
       const svg = d3.select('#svg-output').append('g');
 
       function resetGenerator() {
-        const form         = document.getElementById('form');
-        const formInput    = form.elements.formInput;
-        const text         = formInput.value;
+        const form      = document.getElementById('form');
+        const formInput = form.elements.formInput;
+        const text      = formInput.value;
+        error = false;
+        console.log(text);
         generator          = parse(text, true);
         playButton.onclick = playAll;
         return text;
@@ -62,23 +64,31 @@
         advanceButton.style.display = 'block';
         playButton.style.display    = 'block';
         submitButton.style.display  = 'none';
-        advanceButton.focus();
+        playButton.focus();
         error            = null;
         output.value     = '';
         output.className = '';
 
-        const gs     = svg.selectAll('g')
-                          .data(text.split('').map((c, i) => ({text: c, offset: i})))
-                          .join(d => d.append('g'),
-                                d => d,
-                                d => d.remove())
-                          .classed('char', true);
-        const offset = (mult = 1) => d => `${d.offset * mult}ch`;
+        const gs = svg.selectAll('g')
+                      .data(text.split('').map((c, i) => ({text: c, offset: i})))
+                      .join(d => {
+                              const g = d.append('g');
 
-        let newlines = 1;
+                              g.append('rect');
+                              g.append('text')
+
+                              return g;
+                            },
+                            d => {
+                              return d;
+                            },
+                            d => d.remove())
+                      .classed('char', true);
+
+        let newlines = 0;
         let x        = 0;
         let map      = new Map;
-        gs.append('rect')
+        gs.select('rect')
           .attr('x', d => {
             const val = x++ * 1.7;
             map.set(d, {...(map.get(d) || {}), x: val});
@@ -102,7 +112,7 @@
 
             return val + 'rem';
           });
-        gs.append('text')
+        gs.select('text')
           .text(d => `${d.text === '\n' ? '\\n' : d.text}`)
           .attr('x', d => map.get(d).x + 'ch')
           .attr('y', d => (map.get(d).y + 1) + 'rem')
@@ -126,7 +136,6 @@
             if (paused) return;
             let out = advance();
             if (!out.value) {
-              alert('here')
               paused = true;
               return;
             }
@@ -135,6 +144,25 @@
           }, 75);
 
         play()
+      }
+
+      function resetPlayButton() {
+        playButton.innerText = 'play';
+        playButton.onclick   = () => {
+          resetGenerator();
+          playAll();
+        };
+      }
+
+      function resetAdvanceButton() {
+        let played;
+        advanceButton.onclick = () => {
+          if (!played) {
+            resetGenerator();
+            played = true;
+          }
+          advance();
+        }
       }
 
       function advance() {
@@ -151,9 +179,8 @@
           done = _done;
           if (!_done) {
             value = out;
-            if (!out) {
-              error  = true;
-              status = 'error';
+            if (out === false) {
+              throw new Error('parser returned false');
             }
             all.push(out);
             out && svg.selectAll('.char')
@@ -161,28 +188,19 @@
                       .select('rect')
                       .style('fill', d => (d.offset === out.offset) ? 'red' : 'white');
           } else {
-            let played;
-            advanceButton.onclick = () => {
-              if (!played) {
-                resetGenerator();
-                played = true;
-              }
-              advance();
-            }
-
-            value                = all;
-            generator            = undefined;
-            playButton.onclick   = () => {
-              resetGenerator();
-              playAll();
-            }
-            playButton.innerText = 'play';
+            value = all;
           }
         } catch (e) {
           error  = true;
           value  = e.message;
           status = 'error';
         }
+
+        if (error || done) {
+          resetAdvanceButton();
+          resetPlayButton();
+        }
+
         output.className = status;
         output.value     = JSON.stringify(value, null, 3);
         return {value, status, done: done};
