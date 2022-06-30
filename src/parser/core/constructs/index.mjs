@@ -1,16 +1,17 @@
-import {numeric}     from "./atomic/numeric/numeric.mjs";
-import {nominal}     from "./atomic/nominal/nominal.mjs";
-import {phrasal}     from "./relational/phrasal/phrasal.mjs";
-import {common}      from "./relational/common/common.mjs";
-import {ordinal}     from "./relational/ordinal/ordinal.mjs";
-import {operational} from "./operational/operational.mjs";
-import {containing}  from "./atomic/containing/containing.mjs";
+import {numeric} from "./nodes/numeric/numeric.mjs";
+import {nominal}     from "./nodes/nominal/nominal.mjs";
+import {phrasal} from "./semantic/phrasal/phrasal.mjs";
+import {common}  from "./semantic/common/common.mjs";
+import {ordinal}     from "./semantic/ordinal/ordinal.mjs";
+import {operational} from "./pragmatic/operational/operational.mjs";
+import {container}   from "./nodes/container/container.mjs";
 
-const atomic      = [numeric, nominal, containing];
-const relational  = [phrasal, common, ordinal];
+const nodes     = [numeric, nominal, container];
+const pragmatic = [operational];
+const semantic  = [phrasal, common, ordinal];
 
 export const ALL_GENERATORS = [
-  ...atomic,
-  ...relational,
-  operational,
+  ...nodes,
+  ...pragmatic,
+  ...semantic,
 ];

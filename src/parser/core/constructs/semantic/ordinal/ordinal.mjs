@@ -1,23 +1,20 @@
 import {isOrdinalDelimiter}         from "./checks/cursor/isOrdinalDelimiter.mjs";
 import {permittedConstituents}      from "./components/components.mjs";
 import {movePastSpaces}             from "../phrasal/motions/movePastSpaces.mjs";
-import {operational}                from "../../operational/operational.mjs";
-import {ordinalDelimitingOperators} from "../../operational/operators/operators.mjs";
+import {operational}                from "../../pragmatic/operational/operational.mjs";
+import {ordinalDelimitingOperators} from "../../pragmatic/operational/operators/operators.mjs";
 import {Cursor}                     from "../../../cursor.mjs";
 import {_debug}                     from "../../../constants.mjs";
 
 export function* ordinal(startingCursor, activeTok) {
-  if (!activeTok) {
-    _debug && (yield '[passing ordinal]');
-    return false;
-  }
-
+  if (activeTok === false) return false;
   const cursor = new Cursor(startingCursor);
-  const curr   = cursor.pos().offset;
+  yield* movePastSpaces(cursor);
+  const curr = cursor.pos().offset;
   cursor.token({kind: 'ordinal'});
-  const {body, operators} = yield* bodyLoop(cursor, activeTok);
+  const {head, body, operators, tail} = yield* bodyLoop(cursor, activeTok);
 
-  if (body.length === 1) {
+  if (tail === false) {
     return curr !== cursor.pos().offset ? false : activeTok;
   }
 
@@ -27,18 +24,25 @@ export function* ordinal(startingCursor, activeTok) {
 
   return cursor.token({
                         operators: operators,
+                        head:      head,
                         body:      body.length ? body : undefined,
+                        tail
                       });
 }
 
-function* bodyLoop(cursor, activeTok) {
-  const body      = [activeTok];
+function* bodyLoop(cursor, head) {
+  const body      = [];
   const operators = [];
   let started     = false;
-  while (isOrdinalDelimiter(cursor)) {
+  let tail        = false;
+  while (isOrdinalDelimiter(cursor, head)) {
     if ((!started) && (started = true)) {
       _debug && (yield '--beginning ordinal--;');
     }
+
+    (tail !== false) && body.push(tail);
+
+    yield* movePastSpaces(cursor);
 
     const operator = yield* operational(cursor, null, ordinalDelimitingOperators);
     operators.push(operator);
@@ -48,10 +52,20 @@ function* bodyLoop(cursor, activeTok) {
     for (const generator of permittedConstituents) {
       token = yield* generator(cursor, token);
     }
-    if (!token) break;
+    if (!token) {
+      token = null;
+    }
     yield token;
 
-    body.push(token);
+    yield* movePastSpaces(cursor);
+
+    tail = token;
   }
-  return {body, operators};
+
+  return {
+    head,
+    body:      body,
+    operators: operators,
+    tail:      tail,
+  };
 }

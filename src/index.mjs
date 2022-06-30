@@ -23,7 +23,7 @@ let out =/**/ [
   '--ordinal',
   parse('one two, three; four five'),
 
-  '--containing',
+  '--container',
   parse('{one}'),
   parse('{ something }'),
   parse('{_one two }_three'),

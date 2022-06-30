@@ -1,23 +1,23 @@
-import {isContainerStart}             from "./checks/cursor/isContainerStart.mjs";
-import {movePastSpaces}               from "../../relational/phrasal/motions/movePastSpaces.mjs";
+import {isContainerStart}      from "./checks/cursor/isContainerStart.mjs";
+import {movePastSpaces}        from "../../semantic/phrasal/motions/movePastSpaces.mjs";
 import {permittedConstituents}        from "./components/components.mjs";
-import {operational}                  from "../../operational/operational.mjs";
-import {containerDelimitingOperators} from "../../operational/operators/operators.mjs";
+import {operational}                  from "../../pragmatic/operational/operational.mjs";
+import {containerDelimitingOperators} from "../../pragmatic/operational/operators/operators.mjs";
 import {Cursor}                       from "../../../cursor.mjs";
 import {_debug}                       from "../../../constants.mjs";
 
-export function* containing(startingCursor, activeTok) {
+export function* container(startingCursor, activeTok) {
   if (activeTok) {
-    _debug && (yield '[passing containing]');
+    _debug && (yield '[passing container]');
     return activeTok;
   }
   if (!isContainerStart(startingCursor)) {
-    _debug && (yield '[not containing]');
+    _debug && (yield '[not container]');
     return false;
   }
 
   const cursor = new Cursor(startingCursor)
-  cursor.token({kind: 'containing'});
+  cursor.token({kind: 'container'});
 
   // head
   const head     = cursor.curr();
@@ -32,7 +32,7 @@ export function* containing(startingCursor, activeTok) {
 
   let {tailToken, body} = yield* bodyLoop(cursor, head, label);
 
-  _debug && (yield '--exiting containing--');
+  _debug && (yield '--exiting container--');
   startingCursor.setOffset(cursor.offset);
 
   return cursor.token({
@@ -57,7 +57,7 @@ function* bodyLoop(cursor, head, label) {
   let started;
   const body = [];
   while (cursor.curr()) {
-    if ((!started) && (started = true)) _debug && (yield '--beginning containing--;');
+    if ((!started) && (started = true)) _debug && (yield '--beginning container--;');
     yield* movePastSpaces(cursor);
 
     // tail delimiter check

@@ -135,7 +135,7 @@
           setTimeout(() => {
             if (paused) return;
             let out = advance();
-            if (!out.value) {
+            if (out.value === false) {
               paused = true;
               return;
             }

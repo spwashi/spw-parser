@@ -1,10 +1,10 @@
 import {getOperatorType}       from "./checks/cursor/getOperatorType.mjs";
 import {permittedConstituents} from "./components/components.mjs";
-import {movePastSpaces}        from "../relational/phrasal/motions/movePastSpaces.mjs";
-import {readLabel}             from "../../motions/readLabel.mjs";
+import {movePastSpaces}        from "../../semantic/phrasal/motions/movePastSpaces.mjs";
+import {readLabel}             from "../../../motions/readLabel.mjs";
 import {pragmaticOperators}    from "./operators/operators.mjs";
-import {Cursor}                from "../../cursor.mjs";
-import {_debug}                from "../../constants.mjs";
+import {Cursor}                from "../../../cursor.mjs";
+import {_debug}                from "../../../constants.mjs";
 
 export function* operational(startingCursor, activeTok, permittedOperators = pragmaticOperators) {
   const cursor = new Cursor(startingCursor);

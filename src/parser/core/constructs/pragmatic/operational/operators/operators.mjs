@@ -30,7 +30,8 @@ export const containerDelimitingOperators =
                };
 
 export const ordinalDelimitingOperators = {
-  ';': {name: 'ordinal', key: ';', kind: 'delimiter'}
+  ';':  {name: 'ordinal', key: ';', kind: 'delimiter'},
+  '\n': {name: 'ordinal', key: ';', kind: 'delimiter'}
 };
 export const commonDelimitingOperators  = {
   ',': {name: 'common', key: ',', kind: 'delimiter'}

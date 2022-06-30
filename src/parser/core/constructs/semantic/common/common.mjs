@@ -2,8 +2,8 @@ import {isCommonDelimiter}         from "./checks/cursor/isCommonDelimiter.mjs";
 import {permittedConstituents}     from "./components/components.mjs";
 import {movePastSpaces}            from "../phrasal/motions/movePastSpaces.mjs";
 import {Cursor}                    from "../../../cursor.mjs";
-import {operational}               from "../../operational/operational.mjs";
-import {commonDelimitingOperators} from "../../operational/operators/operators.mjs";
+import {operational}               from "../../pragmatic/operational/operational.mjs";
+import {commonDelimitingOperators} from "../../pragmatic/operational/operators/operators.mjs";
 import {_debug}                    from "../../../constants.mjs";
 
 export function* common(startingCursor, activeTok) {

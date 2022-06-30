@@ -1,12 +1,12 @@
-import {nominal}    from "../constructs/atomic/nominal/nominal.mjs";
-import {numeric}    from "../constructs/atomic/numeric/numeric.mjs";
-import {containing} from "../constructs/atomic/containing/containing.mjs";
+import {nominal}   from "../constructs/nodes/nominal/nominal.mjs";
+import {numeric}   from "../constructs/nodes/numeric/numeric.mjs";
+import {container} from "../constructs/nodes/container/container.mjs";
 
 export function* readLabel(cursor) {
   let label = false;
   if (cursor.curr() === '_') {
     cursor.advance();
-    for (let generator of [nominal, numeric, containing]) {
+    for (let generator of [nominal, numeric, container]) {
       label = yield* generator(cursor, label);
     }
   }
