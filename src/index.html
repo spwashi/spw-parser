@@ -47,11 +47,11 @@
       const svg = d3.select('#svg-output').append('g');
 
       function resetGenerator() {
-        const form      = document.getElementById('form');
-        const formInput = form.elements.formInput;
-        const text      = formInput.value;
-        error = false;
-        console.log(text);
+        const form         = document.getElementById('form');
+        const formInput    = form.elements.formInput;
+        const text         = formInput.value;
+        error              = false;
+        all                = [];
         generator          = parse(text, true);
         playButton.onclick = playAll;
         return text;
@@ -188,7 +188,9 @@
                       .select('rect')
                       .style('fill', d => (d.offset === out.offset) ? 'red' : 'white');
           } else {
-            value = all;
+            value = [...all].reverse();
+            // value = [...all.filter(n => n?.kind)].reverse();
+            // value = all[all.length - 1];
           }
         } catch (e) {
           error  = true;

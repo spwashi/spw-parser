@@ -23,7 +23,11 @@ export function* nominal(startingCursor, activeTok) {
 
   startingCursor.setOffset(cursor.offset);
 
-  return cursor.token({key: key.join('')})
+  const head = {key: key.join('')};
+  return cursor.token({
+                        key:  head.key,
+                        head: head
+                      })
 }
 
 function* bodyLoop(cursor) {

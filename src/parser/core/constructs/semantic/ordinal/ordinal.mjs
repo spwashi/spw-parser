@@ -23,6 +23,7 @@ export function* ordinal(startingCursor, activeTok) {
   _debug && (yield '--exiting ordinal--');
 
   return cursor.token({
+                        key:       [head?.key, body?.map(n => n?.key), tail?.key].join('; '),
                         operators: operators,
                         head:      head,
                         body:      body.length ? body : undefined,
@@ -65,7 +66,7 @@ function* bodyLoop(cursor, head) {
   return {
     head,
     body:      body,
-    operators: operators,
     tail:      tail,
+    operators: operators,
   };
 }

@@ -10,34 +10,58 @@ export function* operational(startingCursor, activeTok, permittedOperators = pra
   const cursor = new Cursor(startingCursor);
   cursor.token({kind: 'operational',});
 
-  let {body, prev, origOpType} = yield* bodyLoop(cursor, permittedOperators);
+  let {
+        body,
+        tail,
+        label,
+        operators,
+        origOpType,
+      } = yield* bodyLoop(cursor, permittedOperators);
+  cursor.token({operators: operators});
 
+  if (!operators.length) return false;
+
+  const head = activeTok ? activeTok : undefined;
+  body       = body.length ? body : undefined;
+  tail       = tail ? tail : undefined;
+  cursor.token({key: [head?.key, ...body?.map(n => n?.key) || [], tail?.key].join(operators[0].char),});
+
+  if (label) cursor.token({label: label})
   if (origOpType?.kind === 'delimiter') {
     startingCursor.setOffset(cursor.offset);
     return cursor.token();
   }
-
-  if (!prev) {
-    _debug && (yield '[not operational]');
+  if (!tail) {
+    _debug && (yield {
+      message: '[not operational]',
+      cause:   'no tail',
+      info:    {
+        head, body, tail,
+        tok: cursor.token()
+      }
+    });
     return activeTok || false;
   }
   startingCursor.setOffset(cursor.offset);
 
   _debug && (yield '--exiting operational--');
 
+
   return cursor.token({
-                        head: activeTok ? activeTok : undefined,
-                        body: body.length ? body : undefined,
-                        tail: prev ? prev : undefined,
+                        key:  [head?.key, ...body?.map(n => n.key) || [], tail?.key].join(operators[0].char),
+                        head: head,
+                        body: body,
+                        tail: tail,
                       })
 }
 
 function* bodyLoop(cursor, permittedOperators) {
   let body    = [];
-  let prev;
+  let tail;
   let started = false;
 
-  yield* movePastSpaces(cursor);
+  if (!permittedOperators[' '])
+    yield* movePastSpaces(cursor);
   let opType, origOpType;
   let label;
   const operators = [];
@@ -48,7 +72,7 @@ function* bodyLoop(cursor, permittedOperators) {
       _debug && (yield '--beginning operational--;');
     }
 
-    prev && body.push(prev);
+    tail && body.push(tail);
     operators.push(cursor.pos());
     yield cursor.pos();
     cursor.advance();
@@ -65,11 +89,16 @@ function* bodyLoop(cursor, permittedOperators) {
     yield* movePastSpaces(cursor);
     if (!token) break;
     yield token;
-    prev = token;
+    tail = token;
   }
 
-  cursor.token({operators: operators});
-  if (label) cursor.token({label: label})
-  return {body, prev, origOpType};
+
+  return {
+    operators,
+    label,
+    body,
+    tail: tail,
+    origOpType
+  };
 }
 

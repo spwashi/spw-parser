@@ -1,5 +1,5 @@
-import {isContainerStart}      from "./checks/cursor/isContainerStart.mjs";
-import {movePastSpaces}        from "../../semantic/phrasal/motions/movePastSpaces.mjs";
+import {isContainerStart}             from "./checks/cursor/isContainerStart.mjs";
+import {movePastSpaces}               from "../../semantic/phrasal/motions/movePastSpaces.mjs";
 import {permittedConstituents}        from "./components/components.mjs";
 import {operational}                  from "../../pragmatic/operational/operational.mjs";
 import {containerDelimitingOperators} from "../../pragmatic/operational/operators/operators.mjs";
@@ -28,29 +28,28 @@ export function* container(startingCursor, activeTok) {
   const label     = operator.label?.key;
   const headToken = operator;
 
-  if (headToken) yield headToken;
-
   let {tailToken, body} = yield* bodyLoop(cursor, head, label);
 
   _debug && (yield '--exiting container--');
   startingCursor.setOffset(cursor.offset);
 
   return cursor.token({
+                        key:  [headToken?.key, ...body?.map(node => node?.key) || [], tailToken?.key].join(''),
                         head: headToken,
                         body: body,
                         tail: tailToken
                       });
 }
 
-function* bodyLoop(cursor, head, label) {
+function* bodyLoop(cursor, headChar, label) {
   // leading spaces
 
   yield* movePastSpaces(cursor);
 
   // tail (expectation)
 
-  let tail, tailToken;
-  const endDelimiterChar = containerDelimitingOperators[head]?.opposite;
+  let tailToken;
+  const tailChar = containerDelimitingOperators[headChar]?.opposite;
 
   // body
 
@@ -61,8 +60,8 @@ function* bodyLoop(cursor, head, label) {
     yield* movePastSpaces(cursor);
 
     // tail delimiter check
-    if ((cursor.curr() === endDelimiterChar) && (tail = cursor.curr())) {
-      const _tailToken = yield* operational(cursor, null, containerDelimitingOperators);
+    if ((cursor.curr() === tailChar)) {
+      const _tailToken = yield* operational(cursor, null, {[tailChar]: containerDelimitingOperators[tailChar]});
       const tailLabel  = _tailToken.label?.key;
 
       if ((tailLabel && label) && (tailLabel !== label)) {
@@ -74,13 +73,24 @@ function* bodyLoop(cursor, head, label) {
       break;
     }
 
+
+    yield* movePastSpaces(cursor);
     // resolve tokens
-    let token = false;
+    let token = false, prev;
     for (let generator of permittedConstituents) {
       token = yield* generator(cursor, token);
-    }
 
-    if (!token) break;
+      if (!token && prev) {
+        token = prev;
+        break;
+      }
+      prev = token;
+    }
+    yield* movePastSpaces(cursor);
+
+    if (!token) {
+      break;
+    }
     yield token;
 
     body.push(token);

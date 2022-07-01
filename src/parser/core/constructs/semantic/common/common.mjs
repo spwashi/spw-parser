@@ -15,27 +15,29 @@ export function* common(startingCursor, activeTok) {
   const cursor = new Cursor(startingCursor);
   cursor.token({kind: 'common'});
 
-  let {body, operators, curr} = yield* bodyLoop(cursor, activeTok);
-
-  if (body.length === 1) {
-    return curr !== cursor.pos().offset ? false : activeTok;
+  let {head, body, operators, tail} = yield* bodyLoop(cursor, activeTok);
+  if (!operators.length) {
+    return head;
   }
 
   startingCursor.setOffset(cursor.offset);
 
   _debug && (yield '--exiting common--');
 
+  body = body.length ? body : undefined;
   return cursor.token({
+                        key:       [head?.key, ...body?.map((n) => n?.key) || [], tail?.key].join(' , '),
+                        head:      head,
+                        body:      body,
+                        tail:      tail,
                         operators: operators,
-                        body:      body.length ? body : undefined,
                       });
 }
 
-function* bodyLoop(cursor, activeTok) {
-  let body      = [activeTok];
+function* bodyLoop(cursor, head) {
+  let body      = [];
   let operators = [];
   let started   = false;
-  let curr      = cursor.pos().offset;
   while (isCommonDelimiter(cursor)) {
     if ((!started) && (started = true)) {
       _debug && (yield '--beginning common--;');
@@ -54,5 +56,6 @@ function* bodyLoop(cursor, activeTok) {
 
     body.push(token);
   }
-  return {body, operators, curr};
+  const tail = body.pop();
+  return {head, body, operators, tail};
 }
