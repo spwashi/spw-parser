@@ -12,7 +12,7 @@ function makeKey(token, context) {
     return list.push(item);
   }
 
-  const key = [head, ...body, tail,].reduce((obj, item, i) => {
+  const key = [head, ...body ?? [], tail,].reduce((obj, item) => {
     if (item) {
       addItemToList(item, obj.list);
     }
@@ -24,8 +24,8 @@ function makeKey(token, context) {
     return {...obj, i: obj.i + 1}
   }, {i: 0, list: []}).list;
 
-  return context.generation ? [context.getId(token, context), key.flat().filter(Boolean)].filter(Boolean)
-                            : [context.getId(token, context), key.flat().join('')].join('|')
+  return context.generation ? [context.getId(token), key.flat().filter(Boolean)].filter(Boolean)
+                            : [context.getId(token), key.flat().join('')].join('|')
 }
 
 export class Cursor {
@@ -54,8 +54,8 @@ export class Cursor {
     return this.input[this.offset];
   }
 
-  * scan(generators) {
-    let activeCursor = undefined;
+  * scan(generators, prev = undefined) {
+    let activeCursor = prev;
     for (const generator of generators) {
       const cursor = yield* generator(this, activeCursor);
       const token  = cursor ? cursor.token() : false;
@@ -98,12 +98,12 @@ export class Cursor {
       return this;
     }
     this.#token = Object.assign({
-                                  kind:     undefined,
-                                  proto:    undefined,
+                                  kind: undefined,
+                                  // proto:    undefined,
                                   identify: function (parent = {generation: -1, threshold: 1}) {
                                     const context = {
                                       makeKey: makeKey,
-                                      getId:   (token, context) => {
+                                      getId:   (token) => {
                                         switch (token.kind) {
                                           default:
                                             return token.cursor.start;
@@ -117,11 +117,11 @@ export class Cursor {
                                   get _key() {
                                     return this.identify();
                                   },
-                                  operators: undefined,
-                                  label:     undefined,
-                                  head:      undefined,
-                                  body:      [],
-                                  tail:      undefined,
+                                  // operators: undefined,
+                                  // label:     undefined,
+                                  // head:      undefined,
+                                  // body:      [],
+                                  // tail:      undefined,
                                 }, token, {cursor: this});
 
     return this;

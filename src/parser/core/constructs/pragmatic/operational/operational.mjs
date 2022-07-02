@@ -1,10 +1,9 @@
-import {getCursorOperatorType} from "./cursor/getCursorOperatorType.mjs";
 import {permittedConstituents} from "./components/components.mjs";
 import {movePastSpaces}        from "../../semantic/phrasal/motions/movePastSpaces.mjs";
-import {readLabel}             from "./cursor/motions/readLabel.mjs";
 import {pragmaticOperators}    from "./operators/operators.mjs";
 import {Cursor}                from "../../../cursor.mjs";
 import {_debug}                from "../../../constants.mjs";
+import {buildOperator}         from "./buildOperator.mjs";
 
 export function* operational(start, prev, domain = pragmaticOperators) {
   const cursor = new Cursor(start, prev);
@@ -46,49 +45,37 @@ export function* operational(start, prev, domain = pragmaticOperators) {
   return cursor;
 }
 
-function* buildOperator(start) {
-  const cursor = new Cursor(start);
-  cursor.token({kind: 'operator'});
-  const operator = [cursor.pos()]
-  yield cursor.pos();
-  cursor.advance();
-  const [_, label] = yield* readLabel(cursor);
-  label && operator.push(_, label.token());
-  const spaces = yield* movePastSpaces(cursor);
-  spaces.length && operator.push(spaces[0]);
-  cursor.token({
-                 body: operator
-               })
-  return cursor;
-}
-
 function* bodyLoop(cursor, prev, permittedOperators) {
-  const head  = prev && prev.token();
-  let body    = [];
-  let started = false;
+  const head = prev && prev.token();
+  const body = [];
 
   if (!permittedOperators[' ']) {
     yield* movePastSpaces(cursor);
   }
 
-  let opType, origOpType;
   const operators = [];
-  while ((opType = getCursorOperatorType(cursor, permittedOperators))) {
-    if ((!started) && (started = true)) {
-      origOpType = opType;
-      cursor.token({proto: origOpType});
-      _debug && (yield '--beginning operational--;');
-    }
+  let operator, origOpType;
+  while (operator = yield* cursor.scan([buildOperator(permittedOperators)])) {
+    if (!operator) continue;
+    if (!operator?.token()) break;
 
-
-    const operator = yield* cursor.scan([buildOperator]);
-    if (!operator?.token()) {
-      break;
-    }
+    _debug && (yield '--beginning operational--;');
     operators.push(operator.token());
-    if (opType.kind === 'delimiter') break;
 
-    const _cursor = yield* cursor.scan(permittedConstituents);
+    const proto = operator.token().proto;
+
+    origOpType = origOpType ? origOpType : proto;
+    yield {info: {proto}};
+
+    if (proto.open) {
+      const spaces = yield* movePastSpaces(operator);
+      spaces.length && body.push(spaces[0]);
+    }
+    if (!proto.close) {
+      yield* movePastSpaces(cursor);
+    }
+
+    const _cursor = yield* cursor.scan(permittedConstituents, proto.close ? operator : undefined);
     let token     = _cursor ? _cursor.token() : null;
     if (!token) break
     body.push(token);
@@ -97,9 +84,10 @@ function* bodyLoop(cursor, prev, permittedOperators) {
 
   const tail = body.pop();
   return {
-    head:       head,
-    body:       body,
-    tail:       tail,
+    head: head,
+    body: body,
+    tail: tail,
+
     operators:  operators,
     origOpType: origOpType
   };

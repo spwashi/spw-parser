@@ -3,7 +3,7 @@ import {movePastSpaces}               from "../../semantic/phrasal/motions/moveP
 import {Cursor}                       from "../../../cursor.mjs";
 import {_debug}                       from "../../../constants.mjs";
 import {containerDelimitingOperators} from "../../pragmatic/operational/operators/operators.mjs";
-import {delimiter}                    from "../../pragmatic/operational/delimiter.mjs";
+import {buildOperator}                from "../../pragmatic/operational/buildOperator.mjs";
 import {permittedConstituents}        from "./components/components.mjs";
 
 export function* container(start, prev) {
@@ -31,13 +31,16 @@ export function* container(start, prev) {
 }
 
 function* bodyLoop(cursor) {
-  const operator = yield* cursor.scan([delimiter(containerDelimitingOperators)]);
+  let open       = containerDelimitingOperators.open;
+  const operator = yield* cursor.scan([buildOperator(open)]);
   const head     = operator?.token();
   const label    = head?.label?.key;
-  yield {cursor}
+  yield {head}
+  const close = containerDelimitingOperators.close._inverse[head.proto.key];
+
+  if (!close) throw new Error('could not resolve type');
 
   yield* movePastSpaces(cursor);
-  const tailChar = head?.proto?.opposite;
 
   let started;
   let tail;
@@ -46,7 +49,7 @@ function* bodyLoop(cursor) {
     if ((!started) && (started = true)) _debug && (yield '--beginning container--;');
     yield* movePastSpaces(cursor);
 
-    const delimiterScanner = yield* cursor.scan([delimiter({[tailChar]: containerDelimitingOperators[tailChar]})]);
+    const delimiterScanner = yield* cursor.scan([buildOperator({[close.key]: close})]);
 
     const _delimiter = delimiterScanner?.token();
     const tailLabel  = _delimiter?.label?.key;

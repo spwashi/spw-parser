@@ -4,29 +4,46 @@ export const pragmaticOperators =
                  '@': {name: 'perspective', key: '@', kind: 'pragmatic'},
                };
 
-const openConcept   = {name: 'open-conceptual', key: '<', opposite: '>', kind: 'delimiter'};
-const openLocation  = {name: 'open-locational', key: '(', opposite: ')', kind: 'delimiter'};
-const openStructure = {name: 'open-structural', key: '{', opposite: '}', kind: 'delimiter'};
-const openEssence   = {name: 'open-essential ', key: '[', opposite: ']', kind: 'delimiter'};
+const openConcept   = {name: 'open-conceptual', key: '<', opposite: '>', kind: 'delimiter', open: true};
+const openLocation  = {name: 'open-locational', key: '(', opposite: ')', kind: 'delimiter', open: true};
+const openStructure = {name: 'open-structural', key: '{', opposite: '}', kind: 'delimiter', open: true};
+const openEssence   = {name: 'open-essential ', key: '[', opposite: ']', kind: 'delimiter', open: true};
 
-const closeConcept   = {name: 'close-conceptual', key: '>', opposite: '<', kind: 'delimiter'};
-const closeLocation  = {name: 'close-locational', key: ')', opposite: '(', kind: 'delimiter'};
-const closeStructure = {name: 'close-structural', key: '}', opposite: '{', kind: 'delimiter'};
-const closeEssence   = {name: 'close-essential ', key: ']', opposite: '[', kind: 'delimiter'};
+const closeConcept   = {name: 'close-conceptual', key: '>', opposite: '<', kind: 'delimiter', close: true};
+const closeLocation  = {name: 'close-locational', key: ')', opposite: '(', kind: 'delimiter', close: true};
+const closeStructure = {name: 'close-structural', key: '}', opposite: '{', kind: 'delimiter', close: true};
+const closeEssence   = {name: 'close-essential ', key: ']', opposite: '[', kind: 'delimiter', close: true};
 
+const openContainerDelimitingOperators    =
+        {
+          '<': openConcept,
+          '(': openLocation,
+          '{': openStructure,
+          '[': openEssence,
+
+          _inverse: {
+            '>': openConcept,
+            ')': openLocation,
+            '}': openStructure,
+            ']': openEssence,
+          }
+        };
+const closeContainerDelimitingOperators   = {
+  '>':      closeConcept,
+  ')':      closeLocation,
+  '}':      closeStructure,
+  ']':      closeEssence,
+  _inverse: {
+    '<': closeConcept,
+    '(': closeLocation,
+    '{': closeStructure,
+    '[': closeEssence,
+  }
+};
 export const containerDelimitingOperators =
                {
-                 '<': openConcept,
-                 '>': closeConcept,
-
-                 '(': openLocation,
-                 ')': closeLocation,
-
-                 '{': openStructure,
-                 '}': closeStructure,
-
-                 '[': openEssence,
-                 ']': closeEssence,
+                 open:  openContainerDelimitingOperators,
+                 close: closeContainerDelimitingOperators
                };
 
 export const commonDelimitingOperators  = {

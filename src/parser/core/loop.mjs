@@ -21,7 +21,8 @@ export function* loopGenerators(start, generators = Object.values(allConstructs)
     }
 
     if (prevCursor?.offset === cursor.offset) {
-      _debug && (yield '[cursor did not change positions]]');
+      _debug && (yield '[cursor did not change positions]');
+      cursor = false;
       break;
     }
 

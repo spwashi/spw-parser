@@ -7,7 +7,7 @@ let out =/**/ {
     ],
   '--nominal':
     [
-      "one"
+      "one",
     ],
   '--numeric':
     [

@@ -3,8 +3,8 @@ import {permittedConstituents}     from "./components/components.mjs";
 import {movePastSpaces}            from "../phrasal/motions/movePastSpaces.mjs";
 import {Cursor}                    from "../../../cursor.mjs";
 import {commonDelimitingOperators} from "../../pragmatic/operational/operators/operators.mjs";
-import {_debug}                    from "../../../constants.mjs";
-import {delimiter}                 from "../../pragmatic/operational/delimiter.mjs";
+import {_debug}        from "../../../constants.mjs";
+import {buildOperator} from "../../pragmatic/operational/buildOperator.mjs";
 
 export function* common(start, prev) {
   const cursor = new Cursor(start, prev);
@@ -40,7 +40,7 @@ function* bodyLoop(cursor, prev) {
     }
     yield* movePastSpaces(cursor);
 
-    const operatorScanner = yield* cursor.scan([delimiter(commonDelimitingOperators)]);
+    const operatorScanner = yield* cursor.scan([buildOperator(commonDelimitingOperators)]);
     const operator        = operatorScanner?.token();
     if (!operator) break;
     operators.push(operator);

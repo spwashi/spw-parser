@@ -6,7 +6,10 @@ import {_debug}                from "../../../constants.mjs";
 
 export function* phrasal(start, prev) {
   if (!prev) {
-    _debug && (yield '[not phrasal: no head]');
+    _debug && (yield {
+      message: '[not phrasal: no head]',
+      cursors: {start, prev}
+    });
     return false;
   }
 
@@ -16,12 +19,24 @@ export function* phrasal(start, prev) {
   const {head, body, tail, operators} = yield* bodyLoop(cursor, prev);
 
   if (!tail) {
-    _debug && (yield '[not phrasal: missing tail]');
+    _debug && (yield {
+      message: '[not phrasal: missing tail]',
+      cursors: {start, prev, cursor},
+      info:    {
+        head,
+        body,
+        tail,
+        operators,
+      }
+    });
 
     return prev ?? false;
   }
 
-  _debug && (yield '--exiting phrasal--');
+  _debug && (yield {
+    message: '--exiting phrasal--',
+    info:    {success: true}
+  });
 
   cursor.token({
                  head:      head,
