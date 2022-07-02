@@ -13,12 +13,14 @@ export function* common(start, prev) {
   const {head, body, tail, operators} = yield* bodyLoop(cursor, prev);
 
   if (!operators.length) {
+    _debug && (yield {
+      message: 'not common',
+      miss:    'no operators'
+    });
     return prev ?? false;
   }
 
-  _debug && (yield {
-    message: '--resolving common--'
-  });
+  _debug && (yield {message: 'resolving common'});
 
   cursor.token({
                  head:      head,
@@ -37,11 +39,7 @@ function* bodyLoop(cursor, prev) {
   const operators = [];
   let started     = false;
   while (isCommonDelimiter(cursor)) {
-    if ((!started) && (started = true)) {
-      _debug && (yield {
-        message: '--beginning common--;'
-      });
-    }
+    if ((!started) && (started = true)) _debug && (yield {message: 'beginning common'});
     yield* movePastSpaces(cursor);
 
     const operatorScanner = yield* cursor.scan([buildOperator(commonDelimitingOperators)]);

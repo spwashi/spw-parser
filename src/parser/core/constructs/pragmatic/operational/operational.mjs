@@ -19,8 +19,8 @@ export function* operational(start, prev, domain = pragmaticOperators) {
 
   if (!tail) {
     _debug && (yield {
-      message: '[not operational]',
-      cause:   'no tail',
+      message: 'not operational',
+      miss:    'missing a tail component',
       cursor:  cursor,
       info:    {
         head: head,
@@ -36,7 +36,7 @@ export function* operational(start, prev, domain = pragmaticOperators) {
   }
 
   _debug && (yield {
-    message: '--resolving operational--',
+    message: 'resolving operational',
     cursor:  cursor
   });
 
@@ -63,9 +63,7 @@ function* bodyLoop(cursor, prev, permittedOperators) {
     if (!operator) continue;
     if (!operator?.token()) break;
 
-    _debug && (yield {
-      message: '--beginning operational--;',
-    });
+    _debug && (yield {message: 'beginning operational',});
     operators.push(operator.token());
 
     const proto = operator.token().proto;

@@ -7,24 +7,28 @@ import {buildOperator}                from "../../pragmatic/operational/buildOpe
 import {permittedConstituents}        from "./components/components.mjs";
 
 export function* container(start, prev) {
+  const cursor = new Cursor(start, prev)
+  cursor.token({kind: 'container'});
+
   if (prev) {
     _debug && (yield {
-      message: '[passing container: prev]'
+      message: 'not container',
+      miss:    'prev'
     });
     return prev;
   }
-  const cursor = new Cursor(start)
-  cursor.token({kind: 'container'});
 
   if (!cursorStartsContainer(start)) {
     _debug && (yield {
-      message: '[not container]'
+      message: 'not container',
+      miss:    'cursor cannot start container'
     });
     return false;
   }
 
   const {head, body, tail} = yield* bodyLoop(cursor);
 
+  _debug && (yield {message: 'resolving container'});
   cursor.token({
                  head: head,
                  body: body,
@@ -50,9 +54,7 @@ function* bodyLoop(cursor) {
   let tail;
   const body = [];
   while (cursor.curr()) {
-    if ((!started) && (started = true)) _debug && (yield {
-      message: '--beginning container--;'
-    });
+    if ((!started) && (started = true)) _debug && (yield {message: 'beginning container'});
     yield* movePastSpaces(cursor);
 
     const delimiterScanner = yield* cursor.scan([buildOperator({[close.key]: close})]);

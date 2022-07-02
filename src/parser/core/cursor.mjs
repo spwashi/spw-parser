@@ -114,7 +114,7 @@ export class Cursor {
                                     };
                                     return context.makeKey(this, context)
                                   },
-                                  get key() {
+                                  get _key() {
                                     return this.identify();
                                   },
                                   // operators: undefined,

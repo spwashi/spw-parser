@@ -4,12 +4,14 @@ import {Cursor}                 from "../../../cursor.mjs";
 import {_debug}                 from "../../../constants.mjs";
 
 export function* numeric(start, prev) {
-  const cursor = new Cursor(start);
+  const cursor = new Cursor(start, prev);
   cursor.token({kind: 'numeric'});
 
   if (prev) {
     _debug && (yield {
-      message: '[passing numeric: following prev]'
+      message: 'not numeric',
+      miss:    'cannot follow prev',
+      cursors: {start, prev}
     });
     return prev;
   }
@@ -18,14 +20,13 @@ export function* numeric(start, prev) {
 
   if (!(_integral.length || _fractional.length)) {
     _debug && (yield {
-      message: '[not numeric: no integral or fractional components]'
+      message: 'not numeric',
+      miss:    'no integral or fractional components',
     });
     return false;
   }
 
-  _debug && (yield {
-    message: '--resolving numeric--'
-  });
+  _debug && (yield {message: 'resolving numeric'});
 
   const integral   = _integral.length ? parseInt(_integral.join('')) : _integral;
   const fractional = _fractional.length ? parseFloat(`.${_fractional.join()}`) : undefined;
@@ -46,7 +47,8 @@ function* bodyLoop(cursor) {
     if ((!started) && (started = true)) {
       _check = cursorContinuesNumeric;
       _debug && (yield {
-        message: '--beginning numeric--;'
+        message: 'beginning numeric',
+        info:    {component: 'integral'}
       });
     }
 
@@ -63,7 +65,8 @@ function* bodyLoop(cursor) {
       if (!started && (started = true)) {
         _check = cursorContinuesNumeric;
         _debug && (yield {
-          message: '--continuing numeric: fractional--;'
+          message: 'continuing numeric',
+          info:    {component: 'fractional'}
         });
       }
       fractional.push(cursor.curr());

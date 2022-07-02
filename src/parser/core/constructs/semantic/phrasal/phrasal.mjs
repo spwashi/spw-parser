@@ -5,22 +5,24 @@ import {Cursor}                from "../../../cursor.mjs";
 import {_debug}                from "../../../constants.mjs";
 
 export function* phrasal(start, prev) {
+  const cursor = new Cursor(start, prev);
+  cursor.token({kind: 'phrasal'});
+
   if (!prev) {
     _debug && (yield {
-      message: '[not phrasal: no head]',
+      message: 'not phrasal',
+      miss:    'no head',
       cursors: {start, prev}
     });
     return false;
   }
 
-  const cursor = new Cursor(start, prev);
-  cursor.token({kind: 'phrasal'});
-
   const {head, body, tail, operators} = yield* bodyLoop(cursor, prev);
 
   if (!tail) {
     _debug && (yield {
-      message: '[not phrasal: missing tail]',
+      message: 'not phrasal',
+      miss:    'no tail',
       cursors: {start, prev, cursor},
       info:    {
         head,
@@ -34,8 +36,7 @@ export function* phrasal(start, prev) {
   }
 
   _debug && (yield {
-    message: '--resolving phrasal--',
-    info:    {success: true}
+    message: 'resolving phrasal',
   });
 
   cursor.token({
@@ -54,11 +55,7 @@ function* bodyLoop(cursor, prev) {
   const operators = [];
   let started     = false;
   while (isPhrasalDelimiter(cursor)) {
-    if ((!started) && (started = true)) {
-      _debug && (yield {
-        message: '--beginning phrasal--;'
-      });
-    }
+    if ((!started) && (started = true)) _debug && (yield {message: 'beginning ordinal'});
 
     const operator = yield* movePastSpaces(cursor);
     operators.push(operator);

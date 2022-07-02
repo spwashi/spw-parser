@@ -7,7 +7,8 @@ export function buildOperator(permittedOperators) {
     const proto = getCursorOperatorType(start, permittedOperators);
     if (!proto) {
       yield {
-        message: 'could not resolve prototype',
+        message: 'not an operator',
+        miss:    'no prototype',
         cursors: {start},
         info:    {permittedOperators, curr: start.curr()}
       }

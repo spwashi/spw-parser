@@ -10,7 +10,8 @@ export function* nominal(start, prev) {
 
   if (prev) {
     _debug && (yield {
-      message: '[passing nominal]'
+      message: 'not nominal',
+      miss:    'cannot follow prev'
     });
     return prev;
   }
@@ -19,14 +20,13 @@ export function* nominal(start, prev) {
 
   if (!key.length) {
     _debug && (yield {
-      message: '[not nominal]'
+      message: 'not nominal',
+      miss:    'no key',
     });
     return false;
   }
 
-  _debug && (yield {
-    message: '--resolving nominal--'
-  });
+  _debug && (yield {message: 'resolving nominal'});
 
   const head = {key: key.join('')};
   cursor.token({head: head});
@@ -42,9 +42,7 @@ function* bodyLoop(cursor) {
   const key  = [];
   let _check = cursorStartsNominal, started;
   while (cursor.curr() && _check(cursor.curr())) {
-    if ((!started) && (started = true)) _debug && (yield {
-      message: '--beginning nominal--'
-    });
+    if ((!started) && (started = true)) _debug && (yield {message: 'beginning nominal'});
     key.push(cursor.curr());
 
     yield cursor.pos();
