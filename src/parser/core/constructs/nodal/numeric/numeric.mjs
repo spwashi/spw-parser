@@ -1,32 +1,31 @@
 import {cursorBeginsNumeric}    from "./cursor/cursorBeginsNumeric.mjs";
 import {cursorContinuesNumeric} from "./cursor/cursorContinuesNumeric.mjs";
 import {Cursor}                 from "../../../cursor.mjs";
-import {_debug}                 from "../../../constants.mjs";
 
 export function* numeric(start, prev) {
   const cursor = new Cursor(start, prev);
   cursor.token({kind: 'numeric'});
 
   if (prev) {
-    _debug && (yield {
-      message: 'not numeric',
-      miss:    'cannot follow prev',
-      cursors: {start, prev}
-    });
+    yield* cursor.log({
+                        message: 'not numeric',
+                        miss:    'cannot follow prev',
+                        cursors: {start, prev}
+                      });
     return prev;
   }
 
   let {integral: _integral, fractional: _fractional} = yield* bodyLoop(cursor);
 
   if (!(_integral.length || _fractional.length)) {
-    _debug && (yield {
-      message: 'not numeric',
-      miss:    'no integral or fractional components',
-    });
+    yield* cursor.log({
+                        message: 'not numeric',
+                        miss:    'no integral or fractional components',
+                      });
     return false;
   }
 
-  _debug && (yield {message: 'resolving numeric'});
+  yield* cursor.log({message: 'resolving numeric'});
 
   const integral   = _integral.length ? parseInt(_integral.join('')) : _integral;
   const fractional = _fractional.length ? parseFloat(`.${_fractional.join()}`) : undefined;
@@ -46,32 +45,30 @@ function* bodyLoop(cursor) {
   while (_check(cursor)) {
     if ((!started) && (started = true)) {
       _check = cursorContinuesNumeric;
-      _debug && (yield {
-        message: 'beginning numeric',
-        info:    {component: 'integral'}
-      });
+      yield* cursor.log({
+                          message: 'beginning numeric',
+                          info:    {component: 'integral'}
+                        });
     }
 
     integral.push(cursor.curr());
-    yield cursor.pos();
-    cursor.advance();
+    yield* cursor.take();
   }
 
   let fractional = [];
   if (cursor.curr() === '.') {
-    cursor.advance()
+    yield* cursor.take()
     let started = false, _check = cursorContinuesNumeric;
     while (_check(cursor)) {
       if (!started && (started = true)) {
         _check = cursorContinuesNumeric;
-        _debug && (yield {
-          message: 'continuing numeric',
-          info:    {component: 'fractional'}
-        });
+        yield* cursor.log({
+                            message: 'continuing numeric',
+                            info:    {component: 'fractional'}
+                          });
       }
       fractional.push(cursor.curr());
-      yield cursor.pos();
-      cursor.advance();
+      yield* cursor.take();
     }
   }
   return {

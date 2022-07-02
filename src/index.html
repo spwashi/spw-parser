@@ -12,6 +12,7 @@
             crossorigin="anonymous" referrerpolicy="no-referrer"></script>
     <script src="lib/d3.js"></script>
     <script type="module" src="parser/parse.mjs"></script>
+    <script type="module" src="parser/core/cursor.mjs"></script>
 </head>
 <body>
     <div id="root"></div>
@@ -32,7 +33,11 @@
         <output id="output" name="parsed"></output>
     </form>
     <script>
-      let generator;
+      let ref = {
+        generator: undefined,
+        tokens:    [],
+        chars:     []
+      };
       let error;
 
       const advanceButton = document.getElementById('next');
@@ -52,7 +57,9 @@
         const text         = formInput.value;
         error              = false;
         all                = [];
-        generator          = parse(text, true);
+        ref.generator      = parse(text, true);
+        ref.tokens         = [];
+        ref.chars          = [];
         playButton.onclick = playAll;
         return text;
       }
@@ -165,49 +172,65 @@
         }
       }
 
+
+      function handleCompletion() {
+        output.value = JSON.stringify({tokens: ref.tokens, chars: ref.chars}, null, 3);
+        resetAdvanceButton();
+        resetPlayButton();
+      }
+
       function advance() {
+        const generator = ref.generator;
+
         if (!generator || error) {
           return {
             done: true
           }
         }
-        let value, status = 'success';
-        let done          = true;
+        let _yielded, status = 'success';
+        let done             = false;
         try {
           let {value: out, done: _done} = generator.next();
 
-          done = _done;
-          if (!_done) {
-            value = out;
-            console.log(value)
-            if (out === false) {
-              // throw new Error('parser returned false');
-            }
-            all.push(out);
-            out && svg.selectAll('.char')
-                      .style('fill', d => (d.offset === out.offset) ? 'white' : 'black')
-                      .select('rect')
-                      .style('fill', d => (d.offset === out.offset) ? 'red' : 'white');
+          if (_done) {
+            _yielded = [...all].reverse();
+            done     = _done;
           } else {
-            value = [...all].reverse();
-            // value = [...all.filter(n => n?.kind)].reverse();
-            // value = all[all.length - 1];
+            _yielded = out;
+            if (out === false) {
+              throw new Error('parser returned false');
+            }
           }
         } catch (e) {
-          error  = true;
+          error = true;
           console.log(e);
-          value  = e.message;
-          status = 'error';
+          _yielded = e.message;
+          status   = 'error';
         }
 
-        if (error || done) {
-          resetAdvanceButton();
-          resetPlayButton();
-        }
 
         output.className = status;
-        output.value     = JSON.stringify(value, null, 3);
-        return {value, status, done: done};
+        if (error || done) {
+          handleCompletion();
+        } else {
+          output.value = JSON.stringify(_yielded, null, 3);
+          if (spwCursor.isCursor(_yielded)) {
+            ref.tokens.push(_yielded.token());
+          } else if (spwCursor.isCursorPosition(_yielded)) {
+            ref.chars.push(_yielded);
+            _yielded && svg.selectAll('.char')
+                           .style('fill', d => (d.offset === _yielded.offset) ? 'white' : 'black')
+                           .select('rect')
+                           .style('fill', d => (d.offset === _yielded.offset) ? 'red' : 'white');
+          } else {
+            if (typeof _yielded === 'string') {
+              console.log(_yielded);
+            }
+            advance();
+          }
+        }
+
+        return {value: _yielded, status, done: done};
       }
     </script>
 </body>

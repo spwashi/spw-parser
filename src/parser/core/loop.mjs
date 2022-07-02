@@ -1,55 +1,69 @@
 import {allConstructs} from "./constructs/constructs.mjs";
-import {_debug}        from "./constants.mjs";
+
+function* checkCursor(cursor, prevCursor) {
+  const currentToken = cursor ? cursor.token() : null;
+
+  if (!currentToken && prevCursor) {
+    yield* cursor.log({
+                        error:   true,
+                        message: 'token stream broke',
+                        info:    {currentToken, prevCursor}
+                      });
+    throw new Error("token stream broke");
+  }
+
+  if (prevCursor?.offset === cursor.offset) {
+    yield* cursor.log({
+                        error:   true,
+                        message: 'cursor did not change positions'
+                      });
+    throw new Error("token stream broke")
+  }
+  return cursor;
+}
 
 export function* loopGenerators(start, generators = Object.values(allConstructs)) {
-  _debug && (yield {message: 'beginning loop'});
-
-  let prevCursor;
   let cursor = start;
+  let error  = undefined;
+  yield* cursor.log({message: 'beginning loop'});
+
+  let prevCursor = undefined;
   while (cursor.curr()) {
     cursor = yield* cursor.scan(generators);
 
     if (!cursor) {
-      _debug && (yield {
+      yield {
         error:   true,
         message: 'did not generate a token'
-      });
+      };
       break;
     }
 
-    const currentToken = cursor ? cursor.token() : null;
-
-    if (!currentToken && prevCursor) {
-      _debug && (yield {
-        error:   true,
-        message: 'token stream broke',
-        info:    {currentToken, prevCursor}
-      });
+    try {
+      prevCursor = yield* checkCursor(cursor, prevCursor);
+    } catch (e) {
       cursor = false;
+      error  = e;
       break;
     }
-
-    if (prevCursor?.offset === cursor.offset) {
-      _debug && (yield {
-        error:   true,
-        message: 'cursor did not change positions'
-      });
-      cursor = false;
-      break;
-    }
-
-    prevCursor = cursor;
   }
 
 
   if (cursor) {
-    _debug && (yield {
-      success: true,
-      message: 'ending loop',
-    });
+    yield* cursor.log({
+                        success: true,
+                        message: 'ending loop',
+                      });
     yield cursor.token();
     return cursor.token();
   } else {
+    yield {
+      success: false,
+      error:   true,
+      message: {
+        error
+      }
+    };
     yield false;
     return false;
   }

@@ -1,3 +1,5 @@
+import {_debug} from "./constants.mjs";
+
 function makeKey(token, context) {
   const operators = token.operators ?? [];
   const head      = token.head;
@@ -64,13 +66,30 @@ export class Cursor {
       }
       this.setOffset(cursor);
 
-      if (token !== activeCursor?.token())
-        yield token;
+      if (token !== activeCursor?.token()) {
+        yield cursor;
+      }
 
       activeCursor = cursor;
     }
 
     return activeCursor;
+  }
+
+  * log(item) {
+    if (_debug) {
+      let tabs = '\t'.repeat(this.level);
+      yield `${tabs}${this}`;
+      yield `${tabs}\t${item.message}`;
+      if (item.miss) yield `${tabs}\t\treason: ${item.miss}`;
+    }
+  }
+
+  * take() {
+    const curr = this.curr();
+    yield this.pos();
+    this.advance();
+    return curr;
   }
 
   advance() {
@@ -127,6 +146,19 @@ export class Cursor {
     return this;
   }
 
+  static isCursorPosition(cursor) {
+    return typeof cursor.offset !== 'undefined' && cursor.kind === 'char';
+  }
+
+  static isCursor(cursor) {
+    return typeof cursor?.start !== 'undefined';
+  }
+
+  toString() {
+    const json = this.toJSON();
+    return `(line: ${json.start.line}, col: ${json.start.col})`
+  }
+
   toJSON() {
     const offset     = this.offset - 1;
     const startSplit = this.input.slice(0, this.start).split('\n');
@@ -151,3 +183,4 @@ export class Cursor {
   }
 }
 
+if (typeof window !== "undefined") window.spwCursor = Cursor;

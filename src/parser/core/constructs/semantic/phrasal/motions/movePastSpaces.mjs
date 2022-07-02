@@ -3,9 +3,8 @@ import {isPhrasalDelimiter} from "../checks/cursor/isPhrasalDelimiter.mjs";
 export function* movePastSpaces(cursor) {
   const spaces = [];
   while (isPhrasalDelimiter(cursor)) {
-    yield cursor.pos();
-    spaces.push(cursor.pos());
-    cursor.advance();
+    const char = yield* cursor.take();
+    spaces.push(char);
   }
   return spaces;
 }

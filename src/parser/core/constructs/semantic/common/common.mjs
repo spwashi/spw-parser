@@ -3,24 +3,25 @@ import {permittedConstituents}     from "./components/components.mjs";
 import {movePastSpaces}            from "../phrasal/motions/movePastSpaces.mjs";
 import {Cursor}                    from "../../../cursor.mjs";
 import {commonDelimitingOperators} from "../../pragmatic/operational/operators/operators.mjs";
-import {_debug}                    from "../../../constants.mjs";
 import {buildOperator}             from "../../pragmatic/operational/buildOperator.mjs";
 
 export function* common(start, prev) {
   const cursor = new Cursor(start, prev);
   cursor.token({kind: 'common'});
 
+  yield* cursor.log({message: 'checking common'});
+
   const {head, body, tail, operators} = yield* bodyLoop(cursor, prev);
 
   if (!operators.length) {
-    _debug && (yield {
-      message: 'not common',
-      miss:    'no operators'
-    });
+    yield* cursor.log({
+                        message: 'not common',
+                        miss:    'no operators'
+                      });
     return prev ?? false;
   }
 
-  _debug && (yield {message: 'resolving common'});
+  yield* cursor.log({message: 'resolving common'});
 
   cursor.token({
                  head:      head,
@@ -39,7 +40,7 @@ function* bodyLoop(cursor, prev) {
   const operators = [];
   let started     = false;
   while (isCommonDelimiter(cursor)) {
-    if ((!started) && (started = true)) _debug && (yield {message: 'beginning common'});
+    if ((!started) && (started = true)) yield* cursor.log({message: 'beginning common'});
     yield* movePastSpaces(cursor);
 
     const operatorScanner = yield* cursor.scan([buildOperator(commonDelimitingOperators)]);

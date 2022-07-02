@@ -1,7 +1,6 @@
 import {cursorStartsContainer}        from "./cursor/cursorStartsContainer.mjs";
 import {movePastSpaces}               from "../../semantic/phrasal/motions/movePastSpaces.mjs";
 import {Cursor}                       from "../../../cursor.mjs";
-import {_debug}                       from "../../../constants.mjs";
 import {containerDelimitingOperators} from "../../pragmatic/operational/operators/operators.mjs";
 import {buildOperator}                from "../../pragmatic/operational/buildOperator.mjs";
 import {permittedConstituents}        from "./components/components.mjs";
@@ -10,25 +9,27 @@ export function* container(start, prev) {
   const cursor = new Cursor(start, prev)
   cursor.token({kind: 'container'});
 
+  yield* cursor.log({message: 'checking container'});
+
   if (prev) {
-    _debug && (yield {
-      message: 'not container',
-      miss:    'prev'
-    });
+    yield* cursor.log({
+                        message: 'not container',
+                        miss:    'prev'
+                      });
     return prev;
   }
 
   if (!cursorStartsContainer(start)) {
-    _debug && (yield {
-      message: 'not container',
-      miss:    'cursor cannot start container'
-    });
+    yield* cursor.log({
+                        message: 'not container',
+                        miss:    'cursor cannot start container'
+                      });
     return false;
   }
 
   const {head, body, tail} = yield* bodyLoop(cursor);
 
-  _debug && (yield {message: 'resolving container'});
+  yield* cursor.log({message: 'resolving container'});
   cursor.token({
                  head: head,
                  body: body,
@@ -43,8 +44,7 @@ function* bodyLoop(cursor) {
   const operator = yield* cursor.scan([buildOperator(open)]);
   const head     = operator?.token();
   const label    = head?.label?.key;
-  yield {head}
-  const close = containerDelimitingOperators.close._inverse[head.proto.key];
+  const close    = containerDelimitingOperators.close._inverse[head.proto.key];
 
   if (!close) throw new Error('could not resolve type');
 
@@ -54,7 +54,7 @@ function* bodyLoop(cursor) {
   let tail;
   const body = [];
   while (cursor.curr()) {
-    if ((!started) && (started = true)) _debug && (yield {message: 'beginning container'});
+    if ((!started) && (started = true)) yield* cursor.log({message: 'beginning container'});
     yield* movePastSpaces(cursor);
 
     const delimiterScanner = yield* cursor.scan([buildOperator({[close.key]: close})]);

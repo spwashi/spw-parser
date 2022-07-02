@@ -6,9 +6,7 @@ export function* readLabel(cursor) {
   let label = false;
   let char;
   if (cursor.curr() === '_') {
-    char = cursor.pos();
-    yield char;
-    cursor.advance();
+    char  = yield* cursor.take();
     label = yield* cursor.scan([nominal, numeric, container]);
   }
   return [char, label];

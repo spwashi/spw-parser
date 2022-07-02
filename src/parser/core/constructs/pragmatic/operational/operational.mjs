@@ -2,15 +2,22 @@ import {permittedConstituents} from "./components/components.mjs";
 import {movePastSpaces}        from "../../semantic/phrasal/motions/movePastSpaces.mjs";
 import {pragmaticOperators}    from "./operators/operators.mjs";
 import {Cursor}                from "../../../cursor.mjs";
-import {_debug}                from "../../../constants.mjs";
 import {buildOperator}         from "./buildOperator.mjs";
 
 export function* operational(start, prev, domain = pragmaticOperators) {
   const cursor = new Cursor(start, prev);
   cursor.token({kind: 'operational'});
 
+  yield* cursor.log({message: 'checking operational'});
+
   const {head, body, tail, operators, initialProto,} = yield* bodyLoop(cursor, prev, domain);
-  if (!operators.length) return false;
+  if (!operators.length) {
+    yield* cursor.log({
+                        message: 'not operational',
+                        miss:    'no operators'
+                      });
+    return false;
+  }
 
   cursor.token({operators})
   if (initialProto?.kind === 'delimiter') {
@@ -18,27 +25,27 @@ export function* operational(start, prev, domain = pragmaticOperators) {
   }
 
   if (!tail) {
-    _debug && (yield {
-      message: 'not operational',
-      miss:    'missing a tail component',
-      cursor:  cursor,
-      info:    {
-        head: head,
-        body,
-        tail,
-        tok:  cursor.token(),
-      }
-    });
+    yield* cursor.log({
+                        message: 'not operational',
+                        miss:    'missing a tail component',
+                        cursor:  cursor,
+                        info:    {
+                          head: head,
+                          body,
+                          tail,
+                          tok:  cursor.token(),
+                        }
+                      });
 
     cursor.token(false);
 
     return false;
   }
 
-  _debug && (yield {
-    message: 'resolving operational',
-    cursor:  cursor
-  });
+  yield* cursor.log({
+                      message: 'resolving operational',
+                      cursor:  cursor
+                    });
 
   cursor.token({
                  head: head,
@@ -63,13 +70,12 @@ function* bodyLoop(cursor, prev, permittedOperators) {
     if (!operator) continue;
     if (!operator?.token()) break;
 
-    _debug && (yield {message: 'beginning operational',});
+    yield* cursor.log({message: 'beginning operational',});
     operators.push(operator.token());
 
     const proto = operator.token().proto;
 
     initialProto = initialProto ? initialProto : proto;
-    yield {info: {proto}};
 
     if (proto.open) {
       const spaces = yield* movePastSpaces(operator);
