@@ -31,9 +31,8 @@ output {
     display: block;
     margin: 1rem;
     position: relative;
-    width: 300px;
-    height: 300px;
-    overflow: auto;
+    width: 800px;
+    min-height: 300px;
     resize: both;
 }
 output:empty {

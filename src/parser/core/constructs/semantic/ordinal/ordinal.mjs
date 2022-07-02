@@ -1,70 +1,60 @@
 import {isOrdinalDelimiter}         from "./checks/cursor/isOrdinalDelimiter.mjs";
 import {permittedConstituents}      from "./components/components.mjs";
 import {movePastSpaces}             from "../phrasal/motions/movePastSpaces.mjs";
-import {operational}                from "../../pragmatic/operational/operational.mjs";
 import {ordinalDelimitingOperators} from "../../pragmatic/operational/operators/operators.mjs";
 import {Cursor}                     from "../../../cursor.mjs";
 import {_debug}                     from "../../../constants.mjs";
+import {delimiter}                  from "../../pragmatic/operational/delimiter.mjs";
 
-export function* ordinal(startingCursor, activeTok) {
-  if (activeTok === false) return false;
-  const cursor = new Cursor(startingCursor);
-  yield* movePastSpaces(cursor);
-  const curr = cursor.pos().offset;
+export function* ordinal(start, prev) {
+  const cursor = new Cursor(start, prev);
   cursor.token({kind: 'ordinal'});
-  const {head, body, operators, tail} = yield* bodyLoop(cursor, activeTok);
 
-  if (tail === false) {
-    return curr !== cursor.pos().offset ? false : activeTok;
+  const {head, body, tail, operators} = yield* bodyLoop(cursor, prev);
+
+  if (!operators.length) {
+    return prev ?? false;
   }
-
-  startingCursor.setOffset(cursor.offset);
 
   _debug && (yield '--exiting ordinal--');
 
-  return cursor.token({
-                        key:       [head?.key, body?.map(n => n?.key), tail?.key].join('; '),
-                        operators: operators,
-                        head:      head,
-                        body:      body.length ? body : undefined,
-                        tail
-                      });
+  cursor.token({
+                 key:       [head?.key, ...body?.map((n) => n?.key) || [], tail?.key].join(' ; '),
+                 head:      head,
+                 body:      body,
+                 tail:      tail,
+                 operators: operators,
+               });
+
+  return cursor;
 }
 
-function* bodyLoop(cursor, head) {
+function* bodyLoop(cursor, prev) {
+  yield* movePastSpaces(cursor);
+  const head      = prev && prev.token();
   const body      = [];
   const operators = [];
   let started     = false;
-  let tail        = false;
   while (isOrdinalDelimiter(cursor, head)) {
     if ((!started) && (started = true)) {
       _debug && (yield '--beginning ordinal--;');
     }
-
-    (tail !== false) && body.push(tail);
-
     yield* movePastSpaces(cursor);
 
-    const operator = yield* operational(cursor, null, ordinalDelimitingOperators);
+    const operator = yield* cursor.scan([delimiter(ordinalDelimitingOperators)]);
     operators.push(operator);
-    yield* movePastSpaces(cursor);
-
-    let token = false;
-    for (const generator of permittedConstituents) {
-      token = yield* generator(cursor, token);
-    }
-    if (!token) {
-      token = null;
-    }
-    yield token;
 
     yield* movePastSpaces(cursor);
-
-    tail = token;
+    const _cursor = yield* cursor.scan(permittedConstituents);
+    let token     = _cursor ? _cursor.token() : null;
+    if (!token) { token = null}
+    body.push(token);
+    yield* movePastSpaces(cursor);
   }
 
+  const tail = body.pop();
   return {
-    head,
+    head:      head,
     body:      body,
     tail:      tail,
     operators: operators,

@@ -1,16 +1,16 @@
-import {beginsNominal}    from "./checks/cursor/beginsNominal.mjs";
-import {continuesNominal} from "./checks/cursor/continuesNominal.mjs";
-import {Cursor}           from "../../../cursor.mjs";
-import {_debug}           from "../../../constants.mjs";
+import {cursorStartsNominal}    from "./cursor/cursorStartsNominal.mjs";
+import {cursorContinuesNominal} from "./cursor/cursorContinuesNominal.mjs";
+import {Cursor}                 from "../../../cursor.mjs";
+import {_debug}                 from "../../../constants.mjs";
 
-export function* nominal(startingCursor, activeTok) {
-  if (activeTok) {
-    _debug && (yield '[passing nominal]');
-    return activeTok;
-  }
-
-  const cursor = new Cursor(startingCursor);
+export function* nominal(start, prev) {
+  const cursor = new Cursor(start);
   cursor.token({kind: 'nominal'});
+
+  if (prev) {
+    _debug && (yield '[passing nominal]');
+    return prev;
+  }
 
   const key = yield* bodyLoop(cursor);
 
@@ -21,26 +21,24 @@ export function* nominal(startingCursor, activeTok) {
 
   _debug && (yield '--exiting nominal--');
 
-  startingCursor.setOffset(cursor.offset);
-
   const head = {key: key.join('')};
-  return cursor.token({
-                        key:  head.key,
-                        head: head
-                      })
+  cursor.token({key: head.key, head: head});
+
+  return cursor;
 }
 
 function* bodyLoop(cursor) {
   const key  = [];
-  let _check = beginsNominal, started;
+  let _check = cursorStartsNominal, started;
   while (cursor.curr() && _check(cursor.curr())) {
     if ((!started) && (started = true)) _debug && (yield '--beginning nominal--');
-
     key.push(cursor.curr());
+
     yield cursor.pos();
+
     cursor.advance();
 
-    _check = continuesNominal;
+    _check = cursorContinuesNominal;
   }
   return key;
 }

@@ -1,16 +1,33 @@
-import {ALL_GENERATORS} from "./constructs/index.mjs";
-import {_debug}         from "./constants.mjs";
+import {allConstructs} from "./constructs/constructs.mjs";
+import {_debug}        from "./constants.mjs";
 
-export function* loopGenerators(cursor, generators = ALL_GENERATORS) {
-  let prev;
+export function* loopGenerators(start, generators = Object.values(allConstructs)) {
   _debug && (yield '--looping--');
-  for (let generator of generators) {
-    const token = yield* generator(cursor, prev ?? false);
-    if (token === false) continue;
-    if (token !== prev) {
-      yield token
+
+  let prevCursor;
+  let cursor = start;
+  while (cursor.curr()) {
+    cursor = yield* cursor.scan(generators);
+
+    if (!cursor) {
+      break;
     }
-    prev = token;
+
+    const currentToken = cursor ? cursor.token() : null;
+
+    if (!currentToken && prevCursor) {
+      break;
+    }
+
+    if (prevCursor?.offset === cursor.offset) {
+      _debug && (yield '[cursor did not change positions]]');
+      break;
+    }
+
+    prevCursor = cursor;
   }
+
   _debug && (yield '--looped--');
+
+  if (cursor) yield cursor.token();
 }

@@ -180,7 +180,7 @@
           if (!_done) {
             value = out;
             if (out === false) {
-              throw new Error('parser returned false');
+              // throw new Error('parser returned false');
             }
             all.push(out);
             out && svg.selectAll('.char')
@@ -194,6 +194,7 @@
           }
         } catch (e) {
           error  = true;
+          console.log(e);
           value  = e.message;
           status = 'error';
         }

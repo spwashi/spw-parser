@@ -1,22 +1,50 @@
 export class Cursor {
   #token;
+  #parent;
+  start;
+  end;
+  offset;
 
-  constructor(prev) {
-    this.offset = prev?.offset || 0;
-    this.start  = this.offset;
-    this.input  = prev?.input;
-    if (prev instanceof Cursor) {
-      this.parent = prev;
+  constructor(start, prev) {
+    this.offset = start?.offset || 0;
+    this.start  = prev?.start ?? this.offset;
+    this.input  = start?.input;
+    this.level  = typeof start?.level !== 'undefined' ? start.level + 1 : 0;
+    if (start instanceof Cursor) {
+      this.#parent = start;
     }
     this.#token = null;
   }
 
-  setOffset(i) { return this.offset = i ?? this.start; }
+  setOffset(cursor) {
+    this.offset = cursor.offset;
+  }
 
-  curr() { return this.input[this.offset]; }
+  curr() {
+    return this.input[this.offset];
+  }
+
+  * scan(generators) {
+    let activeCursor = undefined;
+    for (const generator of generators) {
+      const cursor = yield* generator(this, activeCursor);
+      const token  = cursor ? cursor.token() : false;
+      if (!token) {
+        continue;
+      }
+      this.setOffset(cursor);
+
+      if (token !== activeCursor?.token())
+        yield token;
+
+      activeCursor = cursor;
+    }
+
+    return activeCursor;
+  }
 
   advance() {
-    return this.offset = this.offset + 1;
+    this.offset = this.offset + 1;
   }
 
   pos() {
@@ -26,18 +54,43 @@ export class Cursor {
     };
   }
 
-  token(token = {}) {
-    if (this.#token) {
-      return Object.assign(this.#token, token);
+  token(token) {
+    if (typeof token === "undefined") {
+      return this.#token;
     }
-    return this.#token = Object.assign(token, {cursor: this});
+    if (token === false) {
+      this.#token = token;
+      return this;
+    }
+    if (this.#token) {
+      Object.assign(this.#token, token);
+      return this;
+    }
+    this.#token = Object.assign(token, {cursor: this});
+
+    return this;
   }
 
   toJSON() {
+    const offset     = this.offset - 1;
+    const startSplit = this.input.slice(0, this.start).split('\n');
+    const startLine  = startSplit.length;
+    const text       = this.input.slice(this.start, this.offset);
+    const midSplit   = text.split('\n');
     return {
-      start: this.start,
-      end:   this.offset,
-      text:  this.input.slice(this.start, this.offset),
+      level: this.level,
+      start: {
+        line:   startLine,
+        col:    (startSplit.pop()?.length || 1) - 1,
+        offset: this.start
+      },
+      end:   {
+        line:   startLine + midSplit.length - 1,
+        col:    (midSplit.pop()?.length || 1) - 1,
+        offset: offset
+      },
+      text:  text,
+      // parent: this.#parent?.level ? this.#parent : undefined
     }
   }
 }

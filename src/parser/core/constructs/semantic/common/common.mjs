@@ -2,60 +2,61 @@ import {isCommonDelimiter}         from "./checks/cursor/isCommonDelimiter.mjs";
 import {permittedConstituents}     from "./components/components.mjs";
 import {movePastSpaces}            from "../phrasal/motions/movePastSpaces.mjs";
 import {Cursor}                    from "../../../cursor.mjs";
-import {operational}               from "../../pragmatic/operational/operational.mjs";
 import {commonDelimitingOperators} from "../../pragmatic/operational/operators/operators.mjs";
 import {_debug}                    from "../../../constants.mjs";
+import {delimiter}                 from "../../pragmatic/operational/delimiter.mjs";
 
-export function* common(startingCursor, activeTok) {
-  if (!activeTok) {
-    _debug && (yield '[passing common]');
-    return false;
-  }
-
-  const cursor = new Cursor(startingCursor);
+export function* common(start, prev) {
+  const cursor = new Cursor(start, prev);
   cursor.token({kind: 'common'});
 
-  let {head, body, operators, tail} = yield* bodyLoop(cursor, activeTok);
-  if (!operators.length) {
-    return head;
-  }
+  const {head, body, tail, operators} = yield* bodyLoop(cursor, prev);
 
-  startingCursor.setOffset(cursor.offset);
+  if (!operators.length) {
+    return prev ?? false;
+  }
 
   _debug && (yield '--exiting common--');
 
-  body = body.length ? body : undefined;
-  return cursor.token({
-                        key:       [head?.key, ...body?.map((n) => n?.key) || [], tail?.key].join(' , '),
-                        head:      head,
-                        body:      body,
-                        tail:      tail,
-                        operators: operators,
-                      });
+  cursor.token({
+                 key:       [head?.key, ...body?.map((n) => n?.key) || [], tail?.key].join(' , '),
+                 head:      head,
+                 body:      body,
+                 tail:      tail,
+                 operators: operators,
+               });
+
+  return cursor;
 }
 
-function* bodyLoop(cursor, head) {
-  let body      = [];
-  let operators = [];
-  let started   = false;
+function* bodyLoop(cursor, prev) {
+  yield* movePastSpaces(cursor);
+  const head      = prev && prev.token();
+  const body      = [];
+  const operators = [];
+  let started     = false;
   while (isCommonDelimiter(cursor)) {
     if ((!started) && (started = true)) {
       _debug && (yield '--beginning common--;');
     }
-
-    const operator = yield* operational(cursor, null, commonDelimitingOperators);
-    operators.push(operator);
     yield* movePastSpaces(cursor);
 
-    let token = false;
-    for (let generator of permittedConstituents) {
-      token = yield* generator(cursor, token);
-    }
-    if (!token) break;
-    yield token;
+    const operator = yield* cursor.scan([delimiter(commonDelimitingOperators)]);
+    operators.push(operator);
 
+    yield* movePastSpaces(cursor);
+    const _cursor = yield* cursor.scan(permittedConstituents);
+    let token     = _cursor ? _cursor.token() : null;
+    if (!token) { token = null}
     body.push(token);
+    yield* movePastSpaces(cursor);
   }
+
   const tail = body.pop();
-  return {head, body, operators, tail};
+  return {
+    head:      head,
+    body:      body,
+    tail:      tail,
+    operators: operators,
+  };
 }

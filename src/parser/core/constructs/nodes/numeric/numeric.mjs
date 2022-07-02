@@ -1,16 +1,16 @@
-import {beginsNumeric}    from "./checks/cursor/beginsNumeric.mjs";
-import {continuesNumeric} from "./checks/cursor/continuesNumeric.mjs";
-import {Cursor}           from "../../../cursor.mjs";
-import {_debug}           from "../../../constants.mjs";
+import {cursorBeginsNumeric}    from "./cursor/cursorBeginsNumeric.mjs";
+import {cursorContinuesNumeric} from "./cursor/cursorContinuesNumeric.mjs";
+import {Cursor}                 from "../../../cursor.mjs";
+import {_debug}                 from "../../../constants.mjs";
 
-export function* numeric(startingCursor, activeTok) {
-  if (activeTok) {
-    _debug && (yield '[passing numeric]');
-    return activeTok;
-  }
-
-  const cursor = new Cursor(startingCursor);
+export function* numeric(start, prev) {
+  const cursor = new Cursor(start);
   cursor.token({kind: 'numeric'});
+
+  if (prev) {
+    _debug && (yield '[passing numeric]');
+    return prev;
+  }
 
   let {integral: _integral, fractional: _fractional} = yield* bodyLoop(cursor);
 
@@ -21,25 +21,25 @@ export function* numeric(startingCursor, activeTok) {
 
   _debug && (yield '--exiting numeric--');
 
-  startingCursor.setOffset(cursor.offset);
-
   const integral   = _integral.length ? parseInt(_integral.join('')) : _integral;
   const fractional = _fractional.length ? parseFloat(`.${_fractional.join()}`) : undefined;
   const head       = {key: integral + fractional};
-  return cursor.token({
-                        key:        head.key,
-                        head:       head,
-                        integral:   integral,
-                        fractional: fractional,
-                      });
+  cursor.token({
+                 key:        head.key,
+                 head:       head,
+                 integral:   integral,
+                 fractional: fractional,
+               });
+
+  return cursor;
 }
 
 function* bodyLoop(cursor) {
   const integral = [];
-  let _check     = beginsNumeric, started;
+  let _check     = cursorBeginsNumeric, started;
   while (cursor.curr() && _check(cursor.curr())) {
     if ((!started) && (started = true)) {
-      _check = continuesNumeric;
+      _check = cursorContinuesNumeric;
       _debug && (yield '--beginning numeric--;');
     }
 
@@ -51,10 +51,10 @@ function* bodyLoop(cursor) {
   let fractional = [];
   if (cursor.curr() === '.') {
     cursor.advance()
-    let started = false, _check = continuesNumeric;
+    let started = false, _check = cursorContinuesNumeric;
     while (cursor.curr() && _check(cursor.curr())) {
       if (!started && (started = true)) {
-        _check = continuesNumeric;
+        _check = cursorContinuesNumeric;
         _debug && (yield '--continuing numeric: fractional--;');
       }
       fractional.push(cursor.curr());
@@ -62,5 +62,8 @@ function* bodyLoop(cursor) {
       cursor.advance();
     }
   }
-  return {integral, fractional};
+  return {
+    integral,
+    fractional
+  };
 }

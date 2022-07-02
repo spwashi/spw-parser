@@ -1,63 +1,64 @@
-import {isPhrasalDelimiter}         from "./checks/cursor/isPhrasalDelimiter.mjs";
-import {permittedConstituents}      from "./components/components.mjs";
-import {movePastSpaces}             from "./motions/movePastSpaces.mjs";
-import {Cursor}                     from "../../../cursor.mjs";
-import {_debug}                     from "../../../constants.mjs";
-import {operational}                from "../../pragmatic/operational/operational.mjs";
-import {phrasalDelimitingOperators} from "../../pragmatic/operational/operators/operators.mjs";
+import {isPhrasalDelimiter}    from "./checks/cursor/isPhrasalDelimiter.mjs";
+import {permittedConstituents} from "./components/components.mjs";
+import {movePastSpaces}        from "./motions/movePastSpaces.mjs";
+import {Cursor}                from "../../../cursor.mjs";
+import {_debug}                from "../../../constants.mjs";
 
-export function* phrasal(startingCursor, head) {
-  if (!head) {
-    _debug && (yield '[passing phrasal]');
+export function* phrasal(start, prev) {
+  if (!prev) {
+    _debug && (yield '[not phrasal: no head]');
     return false;
   }
-  const cursor = new Cursor(startingCursor);
-  cursor.token({kind: 'phrasal'})
 
-  let {body, tail, operators} = yield* bodyLoop(cursor);
+  const cursor = new Cursor(start, prev);
+  cursor.token({kind: 'phrasal'});
+
+  const {head, body, tail, operators} = yield* bodyLoop(cursor, prev);
 
   if (!tail) {
-    _debug && (yield '[not phrasal]');
-    return head;
+    _debug && (yield '[not phrasal: missing tail]');
+
+    return prev ?? false;
   }
-  startingCursor.setOffset(cursor.offset);
+
   _debug && (yield '--exiting phrasal--');
-  return cursor.token({
-                        key:  [head?.key, body?.map(n => n?.key), tail?.key].join(' '),
-                        head: head,
-                        body: body.length ? body : undefined,
-                        tail: tail,
-                        operators
-                      });
+
+  cursor.token({
+                 key:  [head?.key, body?.map(n => n?.key), tail?.key].join(' '),
+                 head: head,
+                 body: body,
+                 tail: tail,
+                 operators
+               });
+
+  return cursor;
 }
 
-function* bodyLoop(cursor) {
-  let body      = [];
-  let started   = false;
-  let tail;
-  let spaces    = [];
-  let operators = [];
+function* bodyLoop(cursor, prev) {
+  const head      = prev && prev.token();
+  const body      = [];
+  const operators = [];
+  let started     = false;
   while (isPhrasalDelimiter(cursor)) {
     if ((!started) && (started = true)) {
       _debug && (yield '--beginning phrasal--;');
     }
 
-    tail && body.push(tail);
-
-    const operator = yield* operational(cursor, null, phrasalDelimitingOperators);
+    const operator = yield* movePastSpaces(cursor);
     operators.push(operator);
-    for (let space of movePastSpaces(cursor)) {
-      spaces.push(space);
-    }
 
-    let token = false;
-    for (let generator of permittedConstituents) {
-      token = yield* generator(cursor, token);
-    }
+    yield* movePastSpaces(cursor);
+    const _cursor = yield* cursor.scan(permittedConstituents);
+    const token   = _cursor ? _cursor.token() : null;
     if (!token) break;
-    yield token;
-    tail = token;
+    body.push(token);
   }
-  return {body, tail, operators: operators};
-}
 
+  const tail = body.pop();
+  return {
+    head:      head,
+    body:      body,
+    tail:      tail,
+    operators: operators,
+  };
+}

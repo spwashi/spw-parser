@@ -11,11 +11,11 @@ import {loopGenerators} from "./core/loop.mjs";
  */
 export function parse(input, asGenerator = false) {
   if (asGenerator) return parser();
-  const out = [];
+  let end;
   for (let v of parser()) {
-    out.push(v);
+    end = v;
   }
-  return out[out.length - 1];
+  return end;
 
   function* parser() {
     yield* loopGenerators(new Cursor({input}));

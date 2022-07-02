@@ -1,47 +1,52 @@
 import {parse} from "./parser/parse.mjs";
 
-let out =/**/ [
-  '--false',
-  parse(' '),
+let out =/**/ {
+  '--false':
+    [
+      " ",
+    ],
+  '--nominal':
+    [
+      "one"
+    ],
+  '--numeric':
+    [
+      "2",
+      "2.2"],
+  '--phrasal':
+    [
+      "2 2",
+      "one two",
+      "one 2 three",
+      "onw two three",
+      "{_one two }_three four"
+    ],
+  '--common':
+    [
+      "one two, three",
+    ],
+  '--ordinal':
+    [
+      "one two, three; four five",
+    ],
+  '--container':
+    [
+      "{one}",
+      "{ something }",
+      "{_one two }_three",
+    ],
+  '--operational':
+    [
+      ('one*two'),
+      ('one *two'),
+      ('one* two'),
+      ('one * two'),
+      ('one *_two three '),
+      ('one@two'),
+      ('one * two@three')
+    ]
+};
 
-  '--nominal',
-  parse('one'),
-
-  '--numeric',
-  parse('2'),
-  parse('2.2'),
-
-  '--phrasal',
-  parse('2 2'),
-  parse('one two'),
-  parse('one 2 three'),
-  parse('onw two three'),
-
-  '--common',
-  parse('one two, three'),
-
-  '--ordinal',
-  parse('one two, three; four five'),
-
-  '--container',
-  parse('{one}'),
-  parse('{ something }'),
-  parse('{_one two }_three'),
-  parse('{_one two }_three four'),
-
-  '--operational',
-
-
-  parse('one*two'),
-  parse('one *two'),
-  parse('one* two'),
-  parse('one * two'),
-  parse('one *_two three '),
-
-  parse('one@two'),
-  parse('one * two@three'),
-];
-
-out = JSON.parse(JSON.stringify(out));
+out = JSON.parse(JSON.stringify(Object.fromEntries(Object.entries(out).map(([k, v]) => [k, v.map(str => parse(str, false)?.kind ?? str)]))));
 console.log(out);
 debugger;
