@@ -1,0 +1,3 @@
+<component name="DependencyValidationManager">
+  <scope name="constructs" pattern="file:src/parser/core/constructs/semantic/common/common.mjs||file[spw-parser]:*||file:src/parser/core/constructs/semantic/phrasal/phrasal.mjs||file:src/parser/core/constructs/semantic/ordinal/ordinal.mjs||file:src/parser/core/constructs/pragmatic/operational/operational.mjs||file:src/parser/core/constructs/nodes/numeric/numeric.mjs||file:src/parser/core/constructs/nodes/nominal/nominal.mjs||file:src/parser/core/constructs/nodes/container/container.mjs" />
+</component>
