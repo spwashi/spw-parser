@@ -22,7 +22,6 @@ export function* container(start, prev) {
   const {head, body, tail} = yield* bodyLoop(cursor);
 
   cursor.token({
-                 key:  [head?.key, ...body?.map(node => node?.key) || [], tail?.key].join(''),
                  head: head,
                  body: body,
                  tail: tail

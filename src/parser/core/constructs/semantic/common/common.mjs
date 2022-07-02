@@ -19,7 +19,6 @@ export function* common(start, prev) {
   _debug && (yield '--exiting common--');
 
   cursor.token({
-                 key:       [head?.key, ...body?.map((n) => n?.key) || [], tail?.key].join(' , '),
                  head:      head,
                  body:      body,
                  tail:      tail,
@@ -41,12 +40,14 @@ function* bodyLoop(cursor, prev) {
     }
     yield* movePastSpaces(cursor);
 
-    const operator = yield* cursor.scan([delimiter(commonDelimitingOperators)]);
+    const operatorScanner = yield* cursor.scan([delimiter(commonDelimitingOperators)]);
+    const operator        = operatorScanner?.token();
+    if (!operator) break;
     operators.push(operator);
 
     yield* movePastSpaces(cursor);
-    const _cursor = yield* cursor.scan(permittedConstituents);
-    let token     = _cursor ? _cursor.token() : null;
+    const bodyScanner = yield* cursor.scan(permittedConstituents);
+    let token         = bodyScanner ? bodyScanner.token() : null;
     if (!token) { token = null}
     body.push(token);
     yield* movePastSpaces(cursor);

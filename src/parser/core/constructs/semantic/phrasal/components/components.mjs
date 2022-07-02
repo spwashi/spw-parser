@@ -1,5 +1,5 @@
-import {nominal}   from "../../../nodes/nominal/nominal.mjs";
-import {numeric}   from "../../../nodes/numeric/numeric.mjs";
-import {container} from "../../../nodes/container/container.mjs";
+import {nominal}   from "../../../nodal/nominal/nominal.mjs";
+import {numeric}   from "../../../nodal/numeric/numeric.mjs";
+import {container} from "../../../nodal/container/container.mjs";
 
 export const permittedConstituents = [nominal, numeric, container];

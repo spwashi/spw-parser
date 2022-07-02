@@ -1,3 +1,3 @@
-export function isOrdinalDelimiter(cursor, head) {
-  return cursor.curr() === ';' || (head && cursor.curr() === '\n');
+export function isOrdinalDelimiter(cursor) {
+  return cursor.curr() === ';' || (cursor.curr() === '\n');
 }

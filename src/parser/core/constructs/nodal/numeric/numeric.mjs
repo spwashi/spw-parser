@@ -25,7 +25,6 @@ export function* numeric(start, prev) {
   const fractional = _fractional.length ? parseFloat(`.${_fractional.join()}`) : undefined;
   const head       = {key: integral + fractional};
   cursor.token({
-                 key:        head.key,
                  head:       head,
                  integral:   integral,
                  fractional: fractional,

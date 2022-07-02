@@ -10,15 +10,10 @@ export function* operational(start, prev, domain = pragmaticOperators) {
   const cursor = new Cursor(start, prev);
   cursor.token({kind: 'operational'});
 
-  const {head, body, tail, label, operators, origOpType,} = yield* bodyLoop(cursor, prev, domain);
+  const {head, body, tail, operators, origOpType,} = yield* bodyLoop(cursor, prev, domain);
   if (!operators.length) return false;
 
-  if (label) cursor.token({label: label})
-  cursor.token({operators: operators});
-  cursor.token({
-                 key: [head?.key, ...body?.map(n => n?.key) || [], tail?.key].join(operators[0].char),
-               });
-
+  cursor.token({operators})
   if (origOpType?.kind === 'delimiter') {
     return cursor;
   }
@@ -43,12 +38,27 @@ export function* operational(start, prev, domain = pragmaticOperators) {
   _debug && (yield '--exiting operational--');
 
   cursor.token({
-                 key:  [head?.key, ...body?.map(n => n.key) || [], tail?.key].join(operators[0].char),
                  head: head,
                  body: body,
                  tail: tail,
                });
 
+  return cursor;
+}
+
+function* buildOperator(start) {
+  const cursor = new Cursor(start);
+  cursor.token({kind: 'operator'});
+  const operator = [cursor.pos()]
+  yield cursor.pos();
+  cursor.advance();
+  const [_, label] = yield* readLabel(cursor);
+  label && operator.push(_, label.token());
+  const spaces = yield* movePastSpaces(cursor);
+  spaces.length && operator.push(spaces[0]);
+  cursor.token({
+                 body: operator
+               })
   return cursor;
 }
 
@@ -62,7 +72,6 @@ function* bodyLoop(cursor, prev, permittedOperators) {
   }
 
   let opType, origOpType;
-  let label;
   const operators = [];
   while ((opType = getCursorOperatorType(cursor, permittedOperators))) {
     if ((!started) && (started = true)) {
@@ -71,15 +80,14 @@ function* bodyLoop(cursor, prev, permittedOperators) {
       _debug && (yield '--beginning operational--;');
     }
 
-    operators.push(cursor.pos());
-    yield cursor.pos();
-    cursor.advance();
 
-    label = yield* readLabel(cursor);
-
+    const operator = yield* cursor.scan([buildOperator]);
+    if (!operator?.token()) {
+      break;
+    }
+    operators.push(operator.token());
     if (opType.kind === 'delimiter') break;
 
-    yield* movePastSpaces(cursor);
     const _cursor = yield* cursor.scan(permittedConstituents);
     let token     = _cursor ? _cursor.token() : null;
     if (!token) break
@@ -92,7 +100,6 @@ function* bodyLoop(cursor, prev, permittedOperators) {
     head:       head,
     body:       body,
     tail:       tail,
-    label:      label,
     operators:  operators,
     origOpType: origOpType
   };

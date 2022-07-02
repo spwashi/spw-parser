@@ -16,6 +16,7 @@ export function* loopGenerators(start, generators = Object.values(allConstructs)
     const currentToken = cursor ? cursor.token() : null;
 
     if (!currentToken && prevCursor) {
+      cursor = false;
       break;
     }
 
@@ -30,4 +31,5 @@ export function* loopGenerators(start, generators = Object.values(allConstructs)
   _debug && (yield '--looped--');
 
   if (cursor) yield cursor.token();
+  else yield false;
 }

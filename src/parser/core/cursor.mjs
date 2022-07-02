@@ -1,3 +1,33 @@
+function makeKey(token, context) {
+  const operators = token.operators ?? [];
+  const head      = token.head;
+  const body      = token.body;
+  const tail      = token.tail;
+
+  function addItemToList(curr, list) {
+    let item = curr.key;
+    item     = item ?? curr.identify?.(context)?.[1];
+    item     = item ?? '';
+    if (Array.isArray(item)) return list.push(...item)
+    return list.push(item);
+  }
+
+  const key = [head, ...body, tail,].reduce((obj, item, i) => {
+    if (item) {
+      addItemToList(item, obj.list);
+    }
+    let operator = operators[obj.i] ?? [];
+    operator     = Array.isArray(operator) ? operator : [operator];
+    operator.forEach(operator => {
+      addItemToList(operator, obj.list)
+    })
+    return {...obj, i: obj.i + 1}
+  }, {i: 0, list: []}).list;
+
+  return context.generation ? [context.getId(token, context), key.flat().filter(Boolean)].filter(Boolean)
+                            : [context.getId(token, context), key.flat().join('')].join('|')
+}
+
 export class Cursor {
   #token;
   #parent;
@@ -49,7 +79,8 @@ export class Cursor {
 
   pos() {
     return {
-      char:   this.curr(),
+      kind:   'char',
+      key:    this.curr(),
       offset: this.offset,
     };
   }
@@ -66,7 +97,32 @@ export class Cursor {
       Object.assign(this.#token, token);
       return this;
     }
-    this.#token = Object.assign(token, {cursor: this});
+    this.#token = Object.assign({
+                                  kind:     undefined,
+                                  proto:    undefined,
+                                  identify: function (parent = {generation: -1, threshold: 1}) {
+                                    const context = {
+                                      makeKey: makeKey,
+                                      getId:   (token, context) => {
+                                        switch (token.kind) {
+                                          default:
+                                            return token.cursor.start;
+                                        }
+                                      },
+                                      ...parent,
+                                      generation: parent.generation + 1,
+                                    };
+                                    return context.makeKey(this, context)
+                                  },
+                                  get _key() {
+                                    return this.identify();
+                                  },
+                                  operators: undefined,
+                                  label:     undefined,
+                                  head:      undefined,
+                                  body:      [],
+                                  tail:      undefined,
+                                }, token, {cursor: this});
 
     return this;
   }

@@ -19,7 +19,6 @@ export function* ordinal(start, prev) {
   _debug && (yield '--exiting ordinal--');
 
   cursor.token({
-                 key:       [head?.key, ...body?.map((n) => n?.key) || [], tail?.key].join(' ; '),
                  head:      head,
                  body:      body,
                  tail:      tail,
@@ -35,18 +34,20 @@ function* bodyLoop(cursor, prev) {
   const body      = [];
   const operators = [];
   let started     = false;
-  while (isOrdinalDelimiter(cursor, head)) {
+  while (isOrdinalDelimiter(cursor)) {
     if ((!started) && (started = true)) {
       _debug && (yield '--beginning ordinal--;');
     }
     yield* movePastSpaces(cursor);
 
-    const operator = yield* cursor.scan([delimiter(ordinalDelimitingOperators)]);
+    const operatorScanner = yield* cursor.scan([delimiter(ordinalDelimitingOperators)]);
+    const operator        = operatorScanner?.token();
+    if (!operator) break;
     operators.push(operator);
 
     yield* movePastSpaces(cursor);
-    const _cursor = yield* cursor.scan(permittedConstituents);
-    let token     = _cursor ? _cursor.token() : null;
+    const bodyScanner = yield* cursor.scan(permittedConstituents);
+    let token         = bodyScanner ? bodyScanner.token() : null;
     if (!token) { token = null}
     body.push(token);
     yield* movePastSpaces(cursor);

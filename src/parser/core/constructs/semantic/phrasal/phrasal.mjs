@@ -24,11 +24,10 @@ export function* phrasal(start, prev) {
   _debug && (yield '--exiting phrasal--');
 
   cursor.token({
-                 key:  [head?.key, body?.map(n => n?.key), tail?.key].join(' '),
-                 head: head,
-                 body: body,
-                 tail: tail,
-                 operators
+                 head:      head,
+                 body:      body,
+                 tail:      tail,
+                 operators: operators
                });
 
   return cursor;
