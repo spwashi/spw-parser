@@ -3,8 +3,8 @@ import {permittedConstituents}     from "./components/components.mjs";
 import {movePastSpaces}            from "../phrasal/motions/movePastSpaces.mjs";
 import {Cursor}                    from "../../../cursor.mjs";
 import {commonDelimitingOperators} from "../../pragmatic/operational/operators/operators.mjs";
-import {_debug}        from "../../../constants.mjs";
-import {buildOperator} from "../../pragmatic/operational/buildOperator.mjs";
+import {_debug}                    from "../../../constants.mjs";
+import {buildOperator}             from "../../pragmatic/operational/buildOperator.mjs";
 
 export function* common(start, prev) {
   const cursor = new Cursor(start, prev);
@@ -16,7 +16,9 @@ export function* common(start, prev) {
     return prev ?? false;
   }
 
-  _debug && (yield '--exiting common--');
+  _debug && (yield {
+    message: '--resolving common--'
+  });
 
   cursor.token({
                  head:      head,
@@ -36,7 +38,9 @@ function* bodyLoop(cursor, prev) {
   let started     = false;
   while (isCommonDelimiter(cursor)) {
     if ((!started) && (started = true)) {
-      _debug && (yield '--beginning common--;');
+      _debug && (yield {
+        message: '--beginning common--;'
+      });
     }
     yield* movePastSpaces(cursor);
 

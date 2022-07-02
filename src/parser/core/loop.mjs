@@ -2,7 +2,9 @@ import {allConstructs} from "./constructs/constructs.mjs";
 import {_debug}        from "./constants.mjs";
 
 export function* loopGenerators(start, generators = Object.values(allConstructs)) {
-  _debug && (yield '--looping--');
+  _debug && (yield {
+    message: '--looping--'
+  });
 
   let prevCursor;
   let cursor = start;
@@ -21,7 +23,9 @@ export function* loopGenerators(start, generators = Object.values(allConstructs)
     }
 
     if (prevCursor?.offset === cursor.offset) {
-      _debug && (yield '[cursor did not change positions]');
+      _debug && (yield {
+        message: '[cursor did not change positions]'
+      });
       cursor = false;
       break;
     }
@@ -29,7 +33,9 @@ export function* loopGenerators(start, generators = Object.values(allConstructs)
     prevCursor = cursor;
   }
 
-  _debug && (yield '--looped--');
+  _debug && (yield {
+    message: '--looped--'
+  });
 
   if (cursor) yield cursor.token();
   else yield false;

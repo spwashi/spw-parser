@@ -2,28 +2,39 @@ import {cursorStartsNominal}    from "./cursor/cursorStartsNominal.mjs";
 import {cursorContinuesNominal} from "./cursor/cursorContinuesNominal.mjs";
 import {Cursor}                 from "../../../cursor.mjs";
 import {_debug}                 from "../../../constants.mjs";
+import {trailingContainers}     from "./components/trailingContainers.mjs";
 
 export function* nominal(start, prev) {
   const cursor = new Cursor(start);
   cursor.token({kind: 'nominal'});
 
   if (prev) {
-    _debug && (yield '[passing nominal]');
+    _debug && (yield {
+      message: '[passing nominal]'
+    });
     return prev;
   }
 
   const key = yield* bodyLoop(cursor);
 
   if (!key.length) {
-    _debug && (yield '[not nominal]');
+    _debug && (yield {
+      message: '[not nominal]'
+    });
     return false;
   }
 
-  _debug && (yield '--exiting nominal--');
+  _debug && (yield {
+    message: '--resolving nominal--'
+  });
 
   const head = {key: key.join('')};
-  cursor.token({key: head.key, head: head});
+  cursor.token({head: head});
 
+  const containers = yield* trailingContainers(cursor);
+  if (containers.size) {
+    cursor.token({description: containers});
+  }
   return cursor;
 }
 
@@ -31,7 +42,9 @@ function* bodyLoop(cursor) {
   const key  = [];
   let _check = cursorStartsNominal, started;
   while (cursor.curr() && _check(cursor.curr())) {
-    if ((!started) && (started = true)) _debug && (yield '--beginning nominal--');
+    if ((!started) && (started = true)) _debug && (yield {
+      message: '--beginning nominal--'
+    });
     key.push(cursor.curr());
 
     yield cursor.pos();

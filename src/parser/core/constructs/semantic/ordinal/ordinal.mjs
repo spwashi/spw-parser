@@ -3,8 +3,8 @@ import {permittedConstituents}      from "./components/components.mjs";
 import {movePastSpaces}             from "../phrasal/motions/movePastSpaces.mjs";
 import {ordinalDelimitingOperators} from "../../pragmatic/operational/operators/operators.mjs";
 import {Cursor}                     from "../../../cursor.mjs";
-import {_debug}        from "../../../constants.mjs";
-import {buildOperator} from "../../pragmatic/operational/buildOperator.mjs";
+import {_debug}                     from "../../../constants.mjs";
+import {buildOperator}              from "../../pragmatic/operational/buildOperator.mjs";
 
 export function* ordinal(start, prev) {
   const cursor = new Cursor(start, prev);
@@ -16,7 +16,9 @@ export function* ordinal(start, prev) {
     return prev ?? false;
   }
 
-  _debug && (yield '--exiting ordinal--');
+  _debug && (yield {
+    message: '--resolving ordinal--'
+  });
 
   cursor.token({
                  head:      head,
@@ -36,7 +38,9 @@ function* bodyLoop(cursor, prev) {
   let started     = false;
   while (isOrdinalDelimiter(cursor)) {
     if ((!started) && (started = true)) {
-      _debug && (yield '--beginning ordinal--;');
+      _debug && (yield {
+        message: '--beginning ordinal--;'
+      });
     }
     yield* movePastSpaces(cursor);
 

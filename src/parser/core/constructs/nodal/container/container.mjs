@@ -8,14 +8,18 @@ import {permittedConstituents}        from "./components/components.mjs";
 
 export function* container(start, prev) {
   if (prev) {
-    _debug && (yield '[passing container: prev]');
+    _debug && (yield {
+      message: '[passing container: prev]'
+    });
     return prev;
   }
   const cursor = new Cursor(start)
   cursor.token({kind: 'container'});
 
   if (!cursorStartsContainer(start)) {
-    _debug && (yield '[not container]');
+    _debug && (yield {
+      message: '[not container]'
+    });
     return false;
   }
 
@@ -46,7 +50,9 @@ function* bodyLoop(cursor) {
   let tail;
   const body = [];
   while (cursor.curr()) {
-    if ((!started) && (started = true)) _debug && (yield '--beginning container--;');
+    if ((!started) && (started = true)) _debug && (yield {
+      message: '--beginning container--;'
+    });
     yield* movePastSpaces(cursor);
 
     const delimiterScanner = yield* cursor.scan([buildOperator({[close.key]: close})]);

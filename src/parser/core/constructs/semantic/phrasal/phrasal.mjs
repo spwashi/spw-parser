@@ -34,7 +34,7 @@ export function* phrasal(start, prev) {
   }
 
   _debug && (yield {
-    message: '--exiting phrasal--',
+    message: '--resolving phrasal--',
     info:    {success: true}
   });
 
@@ -55,7 +55,9 @@ function* bodyLoop(cursor, prev) {
   let started     = false;
   while (isPhrasalDelimiter(cursor)) {
     if ((!started) && (started = true)) {
-      _debug && (yield '--beginning phrasal--;');
+      _debug && (yield {
+        message: '--beginning phrasal--;'
+      });
     }
 
     const operator = yield* movePastSpaces(cursor);

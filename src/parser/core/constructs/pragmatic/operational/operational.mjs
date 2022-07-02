@@ -9,11 +9,11 @@ export function* operational(start, prev, domain = pragmaticOperators) {
   const cursor = new Cursor(start, prev);
   cursor.token({kind: 'operational'});
 
-  const {head, body, tail, operators, origOpType,} = yield* bodyLoop(cursor, prev, domain);
+  const {head, body, tail, operators, initialProto,} = yield* bodyLoop(cursor, prev, domain);
   if (!operators.length) return false;
 
   cursor.token({operators})
-  if (origOpType?.kind === 'delimiter') {
+  if (initialProto?.kind === 'delimiter') {
     return cursor;
   }
 
@@ -21,6 +21,7 @@ export function* operational(start, prev, domain = pragmaticOperators) {
     _debug && (yield {
       message: '[not operational]',
       cause:   'no tail',
+      cursor:  cursor,
       info:    {
         head: head,
         body,
@@ -34,7 +35,10 @@ export function* operational(start, prev, domain = pragmaticOperators) {
     return false;
   }
 
-  _debug && (yield '--exiting operational--');
+  _debug && (yield {
+    message: '--resolving operational--',
+    cursor:  cursor
+  });
 
   cursor.token({
                  head: head,
@@ -54,17 +58,19 @@ function* bodyLoop(cursor, prev, permittedOperators) {
   }
 
   const operators = [];
-  let operator, origOpType;
+  let operator, initialProto;
   while (operator = yield* cursor.scan([buildOperator(permittedOperators)])) {
     if (!operator) continue;
     if (!operator?.token()) break;
 
-    _debug && (yield '--beginning operational--;');
+    _debug && (yield {
+      message: '--beginning operational--;',
+    });
     operators.push(operator.token());
 
     const proto = operator.token().proto;
 
-    origOpType = origOpType ? origOpType : proto;
+    initialProto = initialProto ? initialProto : proto;
     yield {info: {proto}};
 
     if (proto.open) {
@@ -88,8 +94,8 @@ function* bodyLoop(cursor, prev, permittedOperators) {
     body: body,
     tail: tail,
 
-    operators:  operators,
-    origOpType: origOpType
+    operators:    operators,
+    initialProto: initialProto
   };
 }
 

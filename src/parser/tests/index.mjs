@@ -1,4 +1,4 @@
-import {parse} from "./parser/parse.mjs";
+import {parse} from "../parse.mjs";
 
 let out =/**/ {
   '--false':
@@ -8,11 +8,20 @@ let out =/**/ {
   '--nominal':
     [
       "one",
+      "one<two>",
+      "one<two>(three)",
+      "one(two)",
+      "one(two){three}",
+      "one{two}",
+      "one(two){three}[four]",
+      "one{two}[three]",
+      "one[two]",
     ],
   '--numeric':
     [
       "2",
-      "2.2"],
+      "2.2",
+    ],
   '--phrasal':
     [
       "2 2",
