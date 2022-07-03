@@ -2,8 +2,8 @@ import {isCommonDelimiter}         from "./checks/cursor/isCommonDelimiter.mjs";
 import {permittedConstituents}     from "./components/components.mjs";
 import {movePastSpaces}            from "../phrasal/motions/movePastSpaces.mjs";
 import {Cursor}                    from "../../../cursor.mjs";
-import {commonDelimitingOperators} from "../../pragmatic/operational/operators/operators.mjs";
-import {buildOperator}             from "../../pragmatic/operational/buildOperator.mjs";
+import {buildOperator}             from "../../operators/buildOperator.mjs";
+import {commonDelimitingOperators} from "../../operators/semanticOperators.mjs";
 
 export function* common(start, prev) {
   const cursor = new Cursor(start, prev);

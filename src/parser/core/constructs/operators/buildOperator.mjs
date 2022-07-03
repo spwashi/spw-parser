@@ -1,6 +1,6 @@
-import {getCursorOperatorType} from "./cursor/getCursorOperatorType.mjs";
-import {Cursor}                from "../../../cursor.mjs";
-import {readLabel}             from "./cursor/motions/readLabel.mjs";
+import {getCursorOperatorType} from "../pragmatic/operational/cursor/getCursorOperatorType.mjs";
+import {Cursor}                from "../../cursor.mjs";
+import {readLabel}             from "../pragmatic/operational/cursor/motions/readLabel.mjs";
 
 export function buildOperator(permittedOperators) {
   return function* (start) {

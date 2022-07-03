@@ -7,10 +7,27 @@ function makeKey(token, context) {
   const tail      = token.tail;
 
   function addItemToList(curr, list) {
-    let item = curr.key;
-    item     = item ?? curr.identify?.(context)?.[1];
-    item     = item ?? '';
-    if (Array.isArray(item)) return list.push(...item)
+    let item;
+    if (typeof curr === 'string') {
+      item = curr;
+    } else if (curr.key) {
+      item = curr.key;
+    } else {
+      switch (curr.kind) {
+        case 'numeric':
+        case 'nominal':
+          item = curr.head.key;
+          break;
+        case 'char':
+          item = curr.key;
+          break;
+        default:
+          item = curr.identify?.(context)?.[1];
+          item = item ?? [curr.head, ...curr.body || [], curr.tail].filter(Boolean);
+      }
+    }
+
+    if (Array.isArray(item)) return item.map(sub => addItemToList(sub, list));
     return list.push(item);
   }
 
@@ -81,15 +98,16 @@ export class Cursor {
       let tabs = '\t'.repeat(this.level);
       yield `${tabs}${this}`;
       yield `${tabs}\t${item.message}`;
-      if (item.miss) yield `${tabs}\t\treason: ${item.miss}`;
+      if (item.miss) yield `${tabs}\t\t\reason: ${item.miss}`;
     }
   }
 
   * take() {
-    const curr = this.curr();
-    yield this.pos();
+    this.curr();
+    let pos = this.pos();
+    yield pos;
     this.advance();
-    return curr;
+    return pos;
   }
 
   advance() {

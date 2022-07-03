@@ -1,4 +1,4 @@
-import {pragmaticOperators} from "../operators/operators.mjs";
+import {pragmaticOperators} from "../../../operators/pragmaticOperators.mjs";
 
 export function getCursorOperatorType(cursor, operators = pragmaticOperators) {
   const char = cursor.curr();

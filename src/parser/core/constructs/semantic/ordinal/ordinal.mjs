@@ -1,9 +1,9 @@
 import {isOrdinalDelimiter}         from "./checks/cursor/isOrdinalDelimiter.mjs";
 import {permittedConstituents}      from "./components/components.mjs";
 import {movePastSpaces}             from "../phrasal/motions/movePastSpaces.mjs";
-import {ordinalDelimitingOperators} from "../../pragmatic/operational/operators/operators.mjs";
 import {Cursor}                     from "../../../cursor.mjs";
-import {buildOperator}              from "../../pragmatic/operational/buildOperator.mjs";
+import {buildOperator}              from "../../operators/buildOperator.mjs";
+import {ordinalDelimitingOperators} from "../../operators/semanticOperators.mjs";
 
 export function* ordinal(start, prev) {
   const cursor = new Cursor(start, prev);

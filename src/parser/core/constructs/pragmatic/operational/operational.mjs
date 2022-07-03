@@ -1,8 +1,8 @@
 import {permittedConstituents} from "./components/components.mjs";
-import {movePastSpaces}        from "../../semantic/phrasal/motions/movePastSpaces.mjs";
-import {pragmaticOperators}    from "./operators/operators.mjs";
-import {Cursor}                from "../../../cursor.mjs";
-import {buildOperator}         from "./buildOperator.mjs";
+import {movePastSpaces}     from "../../semantic/phrasal/motions/movePastSpaces.mjs";
+import {pragmaticOperators} from "../../operators/pragmaticOperators.mjs";
+import {Cursor}             from "../../../cursor.mjs";
+import {buildOperator}      from "../../operators/buildOperator.mjs";
 
 export function* operational(start, prev, domain = pragmaticOperators) {
   const cursor = new Cursor(start, prev);
@@ -10,7 +10,7 @@ export function* operational(start, prev, domain = pragmaticOperators) {
 
   yield* cursor.log({message: 'checking operational'});
 
-  const {head, body, tail, operators, initialProto,} = yield* bodyLoop(cursor, prev, domain);
+  let {head, body, tail, operators, initialProto,} = yield* bodyLoop(cursor, prev, domain);
   if (!operators.length) {
     yield* cursor.log({
                         message: 'not operational',
@@ -19,12 +19,18 @@ export function* operational(start, prev, domain = pragmaticOperators) {
     return false;
   }
 
-  cursor.token({operators})
+  if (!tail && initialProto?.kinds?.has('nominal')) {
+    tail = null;
+    head = operators.pop();
+    cursor.token({kind: 'operational.nominal'})
+  }
+  cursor.token({operators});
+
   if (initialProto?.kind === 'delimiter') {
     return cursor;
   }
 
-  if (!tail) {
+  if (typeof tail === 'undefined') {
     yield* cursor.log({
                         message: 'not operational',
                         miss:    'missing a tail component',
