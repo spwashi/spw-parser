@@ -1,4 +1,4 @@
-import {Cursor}         from "./core/cursor.mjs";
+import {Cursor}         from "./core/cursor/cursor.mjs";
 import {loopGenerators} from "./core/loop.mjs";
 
 
@@ -21,5 +21,3 @@ export function parse(input, asGenerator = false) {
     yield* loopGenerators(new Cursor({input}));
   }
 }
-
-if (typeof window !== "undefined") window.parse = parse;

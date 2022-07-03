@@ -48,7 +48,6 @@ export function* loopGenerators(start, generators = Object.values(allConstructs)
     }
   }
 
-
   if (cursor) {
     yield* cursor.log({
                         success: true,

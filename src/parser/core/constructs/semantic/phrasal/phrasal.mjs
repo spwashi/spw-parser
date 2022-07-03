@@ -1,7 +1,7 @@
 import {isPhrasalDelimiter}    from "./checks/cursor/isPhrasalDelimiter.mjs";
 import {permittedConstituents} from "./components/components.mjs";
-import {movePastSpaces}        from "./motions/movePastSpaces.mjs";
-import {Cursor}                from "../../../cursor.mjs";
+import {movePastSpaces} from "./motions/movePastSpaces.mjs";
+import {Cursor}         from "../../../cursor/cursor.mjs";
 
 export function* phrasal(start, prev) {
   const cursor = new Cursor(start, prev);

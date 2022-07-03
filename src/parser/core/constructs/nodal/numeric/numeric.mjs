@@ -1,6 +1,6 @@
 import {cursorBeginsNumeric}    from "./cursor/cursorBeginsNumeric.mjs";
 import {cursorContinuesNumeric} from "./cursor/cursorContinuesNumeric.mjs";
-import {Cursor}                 from "../../../cursor.mjs";
+import {Cursor}                 from "../../../cursor/cursor.mjs";
 
 export function* numeric(start, prev) {
   const cursor = new Cursor(start, prev);

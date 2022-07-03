@@ -1,6 +1,6 @@
 import {cursorStartsNominal}    from "./cursor/cursorStartsNominal.mjs";
 import {cursorContinuesNominal} from "./cursor/cursorContinuesNominal.mjs";
-import {Cursor}                 from "../../../cursor.mjs";
+import {Cursor}                 from "../../../cursor/cursor.mjs";
 import {trailingContainers}     from "./components/trailingContainers.mjs";
 
 export function* nominal(start, prev) {

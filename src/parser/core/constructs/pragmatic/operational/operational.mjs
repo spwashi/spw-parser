@@ -1,7 +1,7 @@
 import {permittedConstituents} from "./components/components.mjs";
 import {movePastSpaces}     from "../../semantic/phrasal/motions/movePastSpaces.mjs";
 import {pragmaticOperators} from "../../operators/pragmaticOperators.mjs";
-import {Cursor}             from "../../../cursor.mjs";
+import {Cursor}             from "../../../cursor/cursor.mjs";
 import {buildOperator}      from "../../operators/buildOperator.mjs";
 
 export function* operational(start, prev, domain = pragmaticOperators) {

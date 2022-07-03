@@ -1,7 +1,7 @@
 import {cursorStartsContainer}        from "./cursor/cursorStartsContainer.mjs";
-import {movePastSpaces}               from "../../semantic/phrasal/motions/movePastSpaces.mjs";
-import {Cursor}                from "../../../cursor.mjs";
-import {buildOperator}         from "../../operators/buildOperator.mjs";
+import {movePastSpaces} from "../../semantic/phrasal/motions/movePastSpaces.mjs";
+import {Cursor}         from "../../../cursor/cursor.mjs";
+import {buildOperator}  from "../../operators/buildOperator.mjs";
 import {permittedConstituents}        from "./components/components.mjs";
 import {containerDelimitingOperators} from "../../operators/semanticOperators.mjs";
 

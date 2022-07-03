@@ -40,19 +40,19 @@ let out =/**/ {
     ],
   '--container':
     [
-      "{one}",
-      "{ something }",
-      "{_one two }_three",
+      '{one}',
+      '{ something }',
+      '{_one two }_three',
     ],
   '--operational':
     [
-      ('one*two'),
-      ('one *two'),
-      ('one* two'),
-      ('one * two'),
-      ('one *_two three '),
-      ('one@two'),
-      ('one * two@three')
+      'one*two',
+      'one *two',
+      'one* two',
+      'one * two',
+      'one *_two three ',
+      'one@two',
+      'one * two@three'
     ]
 };
 

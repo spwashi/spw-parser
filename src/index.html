@@ -11,8 +11,8 @@
             integrity="sha512-nkC97gUNsbPjaWQm5GVpreTVy9IJO+z13y1M8mM+1BJRjfp9sz+1ixWu4+1mOMUzIt72pVD9rwjxJKV8LdlvjA=="
             crossorigin="anonymous" referrerpolicy="no-referrer"></script>
     <script src="lib/d3.js"></script>
-    <script type="module" src="parser/parse.mjs"></script>
-    <script type="module" src="parser/core/cursor.mjs"></script>
+    <script type="module" src="parser/web/app.mjs"></script>
+
 </head>
 <body>
     <div id="root"></div>
@@ -26,212 +26,28 @@
         </label>
         <br>
         <button id="submitButton" type="submit">parse</button>
-        <button id="play" style="display:none;" type="button" onclick="playAll();">play</button>
-        <button id="next" style="display:none;" type="button" onclick="advance();">step</button>
+        <button id="play" style="display:none;" type="button">play</button>
+        <button id="next" style="display:none;" type="button">step</button>
         <br>
         <svg id="svg-output"></svg>
         <output id="output" name="parsed"></output>
     </form>
-    <script>
-      let ref = {
-        generator: undefined,
-        tokens:    [],
-        chars:     []
-      };
-      let error;
+    <script type="module">
+      import {ParserDom} from "./parser/web/app.mjs";
 
-      const advanceButton = document.getElementById('next');
-      const playButton    = document.getElementById('play');
-      const submitButton  = document.getElementById('submitButton');
-
-      document.getElementById('form').onsubmit = submitForm;
-
-      const output = document.getElementById('output');
-
-      let all   = [];
-      const svg = d3.select('#svg-output').append('g');
-
-      function resetGenerator() {
-        const form         = document.getElementById('form');
-        const formInput    = form.elements.formInput;
-        const text         = formInput.value;
-        error              = false;
-        all                = [];
-        ref.generator      = parse(text, true);
-        ref.tokens         = [];
-        ref.chars          = [];
-        playButton.onclick = playAll;
-        return text;
-      }
-
-      function submitForm(event) {
-        event?.preventDefault();
-        all                         = [];
-        const text                  = resetGenerator();
-        advanceButton.style.display = 'block';
-        playButton.style.display    = 'block';
-        submitButton.style.display  = 'none';
-        playButton.focus();
-        error            = null;
-        output.value     = '';
-        output.className = '';
-
-        const gs = svg.selectAll('g')
-                      .data(text.split('').map((c, i) => ({text: c, offset: i})))
-                      .join(d => {
-                              const g = d.append('g');
-
-                              g.append('rect');
-                              g.append('text')
-
-                              return g;
-                            },
-                            d => {
-                              return d;
-                            },
-                            d => d.remove())
-                      .classed('char', true);
-
-        let newlines = 0;
-        let x        = 0;
-        let map      = new Map;
-        gs.select('rect')
-          .attr('x', d => {
-            const val = x++ * 1.7;
-            map.set(d, {...(map.get(d) || {}), x: val});
-            if (d.text === '\n') {
-              x = 0;
-            }
-            return val + 'ch';
-          })
-          .attr('width', d => d.text === '\n' ? '2.5ch' : '1.5ch')
-          .attr('height', '1.5rem')
-          .style('fill', 'white')
-          .attr('y', d => {
-            const val = (2 * newlines);
-
-            if (d.text === '\n') {
-              newlines++;
-              x = 0;
-            }
-            map.set(d, {...(map.get(d) || {}), y: val});
-
-
-            return val + 'rem';
-          });
-        gs.select('text')
-          .text(d => `${d.text === '\n' ? '\\n' : d.text}`)
-          .attr('x', d => map.get(d).x + 'ch')
-          .attr('y', d => (map.get(d).y + 1) + 'rem')
-          .attr('dx', '.2ch')
-          .style('text-align', 'center')
-      }
-
-      function playAll() {
-        let paused;
-        let play;
-
-        playButton.innerText = 'pause';
-        playButton.onclick   = () => {
-          playButton.innerText = 'play';
-          paused               = true;
-          playButton.onclick   = playAll;
-        }
-
-        play = () =>
-          setTimeout(() => {
-            if (paused) return;
-            let out = advance();
-            if (out.value === false) {
-              paused = true;
-              return;
-            }
-            if (out.done) return;
-            play && play();
-          }, 75);
-
-        play()
-      }
-
-      function resetPlayButton() {
-        playButton.innerText = 'play';
-        playButton.onclick   = () => {
-          resetGenerator();
-          playAll();
-        };
-      }
-
-      function resetAdvanceButton() {
-        let played;
-        advanceButton.onclick = () => {
-          if (!played) {
-            resetGenerator();
-            played = true;
-          }
-          advance();
-        }
-      }
-
-
-      function handleCompletion() {
-        output.value = JSON.stringify({tokens: ref.tokens, chars: ref.chars}, null, 3);
-        resetAdvanceButton();
-        resetPlayButton();
-      }
-
-      function advance() {
-        const generator = ref.generator;
-
-        if (!generator || error) {
-          return {
-            done: true
-          }
-        }
-        let _yielded, status = 'success';
-        let done             = false;
-        try {
-          let {value: out, done: _done} = generator.next();
-
-          if (_done) {
-            _yielded = [...all].reverse();
-            done     = _done;
-          } else {
-            _yielded = out;
-            if (out === false) {
-              throw new Error('parser returned false');
-            }
-          }
-        } catch (e) {
-          error = true;
-          console.log(e);
-          _yielded = e.message;
-          status   = 'error';
-        }
-
-
-        output.className = status;
-        if (error || done) {
-          handleCompletion();
-        } else {
-          output.value = JSON.stringify(_yielded, null, 3);
-          if (spwCursor.isCursor(_yielded)) {
-            ref.tokens.push(_yielded.token());
-          } else if (spwCursor.isCursorPosition(_yielded)) {
-            ref.chars.push(_yielded);
-            _yielded && svg.selectAll('.char')
-                           .style('fill', d => (d.offset === _yielded.offset) ? 'white' : 'black')
-                           .select('rect')
-                           .style('fill', d => (d.offset === _yielded.offset) ? 'red' : 'white');
-          } else {
-            if (typeof _yielded === 'string') {
-              console.log(_yielded);
-            }
-            advance();
-          }
-        }
-
-        return {value: _yielded, status, done: done};
-      }
+      new ParserDom({
+                      controls: {
+                        forward: document.getElementById('next'),
+                        play:    document.getElementById('play'),
+                        submit:  document.getElementById('submitButton')
+                      },
+                      form:     document.getElementById('form'),
+                      output:   {
+                        text: document.getElementById('output'),
+                        svg:  d3.select('#svg-output').append('g'),
+                      },
+                    }
+      );
     </script>
 </body>
 </html>

@@ -1,5 +1,5 @@
 import {getCursorOperatorType} from "../pragmatic/operational/cursor/getCursorOperatorType.mjs";
-import {Cursor}                from "../../cursor.mjs";
+import {Cursor}                from "../../cursor/cursor.mjs";
 import {readLabel}             from "../pragmatic/operational/cursor/motions/readLabel.mjs";
 
 export function buildOperator(permittedOperators) {
