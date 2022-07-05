@@ -1,10 +1,16 @@
 {
-  "name": "redo",
-  "version": "1.0.0",
+  "name": "@spwashi/spw-parser",
+  "version": "0.0.1",
+  "main": "index.js",
   "dependencies": {
     "serve": "^13.0.2"
   },
   "scripts": {
     "serve": "serve src"
-  }
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/spwashi/spw-parser.git"
+  },
+  "license": "ISC"
 }
