@@ -6,7 +6,7 @@ import {buildOperator}  from "../../operators/buildOperator.mjs";
 import {ordinalDelimitingOperators} from "../../operators/semanticOperators.mjs";
 
 export function* ordinal(start, prev) {
-  const cursor = new Cursor(start, prev);
+  const cursor = start.spawn(prev);
   cursor.token({kind: 'ordinal'});
 
   yield* cursor.log({message: 'checking ordinal'});

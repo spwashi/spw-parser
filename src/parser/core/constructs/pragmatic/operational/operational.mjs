@@ -5,7 +5,7 @@ import {Cursor}             from "../../../cursor/cursor.mjs";
 import {buildOperator}      from "../../operators/buildOperator.mjs";
 
 export function* operational(start, prev, domain = pragmaticOperators) {
-  const cursor = new Cursor(start, prev);
+  const cursor = start.spawn(prev);
   cursor.token({kind: 'operational'});
 
   yield* cursor.log({message: 'checking operational'});

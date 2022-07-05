@@ -16,6 +16,10 @@ export class Cursor {
     this.#token  = null;
   }
 
+  spawn(active) {
+    return new Cursor(this, active);
+  }
+
   get parent() {
     return this.#parent;
   }

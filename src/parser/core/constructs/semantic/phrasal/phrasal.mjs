@@ -4,7 +4,7 @@ import {movePastSpaces} from "./motions/movePastSpaces.mjs";
 import {Cursor}         from "../../../cursor/cursor.mjs";
 
 export function* phrasal(start, prev) {
-  const cursor = new Cursor(start, prev);
+  const cursor = start.spawn(prev);
   cursor.token({kind: 'phrasal'});
 
   yield* cursor.log({message: 'checking phrasal'});

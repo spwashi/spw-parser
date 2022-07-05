@@ -1,5 +1,5 @@
-import {parse}  from "../parse.mjs";
-import {Cursor} from "../core/cursor/cursor.mjs";
+import {parse}  from "../../parser/parse.mjs";
+import {Cursor} from "../../parser/core/cursor/cursor.mjs";
 
 class ParserDomSvg {
   constructor(svg) {
@@ -8,7 +8,7 @@ class ParserDomSvg {
 
   draw(text) {
     const svg = this.svg;
-    const gs  = svg.select('g')
+    const gs  = svg.selectAll('g')
                    .data(text.split('').map((c, i) => ({text: c, offset: i})))
                    .join(d => {
                            const g = d.append('g');
@@ -124,7 +124,6 @@ export class ParserDom {
   }
 
   handleCompletion() {
-    console.log(this.state.tokens)
     this.output.text.value = JSON.stringify({
                                               tokens: this.state.tokens
                                               // .map(n => n.identity)

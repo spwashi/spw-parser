@@ -1,10 +1,9 @@
 import {getCursorOperatorType} from "../pragmatic/operational/cursor/getCursorOperatorType.mjs";
-import {Cursor}                from "../../cursor/cursor.mjs";
 import {readLabel}             from "../pragmatic/operational/cursor/motions/readLabel.mjs";
 
 export function buildOperator(permittedOperators) {
   return function* (start) {
-    const cursor = new Cursor(start);
+    const cursor = start.spawn();
     cursor.token({kind: 'operator'});
 
     yield* cursor.log({message: 'checking operator'});

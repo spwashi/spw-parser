@@ -1,12 +1,11 @@
 import {cursorStartsContainer}        from "./cursor/cursorStartsContainer.mjs";
-import {movePastSpaces} from "../../semantic/phrasal/motions/movePastSpaces.mjs";
-import {Cursor}         from "../../../cursor/cursor.mjs";
-import {buildOperator}  from "../../operators/buildOperator.mjs";
+import {movePastSpaces}               from "../../semantic/phrasal/motions/movePastSpaces.mjs";
+import {buildOperator}                from "../../operators/buildOperator.mjs";
 import {permittedConstituents}        from "./components/components.mjs";
 import {containerDelimitingOperators} from "../../operators/semanticOperators.mjs";
 
 export function* container(start, prev) {
-  const cursor = new Cursor(start, prev)
+  const cursor = start.spawn(prev);
   cursor.token({kind: 'container'});
 
   yield* cursor.log({message: 'checking container'});

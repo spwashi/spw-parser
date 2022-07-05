@@ -11,8 +11,7 @@
             integrity="sha512-nkC97gUNsbPjaWQm5GVpreTVy9IJO+z13y1M8mM+1BJRjfp9sz+1ixWu4+1mOMUzIt72pVD9rwjxJKV8LdlvjA=="
             crossorigin="anonymous" referrerpolicy="no-referrer"></script>
     <script src="lib/d3.js"></script>
-    <script type="module" src="parser/web/app.mjs"></script>
-
+    <script type="module" src="runtime/web/app.mjs"></script>
 </head>
 <body>
     <div id="root"></div>
@@ -21,19 +20,19 @@
         <label>
             <textarea autofocus
                       name="formInput"
-                      onfocus="this.value = window.localStorage.getItem('text-to-parse'); submitButton.style.display='block'"
+                      onfocus="this.value = window.localStorage.getItem('text-to-parse'); document.getElementById('submitButton').style.display='block'"
                       onchange="window.localStorage.setItem('text-to-parse', this.value); "></textarea>
         </label>
         <br>
         <button id="submitButton" type="submit">parse</button>
-        <button id="play" style="display:none;" type="button">play</button>
-        <button id="next" style="display:none;" type="button">step</button>
+        <button id="play" type="button">play</button>
+        <button id="next" type="button">step</button>
         <br>
         <svg id="svg-output"></svg>
         <output id="output" name="parsed"></output>
     </form>
     <script type="module">
-      import {ParserDom} from "./parser/web/app.mjs";
+      import {ParserDom} from "./runtime/web/app.mjs";
 
       new ParserDom({
                       controls: {
