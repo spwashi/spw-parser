@@ -2,7 +2,6 @@
   "name": "@spwashi/spw-parser",
   "version": "0.0.1",
   "main": "index.js",
-  "private": false,
   "dependencies": {
     "serve": "^13.0.2"
   },
