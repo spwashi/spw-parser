@@ -1,1 +1,1 @@
-export {parse} from './src/parser/parse.mjs';
+export {parse} from './public/src/parser/parse.mjs';

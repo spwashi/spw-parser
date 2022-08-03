@@ -19,15 +19,15 @@ Spw is a language that is meant to be relatively human.
 Right now there are a few main token categories:
 
 - Nodal Constructs
-    - [Nominal](src/parser/core/constructs/nodal/nominal)
-    - [Numeric](src/parser/core/constructs/nodal/numeric)
-    - [Container](src/parser/core/constructs/nodal/container)
+    - [Nominal](public/src/parser/constructs/nodal/nominal)
+    - [Numeric](public/src/parser/constructs/nodal/numeric)
+    - [Container](public/src/parser/constructs/nodal/container)
 - Pragmatic Constructs
-    - [Operational](./src/parser/core/constructs/pragmatic/operational)
+    - [Operational](public/src/parser/constructs/operational/pragmatic/operational)
 - Semantic Constructs
-    - [Ordinal](./src/parser/core/constructs/semantic/ordinal)
-    - [Phrasal](./src/parser/core/constructs/semantic/phrasal)
-    - [Common](./src/parser/core/constructs/semantic/common)
+    - [Ordinal](public/src/parser/constructs/operational/semantic/ordinal)
+    - [Phrasal](public/src/parser/constructs/operational/semantic/phrasal)
+    - [Common](public/src/parser/constructs/operational/semantic/common)
 
 ---
 
