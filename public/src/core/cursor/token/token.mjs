@@ -66,6 +66,9 @@ class RecursiveReductionLens extends Lens {
 }
 
 export class Token {
+  // joins the token kind
+  static kindJunctionStr = ' + ';
+
   _kind = [];
   cursor;
 
@@ -99,7 +102,7 @@ export class Token {
   toJSON() {
     return Object.fromEntries(Object.entries({
                                                identity: this.identity,
-                                               kind:     [...this.kind].join(' + '),
+                                               kind:     [...this.kind].join(Token.kindJunctionStr),
                                                head:     this.head,
                                                body:     this.body,
                                                tail:     this.tail,
