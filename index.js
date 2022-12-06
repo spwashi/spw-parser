@@ -1,1 +1,0 @@
-export {parse} from './public/src/parser/parse.mjs';

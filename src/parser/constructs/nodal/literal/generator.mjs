@@ -1,7 +1,7 @@
-import {beginsLiteral} from "./cursor/beginsLiteral.mjs";
-import {takeSpaces}    from "../../operational/semantic/phrasal/cursor/motions/takeSpaces.mjs";
-import {_operator}     from "../../operational/generator.builder.mjs";
-import {literalPartOptions} from "./parts/parts.mjs";
+import {beginsLiteral}              from "./cursor/beginsLiteral.mjs";
+import {takeSpaces}                 from "../../operational/semantic/phrasal/cursor/motions/takeSpaces.mjs";
+import {_operator}                  from "../../operational/generator.builder.mjs";
+import {literalPartOptions}         from "./parts/parts.mjs";
 import {literalDelimitingOperators} from "./parts/operators.mjs";
 
 export function* literal(start, prev) {

@@ -10,8 +10,8 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/d3/7.3.0/d3.js"
             integrity="sha512-nkC97gUNsbPjaWQm5GVpreTVy9IJO+z13y1M8mM+1BJRjfp9sz+1ixWu4+1mOMUzIt72pVD9rwjxJKV8LdlvjA=="
             crossorigin="anonymous" referrerpolicy="no-referrer"></script>
-    <script src="src/runtime/web/lib/d3.js"></script>
-    <script type="module" src="src/runtime/web/app.mjs"></script>
+    <script src="/out/runtime/web/lib/d3.js"></script>
+    <script type="module" src="/out/runtime/web/app.js"></script>
 </head>
 <body>
     <div id="root"></div>
@@ -32,7 +32,7 @@
         <output id="output" name="parsed"></output>
     </form>
     <script type="module">
-      import {ParserDom} from "./src/runtime/web/app.mjs";
+      import {ParserDom} from "../src/runtime/web/app.mjs";
 
       new ParserDom({
                       controls: {

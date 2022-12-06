@@ -1,7 +1,7 @@
 import {isOrdinalDelimiter}         from "./cursor/checks/isOrdinalDelimiter.mjs";
-import {ordinalPartOptions} from "./parts/parts.mjs";
-import {takeSpaces}         from "../phrasal/cursor/motions/takeSpaces.mjs";
-import {_operator}          from "../../generator.builder.mjs";
+import {ordinalPartOptions}         from "./parts/parts.mjs";
+import {takeSpaces}                 from "../phrasal/cursor/motions/takeSpaces.mjs";
+import {_operator}                  from "../../generator.builder.mjs";
 import {ordinalDelimitingOperators} from "../operators.mjs";
 
 export function* ordinal(start, prev) {
