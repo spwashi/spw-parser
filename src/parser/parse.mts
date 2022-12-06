@@ -20,7 +20,7 @@ class ParserLens extends Lens {
 export function parse(input, {asGenerator = false} = {}) {
   if (asGenerator) return parser();
   let end;
-  for (let v of parser()) {
+  for (const v of parser()) {
     end = v;
   }
   return end;

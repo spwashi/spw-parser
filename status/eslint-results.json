@@ -12,110 +12,18 @@
   },
   {
     "filePath": "/Users/samwashington/Home/Development/_repos/spw/spw-parser/src/core/cursor/cursor.mts",
-    "messages": [
-      {
-        "ruleId": "prefer-const",
-        "severity": 2,
-        "message": "'tabs' is never reassigned. Use 'const' instead.",
-        "line": 76,
-        "column": 11,
-        "nodeType": "Identifier",
-        "messageId": "useConst",
-        "endLine": 76,
-        "endColumn": 15,
-        "fix": {
-          "range": [
-            1589,
-            1633
-          ],
-          "text": "const tabs          = '\\t'.repeat(this.level);"
-        }
-      },
-      {
-        "ruleId": "prefer-const",
-        "severity": 2,
-        "message": "'pos' is never reassigned. Use 'const' instead.",
-        "line": 90,
-        "column": 9,
-        "nodeType": "Identifier",
-        "messageId": "useConst",
-        "endLine": 90,
-        "endColumn": 12,
-        "fix": {
-          "range": [
-            1970,
-            1991
-          ],
-          "text": "const pos = this.pos();"
-        }
-      }
-    ],
+    "messages": [],
     "suppressedMessages": [],
-    "errorCount": 2,
+    "errorCount": 0,
     "fatalErrorCount": 0,
     "warningCount": 0,
-    "fixableErrorCount": 2,
+    "fixableErrorCount": 0,
     "fixableWarningCount": 0,
-    "source": "import {_debug} from \"../../config.mts\";\nimport {Token}  from \"./token/token.mts\";\n\nexport class Cursor {\n  #token;\n  #parent;\n\n  offset;\n  start;\n\n  constructor(parent, former = undefined) {\n    this.offset     = parent?.offset || 0;\n    this.start      = former?.start ?? this.offset;\n    this.input      = parent?.input;\n    this.generators = parent?.generators;\n    this.level      = typeof parent?.level !== 'undefined' ? parent.level + 1 : 0;\n    this.#parent    = (former || parent) || undefined;\n    this.#token     = null;\n  }\n\n  spawn(former) {\n    const Constructor = this.constructor;\n    return new Constructor(this, former);\n  }\n\n  get parent() {\n    return this.#parent;\n  }\n\n  setOffset(cursor) {\n    this.offset = cursor.offset;\n  }\n\n  curr() {\n    return this.input[this.offset];\n  }\n\n  /**\n   *\n   * @param generators\n   * @param former\n   * @returns {Generator<*, undefined, *>}\n   */\n  * scan(generators = undefined, former = undefined) {\n    generators = generators ?? this.generators;\n\n    if (!generators) throw new Error('Cannot scan without generators');\n\n    let activeCursor = former;\n\n    for (const generator of generators) {\n      const cursor = yield* generator(this, activeCursor);\n      const token  = cursor ? cursor.token() : false;\n\n      if (!token) continue;\n\n      this.setOffset(cursor);\n\n      if (token !== activeCursor?.token()) {\n        yield cursor;\n      }\n\n      activeCursor = cursor;\n    }\n\n    return activeCursor;\n  }\n\n  /**\n   *\n   * @param item\n   * @returns {Generator<string, void, *>}\n   */\n  * log(item) {\n    if (_debug) {\n      let tabs          = '\\t'.repeat(this.level);\n      const tabbedLabel = `${tabs}${this}`;\n      yield tabbedLabel;\n      const tabbedMessage = `${tabs}\\t${item.message}`;\n      yield tabbedMessage;\n      if (item.miss) yield `${tabs}\\t\\treason: ${item.miss}`;\n    }\n  }\n\n  /**\n   *\n   * @returns {Generator<{offset, kind: string}, {offset, kind: string}, *>}\n   */\n  * take() {\n    let pos = this.pos();\n    yield pos;\n    this.advance();\n    return pos;\n  }\n\n  /**\n   *\n   */\n  advance() {\n    this.offset = this.offset + 1;\n  }\n\n  pos() {\n    return {\n      kind:   'pos',\n      offset: this.offset,\n    };\n  }\n\n  token(token) {\n    if (typeof token === \"undefined\") {\n      return this.#token;\n    }\n    if (token === false) {\n      this.#token = token;\n      return this;\n    }\n    this.#token = this.#token ?? new Token(this);\n\n    Object.assign(this.#token, token);\n    return this;\n  }\n\n  static isCursorPosition(cursor) {\n    if (!cursor) return false;\n    return typeof cursor.offset !== 'undefined' && cursor.kind === 'pos';\n  }\n}\n\nexport class CharacterCursor extends Cursor {\n  static isCharacterCursor(cursor) {\n    return typeof cursor?.start !== 'undefined';\n  }\n\n  toString() {\n    const json = this.toJSON();\n    return `(line: ${json.start.line}, col: ${json.start.col})`\n  }\n\n  pos() {\n    return {\n      ...super.pos(),\n      key: this.curr(),\n    };\n  }\n\n  toJSON() {\n    const offset     = this.offset - 1;\n    const startSplit = this.input.slice(0, this.start).split('\\n');\n    const startLine  = startSplit.length;\n    const text       = this.text;\n    const midSplit   = text.split('\\n');\n    return {\n      level: this.level,\n      start: {\n        line:   startLine,\n        col:    (startSplit.pop()?.length || 1) - 1,\n        offset: this.start\n      },\n      end:   {\n        line:   startLine + midSplit.length - 1,\n        col:    (midSplit.pop()?.length || 1) - 1,\n        offset: offset\n      },\n      text:  text,\n      // parent: this.#parent?.level ? this.#parent : undefined\n    }\n  }\n\n  get text() {\n    return this.input.slice(this.start, this.offset);\n  }\n}",
     "usedDeprecatedRules": []
   },
   {
     "filePath": "/Users/samwashington/Home/Development/_repos/spw/spw-parser/src/core/cursor/token/token.mts",
     "messages": [
-      {
-        "ruleId": "prefer-const",
-        "severity": 2,
-        "message": "'item' is never reassigned. Use 'const' instead.",
-        "line": 35,
-        "column": 14,
-        "nodeType": "Identifier",
-        "messageId": "useConst",
-        "endLine": 35,
-        "endColumn": 18,
-        "fix": {
-          "range": [
-            807,
-            815
-          ],
-          "text": "const item"
-        }
-      },
-      {
-        "ruleId": "prefer-const",
-        "severity": 2,
-        "message": "'el' is never reassigned. Use 'const' instead.",
-        "line": 36,
-        "column": 11,
-        "nodeType": "Identifier",
-        "messageId": "useConst",
-        "endLine": 36,
-        "endColumn": 13,
-        "fix": {
-          "range": [
-            845,
-            879
-          ],
-          "text": "const el = this.reduce(item, scope);"
-        }
-      },
-      {
-        "ruleId": "prefer-const",
-        "severity": 2,
-        "message": "'nest' is never reassigned. Use 'const' instead.",
-        "line": 40,
-        "column": 9,
-        "nodeType": "Identifier",
-        "messageId": "useConst",
-        "endLine": 40,
-        "endColumn": 13,
-        "fix": {
-          "range": [
-            991,
-            1066
-          ],
-          "text": "const nest  = RecursiveReductionLens.doFlatten ? false : !context.generation;"
-        }
-      },
       {
         "ruleId": "@typescript-eslint/no-empty-function",
         "severity": 2,
@@ -126,69 +34,15 @@
         "messageId": "unexpected",
         "endLine": 46,
         "endColumn": 4
-      },
-      {
-        "ruleId": "prefer-const",
-        "severity": 2,
-        "message": "'item' is never reassigned. Use 'const' instead.",
-        "line": 58,
-        "column": 14,
-        "nodeType": "Identifier",
-        "messageId": "useConst",
-        "endLine": 58,
-        "endColumn": 18,
-        "fix": {
-          "range": [
-            1318,
-            1326
-          ],
-          "text": "const item"
-        }
-      },
-      {
-        "ruleId": "prefer-const",
-        "severity": 2,
-        "message": "'reduced' is never reassigned. Use 'const' instead.",
-        "line": 59,
-        "column": 11,
-        "nodeType": "Identifier",
-        "messageId": "useConst",
-        "endLine": 59,
-        "endColumn": 18,
-        "fix": {
-          "range": [
-            1344,
-            1385
-          ],
-          "text": "const reduced = this.reduce(item, context);"
-        }
-      },
-      {
-        "ruleId": "prefer-const",
-        "severity": 2,
-        "message": "'curr' is never reassigned. Use 'const' instead.",
-        "line": 91,
-        "column": 11,
-        "nodeType": "Identifier",
-        "messageId": "useConst",
-        "endLine": 91,
-        "endColumn": 15,
-        "fix": {
-          "range": [
-            1924,
-            1963
-          ],
-          "text": "const curr = lens.reduce(this, location);"
-        }
       }
     ],
     "suppressedMessages": [],
-    "errorCount": 7,
+    "errorCount": 1,
     "fatalErrorCount": 0,
     "warningCount": 0,
-    "fixableErrorCount": 6,
+    "fixableErrorCount": 0,
     "fixableWarningCount": 0,
-    "source": "import {Lens}          from \"../../lens/lens.mts\";\nimport {TokenFragment} from \"../../lens/scope/scope.mts\";\n\nclass RecursiveReductionLens extends Lens {\n  static doFlatten = true;\n\n  reduce(node, context) {\n    if (node instanceof TokenFragment) {\n      return this._reduceArray(node.parts, context);\n    }\n\n    if (typeof node === 'undefined' || (node === null)) {\n      this._reduceNothing();\n      return;\n    }\n\n    if (Array.isArray(node)) {\n      return this._reduceArray(node, context);\n    }\n\n    if (typeof node === 'string') {\n      return this._reduceString(node);\n    }\n\n    if (node.key) {\n      return this._reduceAtom(node, context);\n    }\n\n    return this._reduceNode(node, context);\n  }\n\n  _reduceNode(node, context) {\n    const scope = context.spawn(node);\n    const items = [];\n    for (let item of scope.loop(node)) {\n      let el = this.reduce(item, scope);\n      el && items.push(el);\n    }\n    const key = RecursiveReductionLens.doFlatten ? items.flat() : items;\n    let nest  = RecursiveReductionLens.doFlatten ? false : !context.generation;\n    return nest ? {kind: node.kind, key} : key;\n  }\n\n  _reduceNothing() {\n\n  }\n\n  _reduceAtom(node, context) {\n    return context.key(node);\n  }\n\n  _reduceString() {\n    return null;\n  }\n\n  _reduceArray(node, context) {\n    const items = [];\n    for (let item of node) {\n      let reduced = this.reduce(item, context);\n      if (!reduced) continue;\n      items.push(reduced);\n    }\n    if (items.length < 2) return items[0];\n    return items.flat();\n  }\n}\n\nexport class Token {\n  // joins the token kind\n  static kindJunctionStr = ' + ';\n\n  _kind = [];\n  cursor;\n\n  constructor(cursor) {\n    this.cursor = cursor;\n  }\n\n  set kind(kind) {\n    this._kind.push(kind)\n  }\n\n  get kind() {\n    return this._kind;\n  }\n\n  get identity() {\n    const all  = [];\n    const lens = new RecursiveReductionLens(this);\n    for (const location of lens.locate(this)) {\n      let curr = lens.reduce(this, location);\n      curr && all.push(curr);\n    }\n\n    function keys(curr) {\n      return curr.key ? curr.key : (Array.isArray(curr) ? curr.map(keys).join('') : curr);\n    }\n\n    return all.reduce((all, curr) => '' + all + keys(curr), '')\n  }\n\n  toJSON() {\n    return Object.fromEntries(Object.entries({\n                                               identity: this.identity,\n                                               kind:     [...this.kind].join(Token.kindJunctionStr),\n                                               head:     this.head,\n                                               body:     this.body,\n                                               tail:     this.tail,\n                                             }).filter(([, v]) => !!v))\n  }\n}",
+    "source": "import {Lens}          from \"../../lens/lens.mts\";\nimport {TokenFragment} from \"../../lens/scope/scope.mts\";\n\nclass RecursiveReductionLens extends Lens {\n  static doFlatten = true;\n\n  reduce(node, context) {\n    if (node instanceof TokenFragment) {\n      return this._reduceArray(node.parts, context);\n    }\n\n    if (typeof node === 'undefined' || (node === null)) {\n      this._reduceNothing();\n      return;\n    }\n\n    if (Array.isArray(node)) {\n      return this._reduceArray(node, context);\n    }\n\n    if (typeof node === 'string') {\n      return this._reduceString(node);\n    }\n\n    if (node.key) {\n      return this._reduceAtom(node, context);\n    }\n\n    return this._reduceNode(node, context);\n  }\n\n  _reduceNode(node, context) {\n    const scope = context.spawn(node);\n    const items = [];\n    for (const item of scope.loop(node)) {\n      const el = this.reduce(item, scope);\n      el && items.push(el);\n    }\n    const key = RecursiveReductionLens.doFlatten ? items.flat() : items;\n    const nest  = RecursiveReductionLens.doFlatten ? false : !context.generation;\n    return nest ? {kind: node.kind, key} : key;\n  }\n\n  _reduceNothing() {\n\n  }\n\n  _reduceAtom(node, context) {\n    return context.key(node);\n  }\n\n  _reduceString() {\n    return null;\n  }\n\n  _reduceArray(node, context) {\n    const items = [];\n    for (const item of node) {\n      const reduced = this.reduce(item, context);\n      if (!reduced) continue;\n      items.push(reduced);\n    }\n    if (items.length < 2) return items[0];\n    return items.flat();\n  }\n}\n\nexport class Token {\n  // joins the token kind\n  static kindJunctionStr = ' + ';\n\n  _kind = [];\n  cursor;\n\n  constructor(cursor) {\n    this.cursor = cursor;\n  }\n\n  set kind(kind) {\n    this._kind.push(kind)\n  }\n\n  get kind() {\n    return this._kind;\n  }\n\n  get identity() {\n    const all  = [];\n    const lens = new RecursiveReductionLens(this);\n    for (const location of lens.locate(this)) {\n      const curr = lens.reduce(this, location);\n      curr && all.push(curr);\n    }\n\n    function keys(curr) {\n      return curr.key ? curr.key : (Array.isArray(curr) ? curr.map(keys).join('') : curr);\n    }\n\n    return all.reduce((all, curr) => '' + all + keys(curr), '')\n  }\n\n  toJSON() {\n    return Object.fromEntries(Object.entries({\n                                               identity: this.identity,\n                                               kind:     [...this.kind].join(Token.kindJunctionStr),\n                                               head:     this.head,\n                                               body:     this.body,\n                                               tail:     this.tail,\n                                             }).filter(([, v]) => !!v))\n  }\n}",
     "usedDeprecatedRules": []
   },
   {
@@ -252,78 +106,24 @@
     "filePath": "/Users/samwashington/Home/Development/_repos/spw/spw-parser/src/core/lens/scope/scope.mts",
     "messages": [
       {
-        "ruleId": "prefer-const",
-        "severity": 2,
-        "message": "'parts' is never reassigned. Use 'const' instead.",
-        "line": 18,
-        "column": 9,
-        "nodeType": "Identifier",
-        "messageId": "useConst",
-        "endLine": 18,
-        "endColumn": 14,
-        "fix": {
-          "range": [
-            338,
-            395
-          ],
-          "text": "const parts = [this._head, this._operator].filter(Boolean);"
-        }
-      },
-      {
-        "ruleId": "prefer-const",
-        "severity": 2,
-        "message": "'operator' is never reassigned. Use 'const' instead.",
-        "line": 105,
-        "column": 9,
-        "nodeType": "Identifier",
-        "messageId": "useConst",
-        "endLine": 105,
-        "endColumn": 17,
-        "fix": {
-          "range": [
-            2031,
-            2070
-          ],
-          "text": "const operator = iterable.operators?.[i];"
-        }
-      },
-      {
         "ruleId": "@typescript-eslint/no-unused-vars",
         "severity": 1,
         "message": "'i' is assigned a value but never used.",
         "line": 146,
-        "column": 16,
+        "column": 18,
         "nodeType": "Identifier",
         "messageId": "unusedVar",
         "endLine": 146,
-        "endColumn": 17
-      },
-      {
-        "ruleId": "prefer-const",
-        "severity": 2,
-        "message": "'i' is never reassigned. Use 'const' instead.",
-        "line": 146,
-        "column": 16,
-        "nodeType": "Identifier",
-        "messageId": "useConst",
-        "endLine": 146,
-        "endColumn": 17,
-        "fix": {
-          "range": [
-            2714,
-            2719
-          ],
-          "text": "const i"
-        }
+        "endColumn": 19
       }
     ],
     "suppressedMessages": [],
-    "errorCount": 3,
+    "errorCount": 0,
     "fatalErrorCount": 0,
     "warningCount": 1,
-    "fixableErrorCount": 3,
+    "fixableErrorCount": 0,
     "fixableWarningCount": 0,
-    "source": "export class TokenFragment {\n  _head;\n  _operator;\n\n  constructor(head, operator = undefined, isPrefixed = false) {\n    this._head       = head\n    this._operator   = operator;\n    this._isPrefixed = isPrefixed;\n\n  }\n\n  operator(operator) {\n    if (!operator) return this._operator\n    this._operator = operator;\n  }\n\n  get parts() {\n    let parts = [this._head, this._operator].filter(Boolean);\n    return this._isPrefixed ? parts.reverse() : parts;\n  }\n}\n\nclass Head extends TokenFragment {\n}\n\nexport class BodyItem extends TokenFragment {\n  get parts() {\n    return this._isPrefixed ? super.parts.reverse() : super.parts;\n  }\n}\n\nclass Body extends TokenFragment {\n}\n\nclass Tail extends TokenFragment {\n}\n\nclass NodeBuilder {\n  _seedNode;\n  _trailingOperator;\n  _tail;\n\n  constructor(node) {\n    this._seedNode    = node;\n    this.fillOperator = getOperatorIterator(node);\n  }\n\n  get seedNode() {\n    return this._seedNode;\n  }\n\n  initTail() {\n    const node = this.seedNode;\n    if (!node.tail) { return; }\n\n    this._tail = new Tail(node.tail, this._trailingOperator, !!this._trailingOperator);\n\n    return this._tail;\n  }\n\n  initBody() {\n    const node = this.seedNode;\n    const body = node?.body;\n    if (!body) { return; }\n\n    const items = [];\n    for (const item of body) {\n      items.push(new BodyItem(item, this._trailingOperator, false));\n      this._trailingOperator = this.fillOperator();\n    }\n\n    this._body = new Body(items);\n\n    return this._body;\n  }\n\n  initHead() {\n    const node   = this.seedNode;\n    let operator = this.fillOperator();\n    if (node.head) {\n      this._head = new Head(node.head, operator);\n      operator   = undefined;\n    }\n    this._trailingOperator = operator;\n\n    return this._head;\n  }\n\n  * generate() {\n    const head = this.initHead();\n    if (head) yield  head;\n\n    const body = this.initBody();\n    if (body) yield  body;\n\n    const tail = this.initTail();\n    if (tail) yield  tail;\n  }\n\n}\n\nfunction getOperatorIterator(iterable) {\n  let i = 0;\n  return function () {\n    let operator = iterable.operators?.[i];\n    i++;\n    return operator;\n  };\n}\n\nexport class Scope {\n  constructor(parent, context) {\n    this.generation = (parent?.generation ?? -1) + 1;\n    this.context    = context ?? parent;\n    this.root       = parent.root ?? parent;\n  }\n\n  spawn(context) {\n    return new Scope(this, context);\n  }\n\n  key(item) {\n    return item;\n  }\n\n  check(node) {\n    return !!node;\n  }\n\n  get prefix() {\n    if (!this.doPrefix) return;\n    return `{`\n  }\n\n  get doPrefix() {\n    return false; //(this.generation === 4);\n  }\n\n  get suffix() {\n    if (!this.doPrefix) return;\n    return '}';\n  }\n\n  * loop(_node) {\n    if (Array.isArray(_node)) {\n      for (let i of _node) {\n        yield _node;\n      }\n      return;\n    }\n\n    if (!this.check(_node)) return;\n\n    const nodeBuilder = new NodeBuilder(_node);\n    if (this.prefix)\n      yield this.prefix;\n\n\n    yield* nodeBuilder.generate();\n\n    if (this.suffix)\n      yield this.suffix;\n  }\n\n}",
+    "source": "export class TokenFragment {\n  _head;\n  _operator;\n\n  constructor(head, operator = undefined, isPrefixed = false) {\n    this._head       = head\n    this._operator   = operator;\n    this._isPrefixed = isPrefixed;\n\n  }\n\n  operator(operator) {\n    if (!operator) return this._operator\n    this._operator = operator;\n  }\n\n  get parts() {\n    const parts = [this._head, this._operator].filter(Boolean);\n    return this._isPrefixed ? parts.reverse() : parts;\n  }\n}\n\nclass Head extends TokenFragment {\n}\n\nexport class BodyItem extends TokenFragment {\n  get parts() {\n    return this._isPrefixed ? super.parts.reverse() : super.parts;\n  }\n}\n\nclass Body extends TokenFragment {\n}\n\nclass Tail extends TokenFragment {\n}\n\nclass NodeBuilder {\n  _seedNode;\n  _trailingOperator;\n  _tail;\n\n  constructor(node) {\n    this._seedNode    = node;\n    this.fillOperator = getOperatorIterator(node);\n  }\n\n  get seedNode() {\n    return this._seedNode;\n  }\n\n  initTail() {\n    const node = this.seedNode;\n    if (!node.tail) { return; }\n\n    this._tail = new Tail(node.tail, this._trailingOperator, !!this._trailingOperator);\n\n    return this._tail;\n  }\n\n  initBody() {\n    const node = this.seedNode;\n    const body = node?.body;\n    if (!body) { return; }\n\n    const items = [];\n    for (const item of body) {\n      items.push(new BodyItem(item, this._trailingOperator, false));\n      this._trailingOperator = this.fillOperator();\n    }\n\n    this._body = new Body(items);\n\n    return this._body;\n  }\n\n  initHead() {\n    const node   = this.seedNode;\n    let operator = this.fillOperator();\n    if (node.head) {\n      this._head = new Head(node.head, operator);\n      operator   = undefined;\n    }\n    this._trailingOperator = operator;\n\n    return this._head;\n  }\n\n  * generate() {\n    const head = this.initHead();\n    if (head) yield  head;\n\n    const body = this.initBody();\n    if (body) yield  body;\n\n    const tail = this.initTail();\n    if (tail) yield  tail;\n  }\n\n}\n\nfunction getOperatorIterator(iterable) {\n  let i = 0;\n  return function () {\n    const operator = iterable.operators?.[i];\n    i++;\n    return operator;\n  };\n}\n\nexport class Scope {\n  constructor(parent, context) {\n    this.generation = (parent?.generation ?? -1) + 1;\n    this.context    = context ?? parent;\n    this.root       = parent.root ?? parent;\n  }\n\n  spawn(context) {\n    return new Scope(this, context);\n  }\n\n  key(item) {\n    return item;\n  }\n\n  check(node) {\n    return !!node;\n  }\n\n  get prefix() {\n    if (!this.doPrefix) return;\n    return `{`\n  }\n\n  get doPrefix() {\n    return false; //(this.generation === 4);\n  }\n\n  get suffix() {\n    if (!this.doPrefix) return;\n    return '}';\n  }\n\n  * loop(_node) {\n    if (Array.isArray(_node)) {\n      for (const i of _node) {\n        yield _node;\n      }\n      return;\n    }\n\n    if (!this.check(_node)) return;\n\n    const nodeBuilder = new NodeBuilder(_node);\n    if (this.prefix)\n      yield this.prefix;\n\n\n    yield* nodeBuilder.generate();\n\n    if (this.suffix)\n      yield this.suffix;\n  }\n\n}",
     "usedDeprecatedRules": []
   },
   {
@@ -350,33 +150,13 @@
   },
   {
     "filePath": "/Users/samwashington/Home/Development/_repos/spw/spw-parser/src/parser/constructs/nodal/container/generator.mts",
-    "messages": [
-      {
-        "ruleId": "prefer-const",
-        "severity": 2,
-        "message": "'open' is never reassigned. Use 'const' instead.",
-        "line": 42,
-        "column": 7,
-        "nodeType": "Identifier",
-        "messageId": "useConst",
-        "endLine": 42,
-        "endColumn": 11,
-        "fix": {
-          "range": [
-            1220,
-            1271
-          ],
-          "text": "const open       = containerDelimitingOperators.open;"
-        }
-      }
-    ],
+    "messages": [],
     "suppressedMessages": [],
-    "errorCount": 1,
+    "errorCount": 0,
     "fatalErrorCount": 0,
     "warningCount": 0,
-    "fixableErrorCount": 1,
+    "fixableErrorCount": 0,
     "fixableWarningCount": 0,
-    "source": "import {beginsContainer}              from \"./cursor/beginsContainer.mts\";\nimport {takeSpaces}                   from \"../../operational/semantic/phrasal/cursor/motions/takeSpaces.mts\";\nimport {_operator}                    from \"../../operational/generator.builder.mts\";\nimport {containerPartOptions}         from \"./parts/parts.mts\";\nimport {containerDelimitingOperators} from \"./parts/operators.mts\";\n\nexport function* container(start, prev) {\n  const cursor = start.spawn(prev);\n\n  cursor.token({kind: 'container'});\n\n  yield* cursor.log({message: 'checking container'});\n\n  if (prev) {\n    yield* cursor.log({\n                        message: 'not container',\n                        miss:    'prev'\n                      });\n    return prev;\n  }\n\n  if (!beginsContainer(start)) {\n    yield* cursor.log({\n                        message: 'not container',\n                        miss:    'cursor cannot start container'\n                      });\n    return false;\n  }\n\n  const {head, body, tail} = yield* loop(cursor);\n\n  cursor.token({kind: head.proto.name.split('.')[0]})\n\n  yield* cursor.log({message: 'resolving container'});\n\n  cursor.token({head, body, tail});\n\n  return cursor;\n}\n\nfunction* loop(cursor) {\n  let open       = containerDelimitingOperators.open;\n  const operator = yield* cursor.scan([_operator(open)]);\n  const head     = operator?.token();\n  const label    = head?.label?.key;\n  const close    = containerDelimitingOperators.close._inverse[head.proto.key];\n\n  if (!close) throw new Error('could not resolve type');\n\n  yield* takeSpaces(cursor);\n\n  let started;\n  let tail;\n  const body = [];\n\n  while (cursor.curr()) {\n    if ((!started) && (started = true)) yield* cursor.log({message: 'beginning container'});\n    yield* takeSpaces(cursor);\n\n    const delimiterScanner = yield* cursor.scan([_operator({[close.key]: close})]);\n\n    const _delimiter = delimiterScanner?.token();\n    const tailLabel  = _delimiter?.label?.key;\n    if (_delimiter) {\n      if (tailLabel === label || !(tailLabel && label)) {\n        tail = _delimiter;\n        break;\n      }\n\n      body.push(_delimiter);\n\n      yield* takeSpaces(cursor);\n    }\n\n    const statement = yield* cursor.scan(containerPartOptions);\n    if (!statement) break;\n\n    body.push(statement?.token());\n\n    yield* takeSpaces(cursor);\n  }\n\n  return {head, body, tail};\n}\n",
     "usedDeprecatedRules": []
   },
   {
@@ -414,33 +194,13 @@
   },
   {
     "filePath": "/Users/samwashington/Home/Development/_repos/spw/spw-parser/src/parser/constructs/nodal/literal/generator.mts",
-    "messages": [
-      {
-        "ruleId": "prefer-const",
-        "severity": 2,
-        "message": "'open' is never reassigned. Use 'const' instead.",
-        "line": 40,
-        "column": 7,
-        "nodeType": "Identifier",
-        "messageId": "useConst",
-        "endLine": 40,
-        "endColumn": 11,
-        "fix": {
-          "range": [
-            1137,
-            1186
-          ],
-          "text": "const open       = literalDelimitingOperators.open;"
-        }
-      }
-    ],
+    "messages": [],
     "suppressedMessages": [],
-    "errorCount": 1,
+    "errorCount": 0,
     "fatalErrorCount": 0,
     "warningCount": 0,
-    "fixableErrorCount": 1,
+    "fixableErrorCount": 0,
     "fixableWarningCount": 0,
-    "source": "import {beginsLiteral}              from \"./cursor/beginsLiteral.mts\";\nimport {takeSpaces}                 from \"../../operational/semantic/phrasal/cursor/motions/takeSpaces.mts\";\nimport {_operator}                  from \"../../operational/generator.builder.mts\";\nimport {literalPartOptions}         from \"./parts/parts.mts\";\nimport {literalDelimitingOperators} from \"./parts/operators.mts\";\n\nexport function* literal(start, prev) {\n  const cursor = start.spawn(prev);\n\n  cursor.token({kind: 'literal'});\n\n  yield* cursor.log({message: 'checking literal'});\n\n  if (prev) {\n    yield* cursor.log({\n                        message: 'not literal',\n                        miss:    'prev'\n                      });\n    return prev;\n  }\n\n  if (!beginsLiteral(start)) {\n    yield* cursor.log({\n                        message: 'not literal',\n                        miss:    'cursor cannot start literal'\n                      });\n    return false;\n  }\n\n  const {head, body, tail} = yield* loop(cursor);\n\n  yield* cursor.log({message: 'resolving literal'});\n\n  cursor.token({head, body, tail});\n\n  return cursor;\n}\n\nfunction* loop(cursor) {\n  let open       = literalDelimitingOperators.open;\n  const operator = yield* cursor.scan([_operator(open)]);\n  const head     = operator?.token();\n  const label    = head?.label?.key;\n  const close    = literalDelimitingOperators.close._inverse[head.proto.key];\n\n  if (!close) throw new Error('could not resolve type');\n\n  yield* takeSpaces(cursor);\n\n  let started;\n  let tail;\n  const body = [];\n\n  while (cursor.curr()) {\n    if ((!started) && (started = true)) yield* cursor.log({message: 'beginning literal'});\n    yield* takeSpaces(cursor);\n\n    const nextCursor = yield* cursor.scan([_operator({[close.key]: close})]);\n\n    const _delimiter = nextCursor?.token();\n    const tailLabel  = _delimiter?.label?.key;\n    if (_delimiter) {\n      if (tailLabel === label || !(tailLabel && label)) {\n        tail = _delimiter;\n        break;\n      }\n\n      body.push(_delimiter);\n\n      yield* takeSpaces(cursor);\n    }\n\n    const statement = yield* cursor.scan(literalPartOptions);\n    if (!statement) break;\n\n    body.push(statement?.token());\n\n    yield* takeSpaces(cursor);\n  }\n\n  return {head, body, tail};\n}\n",
     "usedDeprecatedRules": []
   },
   {
@@ -791,51 +551,13 @@
   },
   {
     "filePath": "/Users/samwashington/Home/Development/_repos/spw/spw-parser/src/parser/constructs/nodal/nominal/parts/definition.mts",
-    "messages": [
-      {
-        "ruleId": "prefer-const",
-        "severity": 2,
-        "message": "'containers' is never reassigned. Use 'const' instead.",
-        "line": 4,
-        "column": 7,
-        "nodeType": "Identifier",
-        "messageId": "useConst",
-        "endLine": 4,
-        "endColumn": 17,
-        "fix": {
-          "range": [
-            98,
-            127
-          ],
-          "text": "const containers = new Map([]);"
-        }
-      },
-      {
-        "ruleId": "prefer-const",
-        "severity": 2,
-        "message": "'set' is never reassigned. Use 'const' instead.",
-        "line": 7,
-        "column": 9,
-        "nodeType": "Identifier",
-        "messageId": "useConst",
-        "endLine": 7,
-        "endColumn": 12,
-        "fix": {
-          "range": [
-            246,
-            300
-          ],
-          "text": "const set = containers.get(_container.head.proto) ?? [];"
-        }
-      }
-    ],
+    "messages": [],
     "suppressedMessages": [],
-    "errorCount": 2,
+    "errorCount": 0,
     "fatalErrorCount": 0,
     "warningCount": 0,
-    "fixableErrorCount": 2,
+    "fixableErrorCount": 0,
     "fixableWarningCount": 0,
-    "source": "import {container} from \"../../container/generator.mts\";\n\nexport function* definition(cursor) {\n  let containers = new Map([]);\n  let _container;\n  while ((_container = yield* cursor.scan([container])) && (_container = _container.token())) {\n    let set = containers.get(_container.head.proto) ?? [];\n    set.push(_container)\n    containers.set(_container.head.proto.name, set)\n  }\n  return containers;\n}\n\nexport function* takeDefinition(cursor) {\n  const containers = yield* definition(cursor);\n  cursor.token({definition: containers});\n  if (containers.size) {\n    cursor.token({body: [...containers.values()]});\n  }\n}\n",
     "usedDeprecatedRules": []
   },
   {
@@ -862,69 +584,13 @@
   },
   {
     "filePath": "/Users/samwashington/Home/Development/_repos/spw/spw-parser/src/parser/constructs/nodal/numeric/generator.mts",
-    "messages": [
-      {
-        "ruleId": "prefer-const",
-        "severity": 2,
-        "message": "'_integral' is never reassigned. Use 'const' instead.",
-        "line": 17,
-        "column": 18,
-        "nodeType": "Identifier",
-        "messageId": "useConst",
-        "endLine": 17,
-        "endColumn": 27,
-        "fix": {
-          "range": [
-            476,
-            549
-          ],
-          "text": "const {integral: _integral, fractional: _fractional} = yield* loop(cursor);"
-        }
-      },
-      {
-        "ruleId": "prefer-const",
-        "severity": 2,
-        "message": "'_fractional' is never reassigned. Use 'const' instead.",
-        "line": 17,
-        "column": 41,
-        "nodeType": "Identifier",
-        "messageId": "useConst",
-        "endLine": 17,
-        "endColumn": 52,
-        "fix": {
-          "range": [
-            476,
-            549
-          ],
-          "text": "const {integral: _integral, fractional: _fractional} = yield* loop(cursor);"
-        }
-      },
-      {
-        "ruleId": "prefer-const",
-        "severity": 2,
-        "message": "'fractional' is never reassigned. Use 'const' instead.",
-        "line": 60,
-        "column": 7,
-        "nodeType": "Identifier",
-        "messageId": "useConst",
-        "endLine": 60,
-        "endColumn": 17,
-        "fix": {
-          "range": [
-            1712,
-            1732
-          ],
-          "text": "const fractional = [];"
-        }
-      }
-    ],
+    "messages": [],
     "suppressedMessages": [],
-    "errorCount": 3,
+    "errorCount": 0,
     "fatalErrorCount": 0,
     "warningCount": 0,
-    "fixableErrorCount": 3,
+    "fixableErrorCount": 0,
     "fixableWarningCount": 0,
-    "source": "import {beginsNumeric}    from \"./cursor/beginsNumeric.mts\";\nimport {continuesNumeric} from \"./cursor/continuesNumeric.mts\";\n\nexport function* numeric(start, prev) {\n  const cursor = start.spawn(prev);\n  cursor.token({kind: 'numeric'});\n\n  if (prev) {\n    yield* cursor.log({\n                        message: 'not numeric',\n                        miss:    'cannot follow prev',\n                        cursors: {start, prev}\n                      });\n    return prev;\n  }\n\n  let {integral: _integral, fractional: _fractional} = yield* loop(cursor);\n\n  if (!(_integral.length || _fractional.length)) {\n    yield* cursor.log({\n                        message: 'not numeric',\n                        miss:    'no integral or fractional components',\n                      });\n    return false;\n  }\n\n  yield* cursor.log({message: 'resolving numeric'});\n\n  const integral   = _integral.length ? parseInt(_integral.join('')) : _integral;\n  const fractional = _fractional.length ? parseFloat(`.${_fractional.join()}`) : undefined;\n  const head       = {key: integral + fractional};\n\n  cursor.token({\n                 head:       head,\n                 integral:   integral,\n                 fractional: fractional,\n               });\n\n  return cursor;\n}\n\nfunction* loop(cursor) {\n  const integral = [];\n  {\n    let _check = beginsNumeric, started;\n    while (_check(cursor)) {\n      if ((!started) && (started = true)) {\n        _check = continuesNumeric;\n        yield* cursor.log({\n                            message: 'beginning numeric',\n                            info:    {component: 'integral'}\n                          });\n      }\n\n      integral.push(cursor.curr());\n      yield* cursor.take();\n    }\n  }\n\n  let fractional = [];\n  {\n    if (cursor.curr() === '.') {\n      yield* cursor.take()\n      let started = false, _check = continuesNumeric;\n      while (_check(cursor)) {\n        if (!started && (started = true)) {\n          _check = continuesNumeric;\n          yield* cursor.log({\n                              message: 'continuing numeric',\n                              info:    {component: 'fractional'}\n                            });\n        }\n        fractional.push(cursor.curr());\n        yield* cursor.take();\n      }\n    }\n  }\n  return {\n    integral,\n    fractional\n  };\n}\n",
     "usedDeprecatedRules": []
   },
   {
@@ -1008,24 +674,6 @@
         "endColumn": 49
       },
       {
-        "ruleId": "prefer-const",
-        "severity": 2,
-        "message": "'isNominal' is never reassigned. Use 'const' instead.",
-        "line": 21,
-        "column": 7,
-        "nodeType": "Identifier",
-        "messageId": "useConst",
-        "endLine": 21,
-        "endColumn": 16,
-        "fix": {
-          "range": [
-            772,
-            824
-          ],
-          "text": "const isNominal = initialProto?.kinds?.has('nominal');"
-        }
-      },
-      {
         "ruleId": "no-cond-assign",
         "severity": 2,
         "message": "Expected a conditional expression and instead saw an assignment.",
@@ -1035,33 +683,15 @@
         "messageId": "missing",
         "endLine": 81,
         "endColumn": 72
-      },
-      {
-        "ruleId": "prefer-const",
-        "severity": 2,
-        "message": "'token' is never reassigned. Use 'const' instead.",
-        "line": 101,
-        "column": 9,
-        "nodeType": "Identifier",
-        "messageId": "useConst",
-        "endLine": 101,
-        "endColumn": 14,
-        "fix": {
-          "range": [
-            2757,
-            2806
-          ],
-          "text": "const token     = _cursor ? _cursor.token() : null;"
-        }
       }
     ],
     "suppressedMessages": [],
-    "errorCount": 7,
+    "errorCount": 5,
     "fatalErrorCount": 0,
     "warningCount": 0,
-    "fixableErrorCount": 2,
+    "fixableErrorCount": 0,
     "fixableWarningCount": 0,
-    "source": "import {operationalPartOptions} from \"./parts/parts.mts\";\nimport {takeSpaces}             from \"../semantic/phrasal/cursor/motions/takeSpaces.mts\";\nimport {pragmaticOperators}     from \"./parts/operators.mts\";\nimport {_operator}              from \"../generator.builder.mts\";\n\nexport function* operational(start, prev, domain = pragmaticOperators) {\n  const cursor = start.spawn(prev);\n  cursor.token({kind: 'operational'});\n\n  yield* cursor.log({message: 'checking operational'});\n\n  let {head, body, tail, operators, initialProto,} = yield* loop(cursor, prev, domain);\n  if (!operators.length) {\n    yield* cursor.log({\n                        message: 'not operational',\n                        miss:    'no operators'\n                      });\n    return false;\n  }\n\n  let isNominal = initialProto?.kinds?.has('nominal');\n  if (isNominal && !tail) {\n    tail = null;\n  }\n\n  cursor.token({operators});\n\n  if (initialProto?.kind === 'delimiter') {\n    return cursor;\n  }\n\n  if (operators.length === 1) {\n    cursor.token({kind: initialProto.kind})\n    cursor.token({kind: initialProto.name})\n  }\n\n  if (typeof tail === 'undefined') {\n    yield* cursor.log({\n                        message: 'not operational',\n                        miss:    'missing a tail component',\n                        cursor:  cursor,\n                        info:    {\n                          head, body, tail,\n                          tok: cursor.token(),\n                        }\n                      });\n\n    cursor.token(false);\n\n    return false;\n  }\n\n  yield* cursor.log({\n                      message: 'resolving operational',\n                      cursor:  cursor\n                    });\n\n  if (!head && !tail) {\n    cursor.token({kind: 'conceptual'});\n  }\n\n  cursor.token({\n                 head: head,\n                 body: body,\n                 tail: tail,\n               });\n\n  return cursor;\n}\n\nfunction* loop(cursor, prev, permittedOperators) {\n  const head = prev && prev.token();\n  const body = [];\n\n  if (!permittedOperators[' ']) {\n    yield* takeSpaces(cursor);\n  }\n\n  const operators = [];\n  let operator, initialProto;\n  while (operator = yield* cursor.scan([_operator(permittedOperators)])) {\n    if (!operator) continue;\n    if (!operator?.token()) break;\n\n    yield* cursor.log({message: 'beginning operational',});\n    operators.push(operator.token());\n\n    const proto = operator.token().proto;\n\n    initialProto = initialProto ? initialProto : proto;\n\n    if (proto.open) {\n      const spaces = yield* takeSpaces(operator);\n      spaces.length && body.push(spaces[0]);\n    }\n    if (!proto.close) {\n      yield* takeSpaces(cursor);\n    }\n\n    const _cursor = yield* cursor.scan(operationalPartOptions, proto.close ? operator : undefined);\n    let token     = _cursor ? _cursor.token() : null;\n    if (!token) break\n    body.push(token);\n    yield* takeSpaces(cursor);\n  }\n\n  const tail = body.pop();\n  return {\n    head: head,\n    body: body,\n    tail: tail,\n\n    operators:    operators,\n    initialProto: initialProto\n  };\n}\n\n",
+    "source": "import {operationalPartOptions} from \"./parts/parts.mts\";\nimport {takeSpaces}             from \"../semantic/phrasal/cursor/motions/takeSpaces.mts\";\nimport {pragmaticOperators}     from \"./parts/operators.mts\";\nimport {_operator}              from \"../generator.builder.mts\";\n\nexport function* operational(start, prev, domain = pragmaticOperators) {\n  const cursor = start.spawn(prev);\n  cursor.token({kind: 'operational'});\n\n  yield* cursor.log({message: 'checking operational'});\n\n  let {head, body, tail, operators, initialProto,} = yield* loop(cursor, prev, domain);\n  if (!operators.length) {\n    yield* cursor.log({\n                        message: 'not operational',\n                        miss:    'no operators'\n                      });\n    return false;\n  }\n\n  const isNominal = initialProto?.kinds?.has('nominal');\n  if (isNominal && !tail) {\n    tail = null;\n  }\n\n  cursor.token({operators});\n\n  if (initialProto?.kind === 'delimiter') {\n    return cursor;\n  }\n\n  if (operators.length === 1) {\n    cursor.token({kind: initialProto.kind})\n    cursor.token({kind: initialProto.name})\n  }\n\n  if (typeof tail === 'undefined') {\n    yield* cursor.log({\n                        message: 'not operational',\n                        miss:    'missing a tail component',\n                        cursor:  cursor,\n                        info:    {\n                          head, body, tail,\n                          tok: cursor.token(),\n                        }\n                      });\n\n    cursor.token(false);\n\n    return false;\n  }\n\n  yield* cursor.log({\n                      message: 'resolving operational',\n                      cursor:  cursor\n                    });\n\n  if (!head && !tail) {\n    cursor.token({kind: 'conceptual'});\n  }\n\n  cursor.token({\n                 head: head,\n                 body: body,\n                 tail: tail,\n               });\n\n  return cursor;\n}\n\nfunction* loop(cursor, prev, permittedOperators) {\n  const head = prev && prev.token();\n  const body = [];\n\n  if (!permittedOperators[' ']) {\n    yield* takeSpaces(cursor);\n  }\n\n  const operators = [];\n  let operator, initialProto;\n  while (operator = yield* cursor.scan([_operator(permittedOperators)])) {\n    if (!operator) continue;\n    if (!operator?.token()) break;\n\n    yield* cursor.log({message: 'beginning operational',});\n    operators.push(operator.token());\n\n    const proto = operator.token().proto;\n\n    initialProto = initialProto ? initialProto : proto;\n\n    if (proto.open) {\n      const spaces = yield* takeSpaces(operator);\n      spaces.length && body.push(spaces[0]);\n    }\n    if (!proto.close) {\n      yield* takeSpaces(cursor);\n    }\n\n    const _cursor = yield* cursor.scan(operationalPartOptions, proto.close ? operator : undefined);\n    const token     = _cursor ? _cursor.token() : null;\n    if (!token) break\n    body.push(token);\n    yield* takeSpaces(cursor);\n  }\n\n  const tail = body.pop();\n  return {\n    head: head,\n    body: body,\n    tail: tail,\n\n    operators:    operators,\n    initialProto: initialProto\n  };\n}\n\n",
     "usedDeprecatedRules": []
   },
   {
@@ -1209,33 +839,13 @@
   },
   {
     "filePath": "/Users/samwashington/Home/Development/_repos/spw/spw-parser/src/parser/parse.mts",
-    "messages": [
-      {
-        "ruleId": "prefer-const",
-        "severity": 2,
-        "message": "'v' is never reassigned. Use 'const' instead.",
-        "line": 23,
-        "column": 12,
-        "nodeType": "Identifier",
-        "messageId": "useConst",
-        "endLine": 23,
-        "endColumn": 13,
-        "fix": {
-          "range": [
-            674,
-            679
-          ],
-          "text": "const v"
-        }
-      }
-    ],
+    "messages": [],
     "suppressedMessages": [],
-    "errorCount": 1,
+    "errorCount": 0,
     "fatalErrorCount": 0,
     "warningCount": 0,
-    "fixableErrorCount": 1,
+    "fixableErrorCount": 0,
     "fixableWarningCount": 0,
-    "source": "import {Scanner}         from \"../core/lens/scanner.mts\";\nimport {allConstructs}   from \"./constructs/constructs.mts\";\nimport {Lens}            from \"../core/lens/lens.mts\";\nimport {CharacterCursor} from \"../core/cursor/cursor.mts\";\n\n\nclass ParserLens extends Lens {\n  generators = Object.values(allConstructs);\n  Cursor     = CharacterCursor;\n}\n\n/**\n * Parser for the Spw Language\n *\n *\n * @param input {string} The input string to parse\n * @param config {object}\n * @param config.asGenerator {boolean?} Whether to loop through the generator or return it.\n */\nexport function parse(input, {asGenerator = false} = {}) {\n  if (asGenerator) return parser();\n  let end;\n  for (let v of parser()) {\n    end = v;\n  }\n  return end;\n\n  function* parser() {\n    const lens    = new ParserLens;\n    const scanner = new Scanner(lens);\n\n    yield* scanner.scan(input);\n  }\n}",
     "usedDeprecatedRules": []
   },
   {
@@ -1301,24 +911,6 @@
         ]
       },
       {
-        "ruleId": "prefer-const",
-        "severity": 2,
-        "message": "'map' is never reassigned. Use 'const' instead.",
-        "line": 28,
-        "column": 9,
-        "nodeType": "Identifier",
-        "messageId": "useConst",
-        "endLine": 28,
-        "endColumn": 12,
-        "fix": {
-          "range": [
-            846,
-            869
-          ],
-          "text": "const map      = new Map;"
-        }
-      },
-      {
         "ruleId": "@typescript-eslint/no-explicit-any",
         "severity": 1,
         "message": "Unexpected any. Specify a different type.",
@@ -1333,8 +925,8 @@
             "messageId": "suggestUnknown",
             "fix": {
               "range": [
-                1734,
-                1737
+                1736,
+                1739
               ],
               "text": "unknown"
             },
@@ -1344,8 +936,8 @@
             "messageId": "suggestNever",
             "fix": {
               "range": [
-                1734,
-                1737
+                1736,
+                1739
               ],
               "text": "never"
             },
@@ -1368,8 +960,8 @@
             "messageId": "suggestUnknown",
             "fix": {
               "range": [
-                1755,
-                1758
+                1757,
+                1760
               ],
               "text": "unknown"
             },
@@ -1379,8 +971,8 @@
             "messageId": "suggestNever",
             "fix": {
               "range": [
-                1755,
-                1758
+                1757,
+                1760
               ],
               "text": "never"
             },
@@ -1403,8 +995,8 @@
             "messageId": "suggestUnknown",
             "fix": {
               "range": [
-                1780,
-                1783
+                1782,
+                1785
               ],
               "text": "unknown"
             },
@@ -1414,8 +1006,8 @@
             "messageId": "suggestNever",
             "fix": {
               "range": [
-                1780,
-                1783
+                1782,
+                1785
               ],
               "text": "never"
             },
@@ -1438,8 +1030,8 @@
             "messageId": "suggestUnknown",
             "fix": {
               "range": [
-                1802,
-                1805
+                1804,
+                1807
               ],
               "text": "unknown"
             },
@@ -1449,68 +1041,14 @@
             "messageId": "suggestNever",
             "fix": {
               "range": [
-                1802,
-                1805
+                1804,
+                1807
               ],
               "text": "never"
             },
             "desc": "Use `never` instead, this is useful when instantiating generic type parameters that you don't need to know the type of."
           }
         ]
-      },
-      {
-        "ruleId": "prefer-const",
-        "severity": 2,
-        "message": "'out' is never reassigned. Use 'const' instead.",
-        "line": 136,
-        "column": 9,
-        "nodeType": "Identifier",
-        "messageId": "useConst",
-        "endLine": 136,
-        "endColumn": 12,
-        "fix": {
-          "range": [
-            3457,
-            3624
-          ],
-          "text": "const out = {\n      identities: this.state.tokens.map(n => n.identity),\n      tokens:     this.state.tokens.map(n => n.toJSON()),\n      // chars: this.state.chars\n    };"
-        }
-      },
-      {
-        "ruleId": "prefer-const",
-        "severity": 2,
-        "message": "'out' is never reassigned. Use 'const' instead.",
-        "line": 160,
-        "column": 19,
-        "nodeType": "Identifier",
-        "messageId": "useConst",
-        "endLine": 160,
-        "endColumn": 22,
-        "fix": {
-          "range": [
-            4048,
-            4097
-          ],
-          "text": "const {value: out, done: _done} = generator.next();"
-        }
-      },
-      {
-        "ruleId": "prefer-const",
-        "severity": 2,
-        "message": "'_done' is never reassigned. Use 'const' instead.",
-        "line": 160,
-        "column": 30,
-        "nodeType": "Identifier",
-        "messageId": "useConst",
-        "endLine": 160,
-        "endColumn": 35,
-        "fix": {
-          "range": [
-            4048,
-            4097
-          ],
-          "text": "const {value: out, done: _done} = generator.next();"
-        }
       },
       {
         "ruleId": "@typescript-eslint/no-explicit-any",
@@ -1527,8 +1065,8 @@
             "messageId": "suggestUnknown",
             "fix": {
               "range": [
-                4293,
-                4296
+                4299,
+                4302
               ],
               "text": "unknown"
             },
@@ -1538,8 +1076,8 @@
             "messageId": "suggestNever",
             "fix": {
               "range": [
-                4293,
-                4296
+                4299,
+                4302
               ],
               "text": "never"
             },
@@ -1557,33 +1095,15 @@
         "messageId": "useConst",
         "endLine": 203,
         "endColumn": 13
-      },
-      {
-        "ruleId": "prefer-const",
-        "severity": 2,
-        "message": "'out' is never reassigned. Use 'const' instead.",
-        "line": 212,
-        "column": 11,
-        "nodeType": "Identifier",
-        "messageId": "useConst",
-        "endLine": 212,
-        "endColumn": 14,
-        "fix": {
-          "range": [
-            5655,
-            5680
-          ],
-          "text": "const out = this.advance();"
-        }
       }
     ],
     "suppressedMessages": [],
-    "errorCount": 6,
+    "errorCount": 1,
     "fatalErrorCount": 0,
     "warningCount": 6,
-    "fixableErrorCount": 5,
+    "fixableErrorCount": 0,
     "fixableWarningCount": 0,
-    "source": "import {parse}                   from \"../../parser/parse.mts\";\nimport {CharacterCursor, Cursor} from \"../../core/cursor/cursor.mts\";\n\nclass ParserDomSvg {\n  private svg: any;\n  constructor(svg) {\n    this.svg = svg;\n  }\n\n  draw(text) {\n    const svg = this.svg;\n    const gs  = svg.selectAll('g')\n                   .data(text.split('').map((c, i) => ({text: c, offset: i})))\n                   .join(d => {\n                           const g = d.append('g');\n                           g.append('rect');\n                           g.append('text')\n                           return g;\n                         },\n                         d => {\n                           return d;\n                         },\n                         d => d.remove())\n                   .classed('char', true);\n\n    let newlines = 0;\n    let x        = 0;\n    let map      = new Map;\n    gs.select('rect')\n      .attr('x', d => {\n        const val = x++ * 1.7;\n        map.set(d, {...(map.get(d) || {}), x: val});\n        if (d.text === '\\n') {\n          x = 0;\n        }\n        return val + 'ch';\n      })\n      .attr('width', d => d.text === '\\n' ? '2.5ch' : '1.5ch')\n      .attr('height', '1.5rem')\n      .style('fill', 'white')\n      .attr('y', d => {\n        const val = (2 * newlines);\n        if (d.text === '\\n') {\n          newlines++;\n          x = 0;\n        }\n        map.set(d, {...(map.get(d) || {}), y: val});\n        return val + 'rem';\n      });\n    gs.select('text')\n      .text(d => `${d.text === '\\n' ? '\\\\n' : d.text}`)\n      .attr('x', d => map.get(d).x + 'ch')\n      .attr('y', d => (map.get(d).y + 1) + 'rem')\n      .attr('dx', '.2ch')\n      .style('text-align', 'center')\n  }\n}\n\nexport class ParserDom {\n  private output: any;\n  private form: any;\n  private controls: any;\n  private state: any;\n\n  private svg: ParserDomSvg;\n  constructor({form, controls, output}) {\n    const state   = {\n      error:     null,\n      generator: undefined,\n      text:      '',\n      tokens:    [],\n      chars:     [],\n      yielded:   []\n    };\n    this.output   = output;\n    this.form     = form;\n    this.controls = controls;\n    this.state    = state;\n    this.reset();\n  }\n\n  reset() {\n    const text = this.form.elements.formInput.value;\n\n    this.resetGeneratorControlDisplay();\n\n    this.state.text            = text;\n    this.state.error           = null;\n    this.state.generator       = parse(text, {asGenerator: true});\n    this.state.tokens          = [];\n    this.state.chars           = [];\n    this.state.yielded         = [];\n    this.output.text.value     = '';\n    this.output.text.className = '';\n\n    this.svg = new ParserDomSvg(this.output.svg)\n    this.svg.draw(text || '');\n\n    this.form.onsubmit = event => {\n      event?.preventDefault();\n      this.reset();\n    }\n  }\n\n\n  resetPlayButton() {\n    this.controls.play.innerText = 'play';\n    this.controls.play.onclick   = () => {\n      this.reset();\n      this.play();\n    };\n  }\n\n  resetAdvanceButton() {\n    let played;\n    this.controls.forward.onclick = () => {\n      if (!played) {\n        this.reset();\n        played = true;\n      }\n      this.advance();\n    }\n  }\n\n  resetGeneratorControlDisplay() {\n    this.controls.forward.style.display = 'block';\n    this.controls.play.style.display    = 'block';\n    this.controls.submit.style.display  = 'none';\n    this.controls.play.focus();\n\n    this.resetPlayButton();\n    this.resetAdvanceButton();\n  }\n\n  handleCompletion() {\n    let out = {\n      identities: this.state.tokens.map(n => n.identity),\n      tokens:     this.state.tokens.map(n => n.toJSON()),\n      // chars: this.state.chars\n    };\n    console.log(this.state.tokens.map(n => n.identity));\n    console.log(out);\n    this.output.text.value = JSON.stringify(out, null, 3);\n    this.resetGeneratorControlDisplay();\n  }\n\n  advance() {\n    const generator = this.state.generator;\n\n    if (!generator || this.state.error) {\n      return {\n        done: true\n      }\n    }\n\n    let _yielded, status = 'success';\n    let done             = false;\n\n    try {\n      let {value: out, done: _done} = generator.next();\n      if (_done) {\n        done = _done;\n      } else {\n        _yielded = out;\n        if (out === false) {\n          throw new Error('parser returned false');\n        }\n      }\n    } catch (e: any) {\n      this.state.error = true;\n      console.log(e);\n      _yielded = e.message;\n      status   = 'error';\n    }\n\n\n    this.output.text.className = status;\n    if (this.state.error || done) {\n      this.handleCompletion();\n    } else {\n      this.output.text.value = JSON.stringify(_yielded, null, 3);\n      if (CharacterCursor.isCharacterCursor(_yielded)) {\n        this.state.tokens.push(_yielded.token());\n      } else if (Cursor.isCursorPosition(_yielded)) {\n        this.state.chars.push(_yielded);\n        _yielded && this.output.svg.selectAll('.char')\n                        .style('fill', d => (d.offset === _yielded.offset) ? 'white' : 'black')\n                        .select('rect')\n                        .style('fill', d => (d.offset === _yielded.offset) ? 'red' : 'white');\n      } else {\n        if (typeof _yielded === 'string') {\n          this.state.yielded.push(_yielded);\n        }\n        this.advance();\n      }\n    }\n\n    return {value: _yielded, status, done: done};\n  }\n\n  play() {\n    let paused;\n    let play;\n    this.controls.play.innerText = 'pause';\n    this.controls.play.onclick   = () => {\n      this.controls.play.innerText = 'play';\n      paused                       = true;\n      this.controls.play.onclick   = play;\n    }\n    play                         = () => setTimeout(() => {\n      if (paused) return;\n      let out = this.advance();\n      if (out.value === false) {\n        paused = true;\n        return;\n      }\n      if (out.done) return;\n      play && play();\n    }, 10);\n    play()\n  }\n}",
+    "source": "import {parse}                   from \"../../parser/parse.mts\";\nimport {CharacterCursor, Cursor} from \"../../core/cursor/cursor.mts\";\n\nclass ParserDomSvg {\n  private svg: any;\n  constructor(svg) {\n    this.svg = svg;\n  }\n\n  draw(text) {\n    const svg = this.svg;\n    const gs  = svg.selectAll('g')\n                   .data(text.split('').map((c, i) => ({text: c, offset: i})))\n                   .join(d => {\n                           const g = d.append('g');\n                           g.append('rect');\n                           g.append('text')\n                           return g;\n                         },\n                         d => {\n                           return d;\n                         },\n                         d => d.remove())\n                   .classed('char', true);\n\n    let newlines = 0;\n    let x        = 0;\n    const map      = new Map;\n    gs.select('rect')\n      .attr('x', d => {\n        const val = x++ * 1.7;\n        map.set(d, {...(map.get(d) || {}), x: val});\n        if (d.text === '\\n') {\n          x = 0;\n        }\n        return val + 'ch';\n      })\n      .attr('width', d => d.text === '\\n' ? '2.5ch' : '1.5ch')\n      .attr('height', '1.5rem')\n      .style('fill', 'white')\n      .attr('y', d => {\n        const val = (2 * newlines);\n        if (d.text === '\\n') {\n          newlines++;\n          x = 0;\n        }\n        map.set(d, {...(map.get(d) || {}), y: val});\n        return val + 'rem';\n      });\n    gs.select('text')\n      .text(d => `${d.text === '\\n' ? '\\\\n' : d.text}`)\n      .attr('x', d => map.get(d).x + 'ch')\n      .attr('y', d => (map.get(d).y + 1) + 'rem')\n      .attr('dx', '.2ch')\n      .style('text-align', 'center')\n  }\n}\n\nexport class ParserDom {\n  private output: any;\n  private form: any;\n  private controls: any;\n  private state: any;\n\n  private svg: ParserDomSvg;\n  constructor({form, controls, output}) {\n    const state   = {\n      error:     null,\n      generator: undefined,\n      text:      '',\n      tokens:    [],\n      chars:     [],\n      yielded:   []\n    };\n    this.output   = output;\n    this.form     = form;\n    this.controls = controls;\n    this.state    = state;\n    this.reset();\n  }\n\n  reset() {\n    const text = this.form.elements.formInput.value;\n\n    this.resetGeneratorControlDisplay();\n\n    this.state.text            = text;\n    this.state.error           = null;\n    this.state.generator       = parse(text, {asGenerator: true});\n    this.state.tokens          = [];\n    this.state.chars           = [];\n    this.state.yielded         = [];\n    this.output.text.value     = '';\n    this.output.text.className = '';\n\n    this.svg = new ParserDomSvg(this.output.svg)\n    this.svg.draw(text || '');\n\n    this.form.onsubmit = event => {\n      event?.preventDefault();\n      this.reset();\n    }\n  }\n\n\n  resetPlayButton() {\n    this.controls.play.innerText = 'play';\n    this.controls.play.onclick   = () => {\n      this.reset();\n      this.play();\n    };\n  }\n\n  resetAdvanceButton() {\n    let played;\n    this.controls.forward.onclick = () => {\n      if (!played) {\n        this.reset();\n        played = true;\n      }\n      this.advance();\n    }\n  }\n\n  resetGeneratorControlDisplay() {\n    this.controls.forward.style.display = 'block';\n    this.controls.play.style.display    = 'block';\n    this.controls.submit.style.display  = 'none';\n    this.controls.play.focus();\n\n    this.resetPlayButton();\n    this.resetAdvanceButton();\n  }\n\n  handleCompletion() {\n    const out = {\n      identities: this.state.tokens.map(n => n.identity),\n      tokens:     this.state.tokens.map(n => n.toJSON()),\n      // chars: this.state.chars\n    };\n    console.log(this.state.tokens.map(n => n.identity));\n    console.log(out);\n    this.output.text.value = JSON.stringify(out, null, 3);\n    this.resetGeneratorControlDisplay();\n  }\n\n  advance() {\n    const generator = this.state.generator;\n\n    if (!generator || this.state.error) {\n      return {\n        done: true\n      }\n    }\n\n    let _yielded, status = 'success';\n    let done             = false;\n\n    try {\n      const {value: out, done: _done} = generator.next();\n      if (_done) {\n        done = _done;\n      } else {\n        _yielded = out;\n        if (out === false) {\n          throw new Error('parser returned false');\n        }\n      }\n    } catch (e: any) {\n      this.state.error = true;\n      console.log(e);\n      _yielded = e.message;\n      status   = 'error';\n    }\n\n\n    this.output.text.className = status;\n    if (this.state.error || done) {\n      this.handleCompletion();\n    } else {\n      this.output.text.value = JSON.stringify(_yielded, null, 3);\n      if (CharacterCursor.isCharacterCursor(_yielded)) {\n        this.state.tokens.push(_yielded.token());\n      } else if (Cursor.isCursorPosition(_yielded)) {\n        this.state.chars.push(_yielded);\n        _yielded && this.output.svg.selectAll('.char')\n                        .style('fill', d => (d.offset === _yielded.offset) ? 'white' : 'black')\n                        .select('rect')\n                        .style('fill', d => (d.offset === _yielded.offset) ? 'red' : 'white');\n      } else {\n        if (typeof _yielded === 'string') {\n          this.state.yielded.push(_yielded);\n        }\n        this.advance();\n      }\n    }\n\n    return {value: _yielded, status, done: done};\n  }\n\n  play() {\n    let paused;\n    let play;\n    this.controls.play.innerText = 'pause';\n    this.controls.play.onclick   = () => {\n      this.controls.play.innerText = 'play';\n      paused                       = true;\n      this.controls.play.onclick   = play;\n    }\n    play                         = () => setTimeout(() => {\n      if (paused) return;\n      const out = this.advance();\n      if (out.value === false) {\n        paused = true;\n        return;\n      }\n      if (out.done) return;\n      play && play();\n    }, 10);\n    play()\n  }\n}",
     "usedDeprecatedRules": []
   },
   {

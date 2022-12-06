@@ -14,7 +14,7 @@ export function* numeric(start, prev) {
     return prev;
   }
 
-  let {integral: _integral, fractional: _fractional} = yield* loop(cursor);
+  const {integral: _integral, fractional: _fractional} = yield* loop(cursor);
 
   if (!(_integral.length || _fractional.length)) {
     yield* cursor.log({
@@ -57,7 +57,7 @@ function* loop(cursor) {
     }
   }
 
-  let fractional = [];
+  const fractional = [];
   {
     if (cursor.curr() === '.') {
       yield* cursor.take()

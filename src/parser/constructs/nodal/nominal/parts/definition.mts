@@ -1,10 +1,10 @@
 import {container} from "../../container/generator.mts";
 
 export function* definition(cursor) {
-  let containers = new Map([]);
+  const containers = new Map([]);
   let _container;
   while ((_container = yield* cursor.scan([container])) && (_container = _container.token())) {
-    let set = containers.get(_container.head.proto) ?? [];
+    const set = containers.get(_container.head.proto) ?? [];
     set.push(_container)
     containers.set(_container.head.proto.name, set)
   }

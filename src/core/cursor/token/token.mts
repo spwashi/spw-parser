@@ -32,12 +32,12 @@ class RecursiveReductionLens extends Lens {
   _reduceNode(node, context) {
     const scope = context.spawn(node);
     const items = [];
-    for (let item of scope.loop(node)) {
-      let el = this.reduce(item, scope);
+    for (const item of scope.loop(node)) {
+      const el = this.reduce(item, scope);
       el && items.push(el);
     }
     const key = RecursiveReductionLens.doFlatten ? items.flat() : items;
-    let nest  = RecursiveReductionLens.doFlatten ? false : !context.generation;
+    const nest  = RecursiveReductionLens.doFlatten ? false : !context.generation;
     return nest ? {kind: node.kind, key} : key;
   }
 
@@ -55,8 +55,8 @@ class RecursiveReductionLens extends Lens {
 
   _reduceArray(node, context) {
     const items = [];
-    for (let item of node) {
-      let reduced = this.reduce(item, context);
+    for (const item of node) {
+      const reduced = this.reduce(item, context);
       if (!reduced) continue;
       items.push(reduced);
     }
@@ -88,7 +88,7 @@ export class Token {
     const all  = [];
     const lens = new RecursiveReductionLens(this);
     for (const location of lens.locate(this)) {
-      let curr = lens.reduce(this, location);
+      const curr = lens.reduce(this, location);
       curr && all.push(curr);
     }
 

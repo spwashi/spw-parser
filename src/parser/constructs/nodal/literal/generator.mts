@@ -37,7 +37,7 @@ export function* literal(start, prev) {
 }
 
 function* loop(cursor) {
-  let open       = literalDelimitingOperators.open;
+  const open       = literalDelimitingOperators.open;
   const operator = yield* cursor.scan([_operator(open)]);
   const head     = operator?.token();
   const label    = head?.label?.key;

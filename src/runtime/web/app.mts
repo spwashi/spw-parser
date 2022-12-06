@@ -25,7 +25,7 @@ class ParserDomSvg {
 
     let newlines = 0;
     let x        = 0;
-    let map      = new Map;
+    const map      = new Map;
     gs.select('rect')
       .attr('x', d => {
         const val = x++ * 1.7;
@@ -133,7 +133,7 @@ export class ParserDom {
   }
 
   handleCompletion() {
-    let out = {
+    const out = {
       identities: this.state.tokens.map(n => n.identity),
       tokens:     this.state.tokens.map(n => n.toJSON()),
       // chars: this.state.chars
@@ -157,7 +157,7 @@ export class ParserDom {
     let done             = false;
 
     try {
-      let {value: out, done: _done} = generator.next();
+      const {value: out, done: _done} = generator.next();
       if (_done) {
         done = _done;
       } else {
@@ -209,7 +209,7 @@ export class ParserDom {
     }
     play                         = () => setTimeout(() => {
       if (paused) return;
-      let out = this.advance();
+      const out = this.advance();
       if (out.value === false) {
         paused = true;
         return;

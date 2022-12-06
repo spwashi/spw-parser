@@ -18,7 +18,7 @@ export function* operational(start, prev, domain = pragmaticOperators) {
     return false;
   }
 
-  let isNominal = initialProto?.kinds?.has('nominal');
+  const isNominal = initialProto?.kinds?.has('nominal');
   if (isNominal && !tail) {
     tail = null;
   }
@@ -98,7 +98,7 @@ function* loop(cursor, prev, permittedOperators) {
     }
 
     const _cursor = yield* cursor.scan(operationalPartOptions, proto.close ? operator : undefined);
-    let token     = _cursor ? _cursor.token() : null;
+    const token     = _cursor ? _cursor.token() : null;
     if (!token) break
     body.push(token);
     yield* takeSpaces(cursor);

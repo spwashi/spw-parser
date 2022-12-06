@@ -73,7 +73,7 @@ export class Cursor {
    */
   * log(item) {
     if (_debug) {
-      let tabs          = '\t'.repeat(this.level);
+      const tabs          = '\t'.repeat(this.level);
       const tabbedLabel = `${tabs}${this}`;
       yield tabbedLabel;
       const tabbedMessage = `${tabs}\t${item.message}`;
@@ -87,7 +87,7 @@ export class Cursor {
    * @returns {Generator<{offset, kind: string}, {offset, kind: string}, *>}
    */
   * take() {
-    let pos = this.pos();
+    const pos = this.pos();
     yield pos;
     this.advance();
     return pos;

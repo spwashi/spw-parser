@@ -15,7 +15,7 @@ export class TokenFragment {
   }
 
   get parts() {
-    let parts = [this._head, this._operator].filter(Boolean);
+    const parts = [this._head, this._operator].filter(Boolean);
     return this._isPrefixed ? parts.reverse() : parts;
   }
 }
@@ -102,7 +102,7 @@ class NodeBuilder {
 function getOperatorIterator(iterable) {
   let i = 0;
   return function () {
-    let operator = iterable.operators?.[i];
+    const operator = iterable.operators?.[i];
     i++;
     return operator;
   };
@@ -143,7 +143,7 @@ export class Scope {
 
   * loop(_node) {
     if (Array.isArray(_node)) {
-      for (let i of _node) {
+      for (const i of _node) {
         yield _node;
       }
       return;
