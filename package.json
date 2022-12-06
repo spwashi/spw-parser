@@ -6,7 +6,10 @@
   },
   "scripts": {
     "serve": "serve public",
-    "watch": "tsc -w"
+    "watch": "tsc -w",
+    "lint": "eslint",
+    "prelint:write": "yarn -s lint -f json src > status/eslint-results.json; exit 0",
+    "lint:write": "yarn -s eslint --fix --plugin eslint-plugin-json-format status/*.json"
   },
   "repository": {
     "type": "git",
@@ -17,6 +20,7 @@
     "@typescript-eslint/eslint-plugin": "^5.45.1",
     "@typescript-eslint/parser": "^5.45.1",
     "eslint": "^8.29.0",
+    "eslint-plugin-json-format": "^2.0.1",
     "typescript": "^4.9.3"
   }
 }

@@ -1,3 +1,5 @@
+/* eslint-disable */
+
 // https://d3js.org v7.4.4 Copyright 2010-2022 Mike Bostock
 (function (global, factory) {
 typeof exports === 'object' && typeof module !== 'undefined' ? factory(exports) :

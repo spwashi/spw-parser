@@ -1,0 +1,4996 @@
+[
+  {
+    "filePath": "/Users/samwashington/Home/Development/_repos/spw/spw-parser/src/config.mts",
+    "messages": [],
+    "suppressedMessages": [],
+    "errorCount": 0,
+    "fatalErrorCount": 0,
+    "warningCount": 0,
+    "fixableErrorCount": 0,
+    "fixableWarningCount": 0,
+    "usedDeprecatedRules": []
+  },
+  {
+    "filePath": "/Users/samwashington/Home/Development/_repos/spw/spw-parser/src/core/cursor/cursor.mts",
+    "messages": [
+      {
+        "ruleId": "prefer-const",
+        "severity": 2,
+        "message": "'tabs' is never reassigned. Use 'const' instead.",
+        "line": 76,
+        "column": 11,
+        "nodeType": "Identifier",
+        "messageId": "useConst",
+        "endLine": 76,
+        "endColumn": 15,
+        "fix": {
+          "range": [
+            1589,
+            1633
+          ],
+          "text": "const tabs          = '\\t'.repeat(this.level);"
+        }
+      },
+      {
+        "ruleId": "prefer-const",
+        "severity": 2,
+        "message": "'pos' is never reassigned. Use 'const' instead.",
+        "line": 90,
+        "column": 9,
+        "nodeType": "Identifier",
+        "messageId": "useConst",
+        "endLine": 90,
+        "endColumn": 12,
+        "fix": {
+          "range": [
+            1970,
+            1991
+          ],
+          "text": "const pos = this.pos();"
+        }
+      }
+    ],
+    "suppressedMessages": [],
+    "errorCount": 2,
+    "fatalErrorCount": 0,
+    "warningCount": 0,
+    "fixableErrorCount": 2,
+    "fixableWarningCount": 0,
+    "source": "import {_debug} from \"../../config.mts\";\nimport {Token}  from \"./token/token.mts\";\n\nexport class Cursor {\n  #token;\n  #parent;\n\n  offset;\n  start;\n\n  constructor(parent, former = undefined) {\n    this.offset     = parent?.offset || 0;\n    this.start      = former?.start ?? this.offset;\n    this.input      = parent?.input;\n    this.generators = parent?.generators;\n    this.level      = typeof parent?.level !== 'undefined' ? parent.level + 1 : 0;\n    this.#parent    = (former || parent) || undefined;\n    this.#token     = null;\n  }\n\n  spawn(former) {\n    const Constructor = this.constructor;\n    return new Constructor(this, former);\n  }\n\n  get parent() {\n    return this.#parent;\n  }\n\n  setOffset(cursor) {\n    this.offset = cursor.offset;\n  }\n\n  curr() {\n    return this.input[this.offset];\n  }\n\n  /**\n   *\n   * @param generators\n   * @param former\n   * @returns {Generator<*, undefined, *>}\n   */\n  * scan(generators = undefined, former = undefined) {\n    generators = generators ?? this.generators;\n\n    if (!generators) throw new Error('Cannot scan without generators');\n\n    let activeCursor = former;\n\n    for (const generator of generators) {\n      const cursor = yield* generator(this, activeCursor);\n      const token  = cursor ? cursor.token() : false;\n\n      if (!token) continue;\n\n      this.setOffset(cursor);\n\n      if (token !== activeCursor?.token()) {\n        yield cursor;\n      }\n\n      activeCursor = cursor;\n    }\n\n    return activeCursor;\n  }\n\n  /**\n   *\n   * @param item\n   * @returns {Generator<string, void, *>}\n   */\n  * log(item) {\n    if (_debug) {\n      let tabs          = '\\t'.repeat(this.level);\n      const tabbedLabel = `${tabs}${this}`;\n      yield tabbedLabel;\n      const tabbedMessage = `${tabs}\\t${item.message}`;\n      yield tabbedMessage;\n      if (item.miss) yield `${tabs}\\t\\treason: ${item.miss}`;\n    }\n  }\n\n  /**\n   *\n   * @returns {Generator<{offset, kind: string}, {offset, kind: string}, *>}\n   */\n  * take() {\n    let pos = this.pos();\n    yield pos;\n    this.advance();\n    return pos;\n  }\n\n  /**\n   *\n   */\n  advance() {\n    this.offset = this.offset + 1;\n  }\n\n  pos() {\n    return {\n      kind:   'pos',\n      offset: this.offset,\n    };\n  }\n\n  token(token) {\n    if (typeof token === \"undefined\") {\n      return this.#token;\n    }\n    if (token === false) {\n      this.#token = token;\n      return this;\n    }\n    this.#token = this.#token ?? new Token(this);\n\n    Object.assign(this.#token, token);\n    return this;\n  }\n\n  static isCursorPosition(cursor) {\n    if (!cursor) return false;\n    return typeof cursor.offset !== 'undefined' && cursor.kind === 'pos';\n  }\n}\n\nexport class CharacterCursor extends Cursor {\n  static isCharacterCursor(cursor) {\n    return typeof cursor?.start !== 'undefined';\n  }\n\n  toString() {\n    const json = this.toJSON();\n    return `(line: ${json.start.line}, col: ${json.start.col})`\n  }\n\n  pos() {\n    return {\n      ...super.pos(),\n      key: this.curr(),\n    };\n  }\n\n  toJSON() {\n    const offset     = this.offset - 1;\n    const startSplit = this.input.slice(0, this.start).split('\\n');\n    const startLine  = startSplit.length;\n    const text       = this.text;\n    const midSplit   = text.split('\\n');\n    return {\n      level: this.level,\n      start: {\n        line:   startLine,\n        col:    (startSplit.pop()?.length || 1) - 1,\n        offset: this.start\n      },\n      end:   {\n        line:   startLine + midSplit.length - 1,\n        col:    (midSplit.pop()?.length || 1) - 1,\n        offset: offset\n      },\n      text:  text,\n      // parent: this.#parent?.level ? this.#parent : undefined\n    }\n  }\n\n  get text() {\n    return this.input.slice(this.start, this.offset);\n  }\n}",
+    "usedDeprecatedRules": []
+  },
+  {
+    "filePath": "/Users/samwashington/Home/Development/_repos/spw/spw-parser/src/core/cursor/token/token.mts",
+    "messages": [
+      {
+        "ruleId": "prefer-const",
+        "severity": 2,
+        "message": "'item' is never reassigned. Use 'const' instead.",
+        "line": 35,
+        "column": 14,
+        "nodeType": "Identifier",
+        "messageId": "useConst",
+        "endLine": 35,
+        "endColumn": 18,
+        "fix": {
+          "range": [
+            807,
+            815
+          ],
+          "text": "const item"
+        }
+      },
+      {
+        "ruleId": "prefer-const",
+        "severity": 2,
+        "message": "'el' is never reassigned. Use 'const' instead.",
+        "line": 36,
+        "column": 11,
+        "nodeType": "Identifier",
+        "messageId": "useConst",
+        "endLine": 36,
+        "endColumn": 13,
+        "fix": {
+          "range": [
+            845,
+            879
+          ],
+          "text": "const el = this.reduce(item, scope);"
+        }
+      },
+      {
+        "ruleId": "prefer-const",
+        "severity": 2,
+        "message": "'nest' is never reassigned. Use 'const' instead.",
+        "line": 40,
+        "column": 9,
+        "nodeType": "Identifier",
+        "messageId": "useConst",
+        "endLine": 40,
+        "endColumn": 13,
+        "fix": {
+          "range": [
+            991,
+            1066
+          ],
+          "text": "const nest  = RecursiveReductionLens.doFlatten ? false : !context.generation;"
+        }
+      },
+      {
+        "ruleId": "@typescript-eslint/no-empty-function",
+        "severity": 2,
+        "message": "Unexpected empty method '_reduceNothing'.",
+        "line": 44,
+        "column": 20,
+        "nodeType": "FunctionExpression",
+        "messageId": "unexpected",
+        "endLine": 46,
+        "endColumn": 4
+      },
+      {
+        "ruleId": "prefer-const",
+        "severity": 2,
+        "message": "'item' is never reassigned. Use 'const' instead.",
+        "line": 58,
+        "column": 14,
+        "nodeType": "Identifier",
+        "messageId": "useConst",
+        "endLine": 58,
+        "endColumn": 18,
+        "fix": {
+          "range": [
+            1318,
+            1326
+          ],
+          "text": "const item"
+        }
+      },
+      {
+        "ruleId": "prefer-const",
+        "severity": 2,
+        "message": "'reduced' is never reassigned. Use 'const' instead.",
+        "line": 59,
+        "column": 11,
+        "nodeType": "Identifier",
+        "messageId": "useConst",
+        "endLine": 59,
+        "endColumn": 18,
+        "fix": {
+          "range": [
+            1344,
+            1385
+          ],
+          "text": "const reduced = this.reduce(item, context);"
+        }
+      },
+      {
+        "ruleId": "prefer-const",
+        "severity": 2,
+        "message": "'curr' is never reassigned. Use 'const' instead.",
+        "line": 91,
+        "column": 11,
+        "nodeType": "Identifier",
+        "messageId": "useConst",
+        "endLine": 91,
+        "endColumn": 15,
+        "fix": {
+          "range": [
+            1924,
+            1963
+          ],
+          "text": "const curr = lens.reduce(this, location);"
+        }
+      }
+    ],
+    "suppressedMessages": [],
+    "errorCount": 7,
+    "fatalErrorCount": 0,
+    "warningCount": 0,
+    "fixableErrorCount": 6,
+    "fixableWarningCount": 0,
+    "source": "import {Lens}          from \"../../lens/lens.mts\";\nimport {TokenFragment} from \"../../lens/scope/scope.mts\";\n\nclass RecursiveReductionLens extends Lens {\n  static doFlatten = true;\n\n  reduce(node, context) {\n    if (node instanceof TokenFragment) {\n      return this._reduceArray(node.parts, context);\n    }\n\n    if (typeof node === 'undefined' || (node === null)) {\n      this._reduceNothing();\n      return;\n    }\n\n    if (Array.isArray(node)) {\n      return this._reduceArray(node, context);\n    }\n\n    if (typeof node === 'string') {\n      return this._reduceString(node);\n    }\n\n    if (node.key) {\n      return this._reduceAtom(node, context);\n    }\n\n    return this._reduceNode(node, context);\n  }\n\n  _reduceNode(node, context) {\n    const scope = context.spawn(node);\n    const items = [];\n    for (let item of scope.loop(node)) {\n      let el = this.reduce(item, scope);\n      el && items.push(el);\n    }\n    const key = RecursiveReductionLens.doFlatten ? items.flat() : items;\n    let nest  = RecursiveReductionLens.doFlatten ? false : !context.generation;\n    return nest ? {kind: node.kind, key} : key;\n  }\n\n  _reduceNothing() {\n\n  }\n\n  _reduceAtom(node, context) {\n    return context.key(node);\n  }\n\n  _reduceString() {\n    return null;\n  }\n\n  _reduceArray(node, context) {\n    const items = [];\n    for (let item of node) {\n      let reduced = this.reduce(item, context);\n      if (!reduced) continue;\n      items.push(reduced);\n    }\n    if (items.length < 2) return items[0];\n    return items.flat();\n  }\n}\n\nexport class Token {\n  // joins the token kind\n  static kindJunctionStr = ' + ';\n\n  _kind = [];\n  cursor;\n\n  constructor(cursor) {\n    this.cursor = cursor;\n  }\n\n  set kind(kind) {\n    this._kind.push(kind)\n  }\n\n  get kind() {\n    return this._kind;\n  }\n\n  get identity() {\n    const all  = [];\n    const lens = new RecursiveReductionLens(this);\n    for (const location of lens.locate(this)) {\n      let curr = lens.reduce(this, location);\n      curr && all.push(curr);\n    }\n\n    function keys(curr) {\n      return curr.key ? curr.key : (Array.isArray(curr) ? curr.map(keys).join('') : curr);\n    }\n\n    return all.reduce((all, curr) => '' + all + keys(curr), '')\n  }\n\n  toJSON() {\n    return Object.fromEntries(Object.entries({\n                                               identity: this.identity,\n                                               kind:     [...this.kind].join(Token.kindJunctionStr),\n                                               head:     this.head,\n                                               body:     this.body,\n                                               tail:     this.tail,\n                                             }).filter(([, v]) => !!v))\n  }\n}",
+    "usedDeprecatedRules": []
+  },
+  {
+    "filePath": "/Users/samwashington/Home/Development/_repos/spw/spw-parser/src/core/lens/lens.mts",
+    "messages": [
+      {
+        "ruleId": "require-yield",
+        "severity": 2,
+        "message": "This generator function does not have 'yield'.",
+        "line": 22,
+        "column": 11,
+        "nodeType": "FunctionExpression",
+        "messageId": "missingYield",
+        "endLine": 24,
+        "endColumn": 4
+      },
+      {
+        "ruleId": "@typescript-eslint/no-unused-vars",
+        "severity": 1,
+        "message": "'node' is defined but never used.",
+        "line": 22,
+        "column": 12,
+        "nodeType": "Identifier",
+        "messageId": "unusedVar",
+        "endLine": 22,
+        "endColumn": 16
+      },
+      {
+        "ruleId": "@typescript-eslint/no-unused-vars",
+        "severity": 1,
+        "message": "'context' is defined but never used.",
+        "line": 22,
+        "column": 18,
+        "nodeType": "Identifier",
+        "messageId": "unusedVar",
+        "endLine": 22,
+        "endColumn": 25
+      }
+    ],
+    "suppressedMessages": [],
+    "errorCount": 1,
+    "fatalErrorCount": 0,
+    "warningCount": 2,
+    "fixableErrorCount": 0,
+    "fixableWarningCount": 0,
+    "source": "import {Scope}  from \"./scope/scope.mts\";\nimport {Cursor} from \"../cursor/cursor.mts\";\n\nexport class Lens {\n  generators = [];\n  Cursor     = Cursor;\n\n  constructor(source = undefined) {\n    this.source = source;\n  }\n\n  source;\n\n  getCursor(input) {\n    return new (this.Cursor)({input, generators: this.generators});\n  }\n\n  * locate(element) {\n    yield new Scope(element);\n  }\n\n  * reduce(node, context) {\n    throw new Error('unimplemented')\n  }\n}\n\n",
+    "usedDeprecatedRules": []
+  },
+  {
+    "filePath": "/Users/samwashington/Home/Development/_repos/spw/spw-parser/src/core/lens/scanner.mts",
+    "messages": [],
+    "suppressedMessages": [],
+    "errorCount": 0,
+    "fatalErrorCount": 0,
+    "warningCount": 0,
+    "fixableErrorCount": 0,
+    "fixableWarningCount": 0,
+    "usedDeprecatedRules": []
+  },
+  {
+    "filePath": "/Users/samwashington/Home/Development/_repos/spw/spw-parser/src/core/lens/scope/scope.mts",
+    "messages": [
+      {
+        "ruleId": "prefer-const",
+        "severity": 2,
+        "message": "'parts' is never reassigned. Use 'const' instead.",
+        "line": 18,
+        "column": 9,
+        "nodeType": "Identifier",
+        "messageId": "useConst",
+        "endLine": 18,
+        "endColumn": 14,
+        "fix": {
+          "range": [
+            338,
+            395
+          ],
+          "text": "const parts = [this._head, this._operator].filter(Boolean);"
+        }
+      },
+      {
+        "ruleId": "prefer-const",
+        "severity": 2,
+        "message": "'operator' is never reassigned. Use 'const' instead.",
+        "line": 105,
+        "column": 9,
+        "nodeType": "Identifier",
+        "messageId": "useConst",
+        "endLine": 105,
+        "endColumn": 17,
+        "fix": {
+          "range": [
+            2031,
+            2070
+          ],
+          "text": "const operator = iterable.operators?.[i];"
+        }
+      },
+      {
+        "ruleId": "@typescript-eslint/no-unused-vars",
+        "severity": 1,
+        "message": "'i' is assigned a value but never used.",
+        "line": 146,
+        "column": 16,
+        "nodeType": "Identifier",
+        "messageId": "unusedVar",
+        "endLine": 146,
+        "endColumn": 17
+      },
+      {
+        "ruleId": "prefer-const",
+        "severity": 2,
+        "message": "'i' is never reassigned. Use 'const' instead.",
+        "line": 146,
+        "column": 16,
+        "nodeType": "Identifier",
+        "messageId": "useConst",
+        "endLine": 146,
+        "endColumn": 17,
+        "fix": {
+          "range": [
+            2714,
+            2719
+          ],
+          "text": "const i"
+        }
+      }
+    ],
+    "suppressedMessages": [],
+    "errorCount": 3,
+    "fatalErrorCount": 0,
+    "warningCount": 1,
+    "fixableErrorCount": 3,
+    "fixableWarningCount": 0,
+    "source": "export class TokenFragment {\n  _head;\n  _operator;\n\n  constructor(head, operator = undefined, isPrefixed = false) {\n    this._head       = head\n    this._operator   = operator;\n    this._isPrefixed = isPrefixed;\n\n  }\n\n  operator(operator) {\n    if (!operator) return this._operator\n    this._operator = operator;\n  }\n\n  get parts() {\n    let parts = [this._head, this._operator].filter(Boolean);\n    return this._isPrefixed ? parts.reverse() : parts;\n  }\n}\n\nclass Head extends TokenFragment {\n}\n\nexport class BodyItem extends TokenFragment {\n  get parts() {\n    return this._isPrefixed ? super.parts.reverse() : super.parts;\n  }\n}\n\nclass Body extends TokenFragment {\n}\n\nclass Tail extends TokenFragment {\n}\n\nclass NodeBuilder {\n  _seedNode;\n  _trailingOperator;\n  _tail;\n\n  constructor(node) {\n    this._seedNode    = node;\n    this.fillOperator = getOperatorIterator(node);\n  }\n\n  get seedNode() {\n    return this._seedNode;\n  }\n\n  initTail() {\n    const node = this.seedNode;\n    if (!node.tail) { return; }\n\n    this._tail = new Tail(node.tail, this._trailingOperator, !!this._trailingOperator);\n\n    return this._tail;\n  }\n\n  initBody() {\n    const node = this.seedNode;\n    const body = node?.body;\n    if (!body) { return; }\n\n    const items = [];\n    for (const item of body) {\n      items.push(new BodyItem(item, this._trailingOperator, false));\n      this._trailingOperator = this.fillOperator();\n    }\n\n    this._body = new Body(items);\n\n    return this._body;\n  }\n\n  initHead() {\n    const node   = this.seedNode;\n    let operator = this.fillOperator();\n    if (node.head) {\n      this._head = new Head(node.head, operator);\n      operator   = undefined;\n    }\n    this._trailingOperator = operator;\n\n    return this._head;\n  }\n\n  * generate() {\n    const head = this.initHead();\n    if (head) yield  head;\n\n    const body = this.initBody();\n    if (body) yield  body;\n\n    const tail = this.initTail();\n    if (tail) yield  tail;\n  }\n\n}\n\nfunction getOperatorIterator(iterable) {\n  let i = 0;\n  return function () {\n    let operator = iterable.operators?.[i];\n    i++;\n    return operator;\n  };\n}\n\nexport class Scope {\n  constructor(parent, context) {\n    this.generation = (parent?.generation ?? -1) + 1;\n    this.context    = context ?? parent;\n    this.root       = parent.root ?? parent;\n  }\n\n  spawn(context) {\n    return new Scope(this, context);\n  }\n\n  key(item) {\n    return item;\n  }\n\n  check(node) {\n    return !!node;\n  }\n\n  get prefix() {\n    if (!this.doPrefix) return;\n    return `{`\n  }\n\n  get doPrefix() {\n    return false; //(this.generation === 4);\n  }\n\n  get suffix() {\n    if (!this.doPrefix) return;\n    return '}';\n  }\n\n  * loop(_node) {\n    if (Array.isArray(_node)) {\n      for (let i of _node) {\n        yield _node;\n      }\n      return;\n    }\n\n    if (!this.check(_node)) return;\n\n    const nodeBuilder = new NodeBuilder(_node);\n    if (this.prefix)\n      yield this.prefix;\n\n\n    yield* nodeBuilder.generate();\n\n    if (this.suffix)\n      yield this.suffix;\n  }\n\n}",
+    "usedDeprecatedRules": []
+  },
+  {
+    "filePath": "/Users/samwashington/Home/Development/_repos/spw/spw-parser/src/parser/constructs/constructs.mts",
+    "messages": [],
+    "suppressedMessages": [],
+    "errorCount": 0,
+    "fatalErrorCount": 0,
+    "warningCount": 0,
+    "fixableErrorCount": 0,
+    "fixableWarningCount": 0,
+    "usedDeprecatedRules": []
+  },
+  {
+    "filePath": "/Users/samwashington/Home/Development/_repos/spw/spw-parser/src/parser/constructs/nodal/container/cursor/beginsContainer.mts",
+    "messages": [],
+    "suppressedMessages": [],
+    "errorCount": 0,
+    "fatalErrorCount": 0,
+    "warningCount": 0,
+    "fixableErrorCount": 0,
+    "fixableWarningCount": 0,
+    "usedDeprecatedRules": []
+  },
+  {
+    "filePath": "/Users/samwashington/Home/Development/_repos/spw/spw-parser/src/parser/constructs/nodal/container/generator.mts",
+    "messages": [
+      {
+        "ruleId": "prefer-const",
+        "severity": 2,
+        "message": "'open' is never reassigned. Use 'const' instead.",
+        "line": 42,
+        "column": 7,
+        "nodeType": "Identifier",
+        "messageId": "useConst",
+        "endLine": 42,
+        "endColumn": 11,
+        "fix": {
+          "range": [
+            1220,
+            1271
+          ],
+          "text": "const open       = containerDelimitingOperators.open;"
+        }
+      }
+    ],
+    "suppressedMessages": [],
+    "errorCount": 1,
+    "fatalErrorCount": 0,
+    "warningCount": 0,
+    "fixableErrorCount": 1,
+    "fixableWarningCount": 0,
+    "source": "import {beginsContainer}              from \"./cursor/beginsContainer.mts\";\nimport {takeSpaces}                   from \"../../operational/semantic/phrasal/cursor/motions/takeSpaces.mts\";\nimport {_operator}                    from \"../../operational/generator.builder.mts\";\nimport {containerPartOptions}         from \"./parts/parts.mts\";\nimport {containerDelimitingOperators} from \"./parts/operators.mts\";\n\nexport function* container(start, prev) {\n  const cursor = start.spawn(prev);\n\n  cursor.token({kind: 'container'});\n\n  yield* cursor.log({message: 'checking container'});\n\n  if (prev) {\n    yield* cursor.log({\n                        message: 'not container',\n                        miss:    'prev'\n                      });\n    return prev;\n  }\n\n  if (!beginsContainer(start)) {\n    yield* cursor.log({\n                        message: 'not container',\n                        miss:    'cursor cannot start container'\n                      });\n    return false;\n  }\n\n  const {head, body, tail} = yield* loop(cursor);\n\n  cursor.token({kind: head.proto.name.split('.')[0]})\n\n  yield* cursor.log({message: 'resolving container'});\n\n  cursor.token({head, body, tail});\n\n  return cursor;\n}\n\nfunction* loop(cursor) {\n  let open       = containerDelimitingOperators.open;\n  const operator = yield* cursor.scan([_operator(open)]);\n  const head     = operator?.token();\n  const label    = head?.label?.key;\n  const close    = containerDelimitingOperators.close._inverse[head.proto.key];\n\n  if (!close) throw new Error('could not resolve type');\n\n  yield* takeSpaces(cursor);\n\n  let started;\n  let tail;\n  const body = [];\n\n  while (cursor.curr()) {\n    if ((!started) && (started = true)) yield* cursor.log({message: 'beginning container'});\n    yield* takeSpaces(cursor);\n\n    const delimiterScanner = yield* cursor.scan([_operator({[close.key]: close})]);\n\n    const _delimiter = delimiterScanner?.token();\n    const tailLabel  = _delimiter?.label?.key;\n    if (_delimiter) {\n      if (tailLabel === label || !(tailLabel && label)) {\n        tail = _delimiter;\n        break;\n      }\n\n      body.push(_delimiter);\n\n      yield* takeSpaces(cursor);\n    }\n\n    const statement = yield* cursor.scan(containerPartOptions);\n    if (!statement) break;\n\n    body.push(statement?.token());\n\n    yield* takeSpaces(cursor);\n  }\n\n  return {head, body, tail};\n}\n",
+    "usedDeprecatedRules": []
+  },
+  {
+    "filePath": "/Users/samwashington/Home/Development/_repos/spw/spw-parser/src/parser/constructs/nodal/container/parts/operators.mts",
+    "messages": [],
+    "suppressedMessages": [],
+    "errorCount": 0,
+    "fatalErrorCount": 0,
+    "warningCount": 0,
+    "fixableErrorCount": 0,
+    "fixableWarningCount": 0,
+    "usedDeprecatedRules": []
+  },
+  {
+    "filePath": "/Users/samwashington/Home/Development/_repos/spw/spw-parser/src/parser/constructs/nodal/container/parts/parts.mts",
+    "messages": [],
+    "suppressedMessages": [],
+    "errorCount": 0,
+    "fatalErrorCount": 0,
+    "warningCount": 0,
+    "fixableErrorCount": 0,
+    "fixableWarningCount": 0,
+    "usedDeprecatedRules": []
+  },
+  {
+    "filePath": "/Users/samwashington/Home/Development/_repos/spw/spw-parser/src/parser/constructs/nodal/literal/cursor/beginsLiteral.mts",
+    "messages": [],
+    "suppressedMessages": [],
+    "errorCount": 0,
+    "fatalErrorCount": 0,
+    "warningCount": 0,
+    "fixableErrorCount": 0,
+    "fixableWarningCount": 0,
+    "usedDeprecatedRules": []
+  },
+  {
+    "filePath": "/Users/samwashington/Home/Development/_repos/spw/spw-parser/src/parser/constructs/nodal/literal/generator.mts",
+    "messages": [
+      {
+        "ruleId": "prefer-const",
+        "severity": 2,
+        "message": "'open' is never reassigned. Use 'const' instead.",
+        "line": 40,
+        "column": 7,
+        "nodeType": "Identifier",
+        "messageId": "useConst",
+        "endLine": 40,
+        "endColumn": 11,
+        "fix": {
+          "range": [
+            1137,
+            1186
+          ],
+          "text": "const open       = literalDelimitingOperators.open;"
+        }
+      }
+    ],
+    "suppressedMessages": [],
+    "errorCount": 1,
+    "fatalErrorCount": 0,
+    "warningCount": 0,
+    "fixableErrorCount": 1,
+    "fixableWarningCount": 0,
+    "source": "import {beginsLiteral}              from \"./cursor/beginsLiteral.mts\";\nimport {takeSpaces}                 from \"../../operational/semantic/phrasal/cursor/motions/takeSpaces.mts\";\nimport {_operator}                  from \"../../operational/generator.builder.mts\";\nimport {literalPartOptions}         from \"./parts/parts.mts\";\nimport {literalDelimitingOperators} from \"./parts/operators.mts\";\n\nexport function* literal(start, prev) {\n  const cursor = start.spawn(prev);\n\n  cursor.token({kind: 'literal'});\n\n  yield* cursor.log({message: 'checking literal'});\n\n  if (prev) {\n    yield* cursor.log({\n                        message: 'not literal',\n                        miss:    'prev'\n                      });\n    return prev;\n  }\n\n  if (!beginsLiteral(start)) {\n    yield* cursor.log({\n                        message: 'not literal',\n                        miss:    'cursor cannot start literal'\n                      });\n    return false;\n  }\n\n  const {head, body, tail} = yield* loop(cursor);\n\n  yield* cursor.log({message: 'resolving literal'});\n\n  cursor.token({head, body, tail});\n\n  return cursor;\n}\n\nfunction* loop(cursor) {\n  let open       = literalDelimitingOperators.open;\n  const operator = yield* cursor.scan([_operator(open)]);\n  const head     = operator?.token();\n  const label    = head?.label?.key;\n  const close    = literalDelimitingOperators.close._inverse[head.proto.key];\n\n  if (!close) throw new Error('could not resolve type');\n\n  yield* takeSpaces(cursor);\n\n  let started;\n  let tail;\n  const body = [];\n\n  while (cursor.curr()) {\n    if ((!started) && (started = true)) yield* cursor.log({message: 'beginning literal'});\n    yield* takeSpaces(cursor);\n\n    const nextCursor = yield* cursor.scan([_operator({[close.key]: close})]);\n\n    const _delimiter = nextCursor?.token();\n    const tailLabel  = _delimiter?.label?.key;\n    if (_delimiter) {\n      if (tailLabel === label || !(tailLabel && label)) {\n        tail = _delimiter;\n        break;\n      }\n\n      body.push(_delimiter);\n\n      yield* takeSpaces(cursor);\n    }\n\n    const statement = yield* cursor.scan(literalPartOptions);\n    if (!statement) break;\n\n    body.push(statement?.token());\n\n    yield* takeSpaces(cursor);\n  }\n\n  return {head, body, tail};\n}\n",
+    "usedDeprecatedRules": []
+  },
+  {
+    "filePath": "/Users/samwashington/Home/Development/_repos/spw/spw-parser/src/parser/constructs/nodal/literal/parts/anything/cursor/beginsAnything.mts",
+    "messages": [],
+    "suppressedMessages": [],
+    "errorCount": 0,
+    "fatalErrorCount": 0,
+    "warningCount": 0,
+    "fixableErrorCount": 0,
+    "fixableWarningCount": 0,
+    "usedDeprecatedRules": []
+  },
+  {
+    "filePath": "/Users/samwashington/Home/Development/_repos/spw/spw-parser/src/parser/constructs/nodal/literal/parts/anything/cursor/continuesAnything.mts",
+    "messages": [],
+    "suppressedMessages": [],
+    "errorCount": 0,
+    "fatalErrorCount": 0,
+    "warningCount": 0,
+    "fixableErrorCount": 0,
+    "fixableWarningCount": 0,
+    "usedDeprecatedRules": []
+  },
+  {
+    "filePath": "/Users/samwashington/Home/Development/_repos/spw/spw-parser/src/parser/constructs/nodal/literal/parts/anything/generator.mts",
+    "messages": [],
+    "suppressedMessages": [],
+    "errorCount": 0,
+    "fatalErrorCount": 0,
+    "warningCount": 0,
+    "fixableErrorCount": 0,
+    "fixableWarningCount": 0,
+    "usedDeprecatedRules": []
+  },
+  {
+    "filePath": "/Users/samwashington/Home/Development/_repos/spw/spw-parser/src/parser/constructs/nodal/literal/parts/operators.mts",
+    "messages": [
+      {
+        "ruleId": "no-useless-escape",
+        "severity": 2,
+        "message": "Unnecessary escape character: \\`.",
+        "line": 2,
+        "column": 55,
+        "nodeType": "Literal",
+        "messageId": "unnecessaryEscape",
+        "endLine": 2,
+        "endColumn": 56,
+        "suggestions": [
+          {
+            "messageId": "removeEscape",
+            "fix": {
+              "range": [
+                159,
+                160
+              ],
+              "text": ""
+            },
+            "desc": "Remove the `\\`. This maintains the current functionality."
+          },
+          {
+            "messageId": "escapeBackslash",
+            "fix": {
+              "range": [
+                159,
+                159
+              ],
+              "text": "\\"
+            },
+            "desc": "Replace the `\\` with `\\\\` to include the actual backslash character."
+          }
+        ]
+      },
+      {
+        "ruleId": "no-useless-escape",
+        "severity": 2,
+        "message": "Unnecessary escape character: \\`.",
+        "line": 2,
+        "column": 71,
+        "nodeType": "Literal",
+        "messageId": "unnecessaryEscape",
+        "endLine": 2,
+        "endColumn": 72,
+        "suggestions": [
+          {
+            "messageId": "removeEscape",
+            "fix": {
+              "range": [
+                175,
+                176
+              ],
+              "text": ""
+            },
+            "desc": "Remove the `\\`. This maintains the current functionality."
+          },
+          {
+            "messageId": "escapeBackslash",
+            "fix": {
+              "range": [
+                175,
+                175
+              ],
+              "text": "\\"
+            },
+            "desc": "Replace the `\\` with `\\\\` to include the actual backslash character."
+          }
+        ]
+      },
+      {
+        "ruleId": "no-useless-escape",
+        "severity": 2,
+        "message": "Unnecessary escape character: \\`.",
+        "line": 4,
+        "column": 56,
+        "nodeType": "Literal",
+        "messageId": "unnecessaryEscape",
+        "endLine": 4,
+        "endColumn": 57,
+        "suggestions": [
+          {
+            "messageId": "removeEscape",
+            "fix": {
+              "range": [
+                374,
+                375
+              ],
+              "text": ""
+            },
+            "desc": "Remove the `\\`. This maintains the current functionality."
+          },
+          {
+            "messageId": "escapeBackslash",
+            "fix": {
+              "range": [
+                374,
+                374
+              ],
+              "text": "\\"
+            },
+            "desc": "Replace the `\\` with `\\\\` to include the actual backslash character."
+          }
+        ]
+      },
+      {
+        "ruleId": "no-useless-escape",
+        "severity": 2,
+        "message": "Unnecessary escape character: \\`.",
+        "line": 4,
+        "column": 72,
+        "nodeType": "Literal",
+        "messageId": "unnecessaryEscape",
+        "endLine": 4,
+        "endColumn": 73,
+        "suggestions": [
+          {
+            "messageId": "removeEscape",
+            "fix": {
+              "range": [
+                390,
+                391
+              ],
+              "text": ""
+            },
+            "desc": "Remove the `\\`. This maintains the current functionality."
+          },
+          {
+            "messageId": "escapeBackslash",
+            "fix": {
+              "range": [
+                390,
+                390
+              ],
+              "text": "\\"
+            },
+            "desc": "Replace the `\\` with `\\\\` to include the actual backslash character."
+          }
+        ]
+      },
+      {
+        "ruleId": "no-useless-escape",
+        "severity": 2,
+        "message": "Unnecessary escape character: \\`.",
+        "line": 9,
+        "column": 12,
+        "nodeType": "Literal",
+        "messageId": "unnecessaryEscape",
+        "endLine": 9,
+        "endColumn": 13,
+        "suggestions": [
+          {
+            "messageId": "removeEscape",
+            "fix": {
+              "range": [
+                519,
+                520
+              ],
+              "text": ""
+            },
+            "desc": "Remove the `\\`. This maintains the current functionality."
+          },
+          {
+            "messageId": "escapeBackslash",
+            "fix": {
+              "range": [
+                519,
+                519
+              ],
+              "text": "\\"
+            },
+            "desc": "Replace the `\\` with `\\\\` to include the actual backslash character."
+          }
+        ]
+      },
+      {
+        "ruleId": "no-useless-escape",
+        "severity": 2,
+        "message": "Unnecessary escape character: \\`.",
+        "line": 19,
+        "column": 12,
+        "nodeType": "Literal",
+        "messageId": "unnecessaryEscape",
+        "endLine": 19,
+        "endColumn": 13,
+        "suggestions": [
+          {
+            "messageId": "removeEscape",
+            "fix": {
+              "range": [
+                738,
+                739
+              ],
+              "text": ""
+            },
+            "desc": "Remove the `\\`. This maintains the current functionality."
+          },
+          {
+            "messageId": "escapeBackslash",
+            "fix": {
+              "range": [
+                738,
+                738
+              ],
+              "text": "\\"
+            },
+            "desc": "Replace the `\\` with `\\\\` to include the actual backslash character."
+          }
+        ]
+      },
+      {
+        "ruleId": "no-useless-escape",
+        "severity": 2,
+        "message": "Unnecessary escape character: \\`.",
+        "line": 23,
+        "column": 14,
+        "nodeType": "Literal",
+        "messageId": "unnecessaryEscape",
+        "endLine": 23,
+        "endColumn": 15,
+        "suggestions": [
+          {
+            "messageId": "removeEscape",
+            "fix": {
+              "range": [
+                826,
+                827
+              ],
+              "text": ""
+            },
+            "desc": "Remove the `\\`. This maintains the current functionality."
+          },
+          {
+            "messageId": "escapeBackslash",
+            "fix": {
+              "range": [
+                826,
+                826
+              ],
+              "text": "\\"
+            },
+            "desc": "Replace the `\\` with `\\\\` to include the actual backslash character."
+          }
+        ]
+      }
+    ],
+    "suppressedMessages": [],
+    "errorCount": 7,
+    "fatalErrorCount": 0,
+    "warningCount": 0,
+    "fixableErrorCount": 0,
+    "fixableWarningCount": 0,
+    "source": "const openConcept   = {name: 'open-conceptual', key: '\"', opposite: '\"', kind: 'delimiter', open: true};\nconst openLocation  = {name: 'open-locational', key: '\\`', opposite: '\\`', kind: 'delimiter', open: true};\nconst closeConcept  = {name: 'close-conceptual', key: '\"', opposite: '\"', kind: 'delimiter', close: true};\nconst closeLocation = {name: 'close-locational', key: '\\`', opposite: '\\`', kind: 'delimiter', close: true};\n\nconst openLiteralDelimitingOperators  =\n        {\n          '\"':  openConcept,\n          '\\`': openLocation,\n\n          _inverse: {\n            '\"':  openConcept,\n            '\\'': openLocation,\n          }\n        };\nconst closeLiteralDelimitingOperators =\n        {\n          '\"':  closeConcept,\n          '\\`': closeLocation,\n\n          _inverse: {\n            '\"':  closeConcept,\n            '\\`': closeLocation,\n          }\n        };\n\nexport const literalDelimitingOperators =\n               {\n                 open:  openLiteralDelimitingOperators,\n                 close: closeLiteralDelimitingOperators,\n               };",
+    "usedDeprecatedRules": []
+  },
+  {
+    "filePath": "/Users/samwashington/Home/Development/_repos/spw/spw-parser/src/parser/constructs/nodal/literal/parts/parts.mts",
+    "messages": [],
+    "suppressedMessages": [],
+    "errorCount": 0,
+    "fatalErrorCount": 0,
+    "warningCount": 0,
+    "fixableErrorCount": 0,
+    "fixableWarningCount": 0,
+    "usedDeprecatedRules": []
+  },
+  {
+    "filePath": "/Users/samwashington/Home/Development/_repos/spw/spw-parser/src/parser/constructs/nodal/literal/util/containerDelimiterMap.mts",
+    "messages": [],
+    "suppressedMessages": [],
+    "errorCount": 0,
+    "fatalErrorCount": 0,
+    "warningCount": 0,
+    "fixableErrorCount": 0,
+    "fixableWarningCount": 0,
+    "usedDeprecatedRules": []
+  },
+  {
+    "filePath": "/Users/samwashington/Home/Development/_repos/spw/spw-parser/src/parser/constructs/nodal/nominal/cursor/beginsNominal.mts",
+    "messages": [],
+    "suppressedMessages": [],
+    "errorCount": 0,
+    "fatalErrorCount": 0,
+    "warningCount": 0,
+    "fixableErrorCount": 0,
+    "fixableWarningCount": 0,
+    "usedDeprecatedRules": []
+  },
+  {
+    "filePath": "/Users/samwashington/Home/Development/_repos/spw/spw-parser/src/parser/constructs/nodal/nominal/cursor/continuesNominal.mts",
+    "messages": [],
+    "suppressedMessages": [],
+    "errorCount": 0,
+    "fatalErrorCount": 0,
+    "warningCount": 0,
+    "fixableErrorCount": 0,
+    "fixableWarningCount": 0,
+    "usedDeprecatedRules": []
+  },
+  {
+    "filePath": "/Users/samwashington/Home/Development/_repos/spw/spw-parser/src/parser/constructs/nodal/nominal/generator.mts",
+    "messages": [],
+    "suppressedMessages": [],
+    "errorCount": 0,
+    "fatalErrorCount": 0,
+    "warningCount": 0,
+    "fixableErrorCount": 0,
+    "fixableWarningCount": 0,
+    "usedDeprecatedRules": []
+  },
+  {
+    "filePath": "/Users/samwashington/Home/Development/_repos/spw/spw-parser/src/parser/constructs/nodal/nominal/parts/definition.mts",
+    "messages": [
+      {
+        "ruleId": "prefer-const",
+        "severity": 2,
+        "message": "'containers' is never reassigned. Use 'const' instead.",
+        "line": 4,
+        "column": 7,
+        "nodeType": "Identifier",
+        "messageId": "useConst",
+        "endLine": 4,
+        "endColumn": 17,
+        "fix": {
+          "range": [
+            98,
+            127
+          ],
+          "text": "const containers = new Map([]);"
+        }
+      },
+      {
+        "ruleId": "prefer-const",
+        "severity": 2,
+        "message": "'set' is never reassigned. Use 'const' instead.",
+        "line": 7,
+        "column": 9,
+        "nodeType": "Identifier",
+        "messageId": "useConst",
+        "endLine": 7,
+        "endColumn": 12,
+        "fix": {
+          "range": [
+            246,
+            300
+          ],
+          "text": "const set = containers.get(_container.head.proto) ?? [];"
+        }
+      }
+    ],
+    "suppressedMessages": [],
+    "errorCount": 2,
+    "fatalErrorCount": 0,
+    "warningCount": 0,
+    "fixableErrorCount": 2,
+    "fixableWarningCount": 0,
+    "source": "import {container} from \"../../container/generator.mts\";\n\nexport function* definition(cursor) {\n  let containers = new Map([]);\n  let _container;\n  while ((_container = yield* cursor.scan([container])) && (_container = _container.token())) {\n    let set = containers.get(_container.head.proto) ?? [];\n    set.push(_container)\n    containers.set(_container.head.proto.name, set)\n  }\n  return containers;\n}\n\nexport function* takeDefinition(cursor) {\n  const containers = yield* definition(cursor);\n  cursor.token({definition: containers});\n  if (containers.size) {\n    cursor.token({body: [...containers.values()]});\n  }\n}\n",
+    "usedDeprecatedRules": []
+  },
+  {
+    "filePath": "/Users/samwashington/Home/Development/_repos/spw/spw-parser/src/parser/constructs/nodal/numeric/cursor/beginsNumeric.mts",
+    "messages": [],
+    "suppressedMessages": [],
+    "errorCount": 0,
+    "fatalErrorCount": 0,
+    "warningCount": 0,
+    "fixableErrorCount": 0,
+    "fixableWarningCount": 0,
+    "usedDeprecatedRules": []
+  },
+  {
+    "filePath": "/Users/samwashington/Home/Development/_repos/spw/spw-parser/src/parser/constructs/nodal/numeric/cursor/continuesNumeric.mts",
+    "messages": [],
+    "suppressedMessages": [],
+    "errorCount": 0,
+    "fatalErrorCount": 0,
+    "warningCount": 0,
+    "fixableErrorCount": 0,
+    "fixableWarningCount": 0,
+    "usedDeprecatedRules": []
+  },
+  {
+    "filePath": "/Users/samwashington/Home/Development/_repos/spw/spw-parser/src/parser/constructs/nodal/numeric/generator.mts",
+    "messages": [
+      {
+        "ruleId": "prefer-const",
+        "severity": 2,
+        "message": "'_integral' is never reassigned. Use 'const' instead.",
+        "line": 17,
+        "column": 18,
+        "nodeType": "Identifier",
+        "messageId": "useConst",
+        "endLine": 17,
+        "endColumn": 27,
+        "fix": {
+          "range": [
+            476,
+            549
+          ],
+          "text": "const {integral: _integral, fractional: _fractional} = yield* loop(cursor);"
+        }
+      },
+      {
+        "ruleId": "prefer-const",
+        "severity": 2,
+        "message": "'_fractional' is never reassigned. Use 'const' instead.",
+        "line": 17,
+        "column": 41,
+        "nodeType": "Identifier",
+        "messageId": "useConst",
+        "endLine": 17,
+        "endColumn": 52,
+        "fix": {
+          "range": [
+            476,
+            549
+          ],
+          "text": "const {integral: _integral, fractional: _fractional} = yield* loop(cursor);"
+        }
+      },
+      {
+        "ruleId": "prefer-const",
+        "severity": 2,
+        "message": "'fractional' is never reassigned. Use 'const' instead.",
+        "line": 60,
+        "column": 7,
+        "nodeType": "Identifier",
+        "messageId": "useConst",
+        "endLine": 60,
+        "endColumn": 17,
+        "fix": {
+          "range": [
+            1712,
+            1732
+          ],
+          "text": "const fractional = [];"
+        }
+      }
+    ],
+    "suppressedMessages": [],
+    "errorCount": 3,
+    "fatalErrorCount": 0,
+    "warningCount": 0,
+    "fixableErrorCount": 3,
+    "fixableWarningCount": 0,
+    "source": "import {beginsNumeric}    from \"./cursor/beginsNumeric.mts\";\nimport {continuesNumeric} from \"./cursor/continuesNumeric.mts\";\n\nexport function* numeric(start, prev) {\n  const cursor = start.spawn(prev);\n  cursor.token({kind: 'numeric'});\n\n  if (prev) {\n    yield* cursor.log({\n                        message: 'not numeric',\n                        miss:    'cannot follow prev',\n                        cursors: {start, prev}\n                      });\n    return prev;\n  }\n\n  let {integral: _integral, fractional: _fractional} = yield* loop(cursor);\n\n  if (!(_integral.length || _fractional.length)) {\n    yield* cursor.log({\n                        message: 'not numeric',\n                        miss:    'no integral or fractional components',\n                      });\n    return false;\n  }\n\n  yield* cursor.log({message: 'resolving numeric'});\n\n  const integral   = _integral.length ? parseInt(_integral.join('')) : _integral;\n  const fractional = _fractional.length ? parseFloat(`.${_fractional.join()}`) : undefined;\n  const head       = {key: integral + fractional};\n\n  cursor.token({\n                 head:       head,\n                 integral:   integral,\n                 fractional: fractional,\n               });\n\n  return cursor;\n}\n\nfunction* loop(cursor) {\n  const integral = [];\n  {\n    let _check = beginsNumeric, started;\n    while (_check(cursor)) {\n      if ((!started) && (started = true)) {\n        _check = continuesNumeric;\n        yield* cursor.log({\n                            message: 'beginning numeric',\n                            info:    {component: 'integral'}\n                          });\n      }\n\n      integral.push(cursor.curr());\n      yield* cursor.take();\n    }\n  }\n\n  let fractional = [];\n  {\n    if (cursor.curr() === '.') {\n      yield* cursor.take()\n      let started = false, _check = continuesNumeric;\n      while (_check(cursor)) {\n        if (!started && (started = true)) {\n          _check = continuesNumeric;\n          yield* cursor.log({\n                              message: 'continuing numeric',\n                              info:    {component: 'fractional'}\n                            });\n        }\n        fractional.push(cursor.curr());\n        yield* cursor.take();\n      }\n    }\n  }\n  return {\n    integral,\n    fractional\n  };\n}\n",
+    "usedDeprecatedRules": []
+  },
+  {
+    "filePath": "/Users/samwashington/Home/Development/_repos/spw/spw-parser/src/parser/constructs/operational/generator.builder.mts",
+    "messages": [],
+    "suppressedMessages": [],
+    "errorCount": 0,
+    "fatalErrorCount": 0,
+    "warningCount": 0,
+    "fixableErrorCount": 0,
+    "fixableWarningCount": 0,
+    "usedDeprecatedRules": []
+  },
+  {
+    "filePath": "/Users/samwashington/Home/Development/_repos/spw/spw-parser/src/parser/constructs/operational/pragmatic/cursor/motions/takeLabel.mts",
+    "messages": [],
+    "suppressedMessages": [],
+    "errorCount": 0,
+    "fatalErrorCount": 0,
+    "warningCount": 0,
+    "fixableErrorCount": 0,
+    "fixableWarningCount": 0,
+    "usedDeprecatedRules": []
+  },
+  {
+    "filePath": "/Users/samwashington/Home/Development/_repos/spw/spw-parser/src/parser/constructs/operational/pragmatic/cursor/takeOperator.mts",
+    "messages": [],
+    "suppressedMessages": [],
+    "errorCount": 0,
+    "fatalErrorCount": 0,
+    "warningCount": 0,
+    "fixableErrorCount": 0,
+    "fixableWarningCount": 0,
+    "usedDeprecatedRules": []
+  },
+  {
+    "filePath": "/Users/samwashington/Home/Development/_repos/spw/spw-parser/src/parser/constructs/operational/pragmatic/generator.mts",
+    "messages": [
+      {
+        "ruleId": "prefer-const",
+        "severity": 2,
+        "message": "'head' is never reassigned. Use 'const' instead.",
+        "line": 12,
+        "column": 8,
+        "nodeType": "Identifier",
+        "messageId": "useConst",
+        "endLine": 12,
+        "endColumn": 12
+      },
+      {
+        "ruleId": "prefer-const",
+        "severity": 2,
+        "message": "'body' is never reassigned. Use 'const' instead.",
+        "line": 12,
+        "column": 14,
+        "nodeType": "Identifier",
+        "messageId": "useConst",
+        "endLine": 12,
+        "endColumn": 18
+      },
+      {
+        "ruleId": "prefer-const",
+        "severity": 2,
+        "message": "'operators' is never reassigned. Use 'const' instead.",
+        "line": 12,
+        "column": 26,
+        "nodeType": "Identifier",
+        "messageId": "useConst",
+        "endLine": 12,
+        "endColumn": 35
+      },
+      {
+        "ruleId": "prefer-const",
+        "severity": 2,
+        "message": "'initialProto' is never reassigned. Use 'const' instead.",
+        "line": 12,
+        "column": 37,
+        "nodeType": "Identifier",
+        "messageId": "useConst",
+        "endLine": 12,
+        "endColumn": 49
+      },
+      {
+        "ruleId": "prefer-const",
+        "severity": 2,
+        "message": "'isNominal' is never reassigned. Use 'const' instead.",
+        "line": 21,
+        "column": 7,
+        "nodeType": "Identifier",
+        "messageId": "useConst",
+        "endLine": 21,
+        "endColumn": 16,
+        "fix": {
+          "range": [
+            772,
+            824
+          ],
+          "text": "const isNominal = initialProto?.kinds?.has('nominal');"
+        }
+      },
+      {
+        "ruleId": "no-cond-assign",
+        "severity": 2,
+        "message": "Expected a conditional expression and instead saw an assignment.",
+        "line": 81,
+        "column": 10,
+        "nodeType": "AssignmentExpression",
+        "messageId": "missing",
+        "endLine": 81,
+        "endColumn": 72
+      },
+      {
+        "ruleId": "prefer-const",
+        "severity": 2,
+        "message": "'token' is never reassigned. Use 'const' instead.",
+        "line": 101,
+        "column": 9,
+        "nodeType": "Identifier",
+        "messageId": "useConst",
+        "endLine": 101,
+        "endColumn": 14,
+        "fix": {
+          "range": [
+            2757,
+            2806
+          ],
+          "text": "const token     = _cursor ? _cursor.token() : null;"
+        }
+      }
+    ],
+    "suppressedMessages": [],
+    "errorCount": 7,
+    "fatalErrorCount": 0,
+    "warningCount": 0,
+    "fixableErrorCount": 2,
+    "fixableWarningCount": 0,
+    "source": "import {operationalPartOptions} from \"./parts/parts.mts\";\nimport {takeSpaces}             from \"../semantic/phrasal/cursor/motions/takeSpaces.mts\";\nimport {pragmaticOperators}     from \"./parts/operators.mts\";\nimport {_operator}              from \"../generator.builder.mts\";\n\nexport function* operational(start, prev, domain = pragmaticOperators) {\n  const cursor = start.spawn(prev);\n  cursor.token({kind: 'operational'});\n\n  yield* cursor.log({message: 'checking operational'});\n\n  let {head, body, tail, operators, initialProto,} = yield* loop(cursor, prev, domain);\n  if (!operators.length) {\n    yield* cursor.log({\n                        message: 'not operational',\n                        miss:    'no operators'\n                      });\n    return false;\n  }\n\n  let isNominal = initialProto?.kinds?.has('nominal');\n  if (isNominal && !tail) {\n    tail = null;\n  }\n\n  cursor.token({operators});\n\n  if (initialProto?.kind === 'delimiter') {\n    return cursor;\n  }\n\n  if (operators.length === 1) {\n    cursor.token({kind: initialProto.kind})\n    cursor.token({kind: initialProto.name})\n  }\n\n  if (typeof tail === 'undefined') {\n    yield* cursor.log({\n                        message: 'not operational',\n                        miss:    'missing a tail component',\n                        cursor:  cursor,\n                        info:    {\n                          head, body, tail,\n                          tok: cursor.token(),\n                        }\n                      });\n\n    cursor.token(false);\n\n    return false;\n  }\n\n  yield* cursor.log({\n                      message: 'resolving operational',\n                      cursor:  cursor\n                    });\n\n  if (!head && !tail) {\n    cursor.token({kind: 'conceptual'});\n  }\n\n  cursor.token({\n                 head: head,\n                 body: body,\n                 tail: tail,\n               });\n\n  return cursor;\n}\n\nfunction* loop(cursor, prev, permittedOperators) {\n  const head = prev && prev.token();\n  const body = [];\n\n  if (!permittedOperators[' ']) {\n    yield* takeSpaces(cursor);\n  }\n\n  const operators = [];\n  let operator, initialProto;\n  while (operator = yield* cursor.scan([_operator(permittedOperators)])) {\n    if (!operator) continue;\n    if (!operator?.token()) break;\n\n    yield* cursor.log({message: 'beginning operational',});\n    operators.push(operator.token());\n\n    const proto = operator.token().proto;\n\n    initialProto = initialProto ? initialProto : proto;\n\n    if (proto.open) {\n      const spaces = yield* takeSpaces(operator);\n      spaces.length && body.push(spaces[0]);\n    }\n    if (!proto.close) {\n      yield* takeSpaces(cursor);\n    }\n\n    const _cursor = yield* cursor.scan(operationalPartOptions, proto.close ? operator : undefined);\n    let token     = _cursor ? _cursor.token() : null;\n    if (!token) break\n    body.push(token);\n    yield* takeSpaces(cursor);\n  }\n\n  const tail = body.pop();\n  return {\n    head: head,\n    body: body,\n    tail: tail,\n\n    operators:    operators,\n    initialProto: initialProto\n  };\n}\n\n",
+    "usedDeprecatedRules": []
+  },
+  {
+    "filePath": "/Users/samwashington/Home/Development/_repos/spw/spw-parser/src/parser/constructs/operational/pragmatic/parts/operators.mts",
+    "messages": [],
+    "suppressedMessages": [],
+    "errorCount": 0,
+    "fatalErrorCount": 0,
+    "warningCount": 0,
+    "fixableErrorCount": 0,
+    "fixableWarningCount": 0,
+    "usedDeprecatedRules": []
+  },
+  {
+    "filePath": "/Users/samwashington/Home/Development/_repos/spw/spw-parser/src/parser/constructs/operational/pragmatic/parts/parts.mts",
+    "messages": [],
+    "suppressedMessages": [],
+    "errorCount": 0,
+    "fatalErrorCount": 0,
+    "warningCount": 0,
+    "fixableErrorCount": 0,
+    "fixableWarningCount": 0,
+    "usedDeprecatedRules": []
+  },
+  {
+    "filePath": "/Users/samwashington/Home/Development/_repos/spw/spw-parser/src/parser/constructs/operational/semantic/common/cursor/checks/isCommonDelimiter.mts",
+    "messages": [],
+    "suppressedMessages": [],
+    "errorCount": 0,
+    "fatalErrorCount": 0,
+    "warningCount": 0,
+    "fixableErrorCount": 0,
+    "fixableWarningCount": 0,
+    "usedDeprecatedRules": []
+  },
+  {
+    "filePath": "/Users/samwashington/Home/Development/_repos/spw/spw-parser/src/parser/constructs/operational/semantic/common/generator.mts",
+    "messages": [],
+    "suppressedMessages": [],
+    "errorCount": 0,
+    "fatalErrorCount": 0,
+    "warningCount": 0,
+    "fixableErrorCount": 0,
+    "fixableWarningCount": 0,
+    "usedDeprecatedRules": []
+  },
+  {
+    "filePath": "/Users/samwashington/Home/Development/_repos/spw/spw-parser/src/parser/constructs/operational/semantic/common/parts/parts.mts",
+    "messages": [],
+    "suppressedMessages": [],
+    "errorCount": 0,
+    "fatalErrorCount": 0,
+    "warningCount": 0,
+    "fixableErrorCount": 0,
+    "fixableWarningCount": 0,
+    "usedDeprecatedRules": []
+  },
+  {
+    "filePath": "/Users/samwashington/Home/Development/_repos/spw/spw-parser/src/parser/constructs/operational/semantic/operators.mts",
+    "messages": [],
+    "suppressedMessages": [],
+    "errorCount": 0,
+    "fatalErrorCount": 0,
+    "warningCount": 0,
+    "fixableErrorCount": 0,
+    "fixableWarningCount": 0,
+    "usedDeprecatedRules": []
+  },
+  {
+    "filePath": "/Users/samwashington/Home/Development/_repos/spw/spw-parser/src/parser/constructs/operational/semantic/ordinal/cursor/checks/isOrdinalDelimiter.mts",
+    "messages": [],
+    "suppressedMessages": [],
+    "errorCount": 0,
+    "fatalErrorCount": 0,
+    "warningCount": 0,
+    "fixableErrorCount": 0,
+    "fixableWarningCount": 0,
+    "usedDeprecatedRules": []
+  },
+  {
+    "filePath": "/Users/samwashington/Home/Development/_repos/spw/spw-parser/src/parser/constructs/operational/semantic/ordinal/generator.mts",
+    "messages": [],
+    "suppressedMessages": [],
+    "errorCount": 0,
+    "fatalErrorCount": 0,
+    "warningCount": 0,
+    "fixableErrorCount": 0,
+    "fixableWarningCount": 0,
+    "usedDeprecatedRules": []
+  },
+  {
+    "filePath": "/Users/samwashington/Home/Development/_repos/spw/spw-parser/src/parser/constructs/operational/semantic/ordinal/parts/parts.mts",
+    "messages": [],
+    "suppressedMessages": [],
+    "errorCount": 0,
+    "fatalErrorCount": 0,
+    "warningCount": 0,
+    "fixableErrorCount": 0,
+    "fixableWarningCount": 0,
+    "usedDeprecatedRules": []
+  },
+  {
+    "filePath": "/Users/samwashington/Home/Development/_repos/spw/spw-parser/src/parser/constructs/operational/semantic/phrasal/cursor/checks/isPhrasalDelimiter.mts",
+    "messages": [],
+    "suppressedMessages": [],
+    "errorCount": 0,
+    "fatalErrorCount": 0,
+    "warningCount": 0,
+    "fixableErrorCount": 0,
+    "fixableWarningCount": 0,
+    "usedDeprecatedRules": []
+  },
+  {
+    "filePath": "/Users/samwashington/Home/Development/_repos/spw/spw-parser/src/parser/constructs/operational/semantic/phrasal/cursor/motions/takeSpaces.mts",
+    "messages": [],
+    "suppressedMessages": [],
+    "errorCount": 0,
+    "fatalErrorCount": 0,
+    "warningCount": 0,
+    "fixableErrorCount": 0,
+    "fixableWarningCount": 0,
+    "usedDeprecatedRules": []
+  },
+  {
+    "filePath": "/Users/samwashington/Home/Development/_repos/spw/spw-parser/src/parser/constructs/operational/semantic/phrasal/generator.mts",
+    "messages": [],
+    "suppressedMessages": [],
+    "errorCount": 0,
+    "fatalErrorCount": 0,
+    "warningCount": 0,
+    "fixableErrorCount": 0,
+    "fixableWarningCount": 0,
+    "usedDeprecatedRules": []
+  },
+  {
+    "filePath": "/Users/samwashington/Home/Development/_repos/spw/spw-parser/src/parser/constructs/operational/semantic/phrasal/parts/parts.mts",
+    "messages": [],
+    "suppressedMessages": [],
+    "errorCount": 0,
+    "fatalErrorCount": 0,
+    "warningCount": 0,
+    "fixableErrorCount": 0,
+    "fixableWarningCount": 0,
+    "usedDeprecatedRules": []
+  },
+  {
+    "filePath": "/Users/samwashington/Home/Development/_repos/spw/spw-parser/src/parser/parse.mts",
+    "messages": [
+      {
+        "ruleId": "prefer-const",
+        "severity": 2,
+        "message": "'v' is never reassigned. Use 'const' instead.",
+        "line": 23,
+        "column": 12,
+        "nodeType": "Identifier",
+        "messageId": "useConst",
+        "endLine": 23,
+        "endColumn": 13,
+        "fix": {
+          "range": [
+            674,
+            679
+          ],
+          "text": "const v"
+        }
+      }
+    ],
+    "suppressedMessages": [],
+    "errorCount": 1,
+    "fatalErrorCount": 0,
+    "warningCount": 0,
+    "fixableErrorCount": 1,
+    "fixableWarningCount": 0,
+    "source": "import {Scanner}         from \"../core/lens/scanner.mts\";\nimport {allConstructs}   from \"./constructs/constructs.mts\";\nimport {Lens}            from \"../core/lens/lens.mts\";\nimport {CharacterCursor} from \"../core/cursor/cursor.mts\";\n\n\nclass ParserLens extends Lens {\n  generators = Object.values(allConstructs);\n  Cursor     = CharacterCursor;\n}\n\n/**\n * Parser for the Spw Language\n *\n *\n * @param input {string} The input string to parse\n * @param config {object}\n * @param config.asGenerator {boolean?} Whether to loop through the generator or return it.\n */\nexport function parse(input, {asGenerator = false} = {}) {\n  if (asGenerator) return parser();\n  let end;\n  for (let v of parser()) {\n    end = v;\n  }\n  return end;\n\n  function* parser() {\n    const lens    = new ParserLens;\n    const scanner = new Scanner(lens);\n\n    yield* scanner.scan(input);\n  }\n}",
+    "usedDeprecatedRules": []
+  },
+  {
+    "filePath": "/Users/samwashington/Home/Development/_repos/spw/spw-parser/src/parser/tests/test.mts",
+    "messages": [
+      {
+        "ruleId": "no-debugger",
+        "severity": 2,
+        "message": "Unexpected 'debugger' statement.",
+        "line": 18,
+        "column": 1,
+        "nodeType": "DebuggerStatement",
+        "messageId": "unexpected",
+        "endLine": 18,
+        "endColumn": 10
+      }
+    ],
+    "suppressedMessages": [],
+    "errorCount": 1,
+    "fatalErrorCount": 0,
+    "warningCount": 0,
+    "fixableErrorCount": 0,
+    "fixableWarningCount": 0,
+    "source": "import {parse} from \"../parse.mts\";\n\nlet out =/**/ Object.entries({\n                               '--false':       [\" \",],\n                               '--nominal':     [\"one\", \"one<two>\", \"one<two>(three)\", \"one(two)\", \"one(two){three}\", \"one{two}\", \"one(two){three}[four]\", \"one{two}[three]\", \"one[two]\",],\n                               '--literal':     [\"`one`\", '\"one\"',],\n                               '--numeric':     [\"2\", \"2.2\",],\n                               '--phrasal':     [\"2 2\", \"one two\", \"one 2 three\", \"onw two three\", \"{_one two }_three four\"],\n                               '--common':      [\"one two, three\",],\n                               '--ordinal':     [\"one two, three; four five\", `\\n      one\\n      two \\n      three\\n      `, `\\n      one;\\n      two;\\n      three;\\n      `, `\\n      one;\\n      *_two;\\n      three;\\n      `],\n                               '--container':   ['{one}', '{ something }', '{_one two }_three',],\n                               '--operational': ['one*two', '*_one', 'one *two', 'one* two', 'one * two', 'one *_two three ', 'one@two', 'one * two@three']\n                             });\n\nout = Object.fromEntries(out.map(([k, v]) => [k, v.map(str => parse(str, {asGenerator: false})?.kind ?? str)]));\nout = JSON.parse(JSON.stringify(out));\nconsole.log(out);\ndebugger;",
+    "usedDeprecatedRules": []
+  },
+  {
+    "filePath": "/Users/samwashington/Home/Development/_repos/spw/spw-parser/src/runtime/web/app.mts",
+    "messages": [
+      {
+        "ruleId": "@typescript-eslint/no-explicit-any",
+        "severity": 1,
+        "message": "Unexpected any. Specify a different type.",
+        "line": 5,
+        "column": 16,
+        "nodeType": "TSAnyKeyword",
+        "messageId": "unexpectedAny",
+        "endLine": 5,
+        "endColumn": 19,
+        "suggestions": [
+          {
+            "messageId": "suggestUnknown",
+            "fix": {
+              "range": [
+                171,
+                174
+              ],
+              "text": "unknown"
+            },
+            "desc": "Use `unknown` instead, this will force you to explicitly, and safely assert the type is correct."
+          },
+          {
+            "messageId": "suggestNever",
+            "fix": {
+              "range": [
+                171,
+                174
+              ],
+              "text": "never"
+            },
+            "desc": "Use `never` instead, this is useful when instantiating generic type parameters that you don't need to know the type of."
+          }
+        ]
+      },
+      {
+        "ruleId": "prefer-const",
+        "severity": 2,
+        "message": "'map' is never reassigned. Use 'const' instead.",
+        "line": 28,
+        "column": 9,
+        "nodeType": "Identifier",
+        "messageId": "useConst",
+        "endLine": 28,
+        "endColumn": 12,
+        "fix": {
+          "range": [
+            846,
+            869
+          ],
+          "text": "const map      = new Map;"
+        }
+      },
+      {
+        "ruleId": "@typescript-eslint/no-explicit-any",
+        "severity": 1,
+        "message": "Unexpected any. Specify a different type.",
+        "line": 60,
+        "column": 19,
+        "nodeType": "TSAnyKeyword",
+        "messageId": "unexpectedAny",
+        "endLine": 60,
+        "endColumn": 22,
+        "suggestions": [
+          {
+            "messageId": "suggestUnknown",
+            "fix": {
+              "range": [
+                1734,
+                1737
+              ],
+              "text": "unknown"
+            },
+            "desc": "Use `unknown` instead, this will force you to explicitly, and safely assert the type is correct."
+          },
+          {
+            "messageId": "suggestNever",
+            "fix": {
+              "range": [
+                1734,
+                1737
+              ],
+              "text": "never"
+            },
+            "desc": "Use `never` instead, this is useful when instantiating generic type parameters that you don't need to know the type of."
+          }
+        ]
+      },
+      {
+        "ruleId": "@typescript-eslint/no-explicit-any",
+        "severity": 1,
+        "message": "Unexpected any. Specify a different type.",
+        "line": 61,
+        "column": 17,
+        "nodeType": "TSAnyKeyword",
+        "messageId": "unexpectedAny",
+        "endLine": 61,
+        "endColumn": 20,
+        "suggestions": [
+          {
+            "messageId": "suggestUnknown",
+            "fix": {
+              "range": [
+                1755,
+                1758
+              ],
+              "text": "unknown"
+            },
+            "desc": "Use `unknown` instead, this will force you to explicitly, and safely assert the type is correct."
+          },
+          {
+            "messageId": "suggestNever",
+            "fix": {
+              "range": [
+                1755,
+                1758
+              ],
+              "text": "never"
+            },
+            "desc": "Use `never` instead, this is useful when instantiating generic type parameters that you don't need to know the type of."
+          }
+        ]
+      },
+      {
+        "ruleId": "@typescript-eslint/no-explicit-any",
+        "severity": 1,
+        "message": "Unexpected any. Specify a different type.",
+        "line": 62,
+        "column": 21,
+        "nodeType": "TSAnyKeyword",
+        "messageId": "unexpectedAny",
+        "endLine": 62,
+        "endColumn": 24,
+        "suggestions": [
+          {
+            "messageId": "suggestUnknown",
+            "fix": {
+              "range": [
+                1780,
+                1783
+              ],
+              "text": "unknown"
+            },
+            "desc": "Use `unknown` instead, this will force you to explicitly, and safely assert the type is correct."
+          },
+          {
+            "messageId": "suggestNever",
+            "fix": {
+              "range": [
+                1780,
+                1783
+              ],
+              "text": "never"
+            },
+            "desc": "Use `never` instead, this is useful when instantiating generic type parameters that you don't need to know the type of."
+          }
+        ]
+      },
+      {
+        "ruleId": "@typescript-eslint/no-explicit-any",
+        "severity": 1,
+        "message": "Unexpected any. Specify a different type.",
+        "line": 63,
+        "column": 18,
+        "nodeType": "TSAnyKeyword",
+        "messageId": "unexpectedAny",
+        "endLine": 63,
+        "endColumn": 21,
+        "suggestions": [
+          {
+            "messageId": "suggestUnknown",
+            "fix": {
+              "range": [
+                1802,
+                1805
+              ],
+              "text": "unknown"
+            },
+            "desc": "Use `unknown` instead, this will force you to explicitly, and safely assert the type is correct."
+          },
+          {
+            "messageId": "suggestNever",
+            "fix": {
+              "range": [
+                1802,
+                1805
+              ],
+              "text": "never"
+            },
+            "desc": "Use `never` instead, this is useful when instantiating generic type parameters that you don't need to know the type of."
+          }
+        ]
+      },
+      {
+        "ruleId": "prefer-const",
+        "severity": 2,
+        "message": "'out' is never reassigned. Use 'const' instead.",
+        "line": 136,
+        "column": 9,
+        "nodeType": "Identifier",
+        "messageId": "useConst",
+        "endLine": 136,
+        "endColumn": 12,
+        "fix": {
+          "range": [
+            3457,
+            3624
+          ],
+          "text": "const out = {\n      identities: this.state.tokens.map(n => n.identity),\n      tokens:     this.state.tokens.map(n => n.toJSON()),\n      // chars: this.state.chars\n    };"
+        }
+      },
+      {
+        "ruleId": "prefer-const",
+        "severity": 2,
+        "message": "'out' is never reassigned. Use 'const' instead.",
+        "line": 160,
+        "column": 19,
+        "nodeType": "Identifier",
+        "messageId": "useConst",
+        "endLine": 160,
+        "endColumn": 22,
+        "fix": {
+          "range": [
+            4048,
+            4097
+          ],
+          "text": "const {value: out, done: _done} = generator.next();"
+        }
+      },
+      {
+        "ruleId": "prefer-const",
+        "severity": 2,
+        "message": "'_done' is never reassigned. Use 'const' instead.",
+        "line": 160,
+        "column": 30,
+        "nodeType": "Identifier",
+        "messageId": "useConst",
+        "endLine": 160,
+        "endColumn": 35,
+        "fix": {
+          "range": [
+            4048,
+            4097
+          ],
+          "text": "const {value: out, done: _done} = generator.next();"
+        }
+      },
+      {
+        "ruleId": "@typescript-eslint/no-explicit-any",
+        "severity": 1,
+        "message": "Unexpected any. Specify a different type.",
+        "line": 169,
+        "column": 17,
+        "nodeType": "TSAnyKeyword",
+        "messageId": "unexpectedAny",
+        "endLine": 169,
+        "endColumn": 20,
+        "suggestions": [
+          {
+            "messageId": "suggestUnknown",
+            "fix": {
+              "range": [
+                4293,
+                4296
+              ],
+              "text": "unknown"
+            },
+            "desc": "Use `unknown` instead, this will force you to explicitly, and safely assert the type is correct."
+          },
+          {
+            "messageId": "suggestNever",
+            "fix": {
+              "range": [
+                4293,
+                4296
+              ],
+              "text": "never"
+            },
+            "desc": "Use `never` instead, this is useful when instantiating generic type parameters that you don't need to know the type of."
+          }
+        ]
+      },
+      {
+        "ruleId": "prefer-const",
+        "severity": 2,
+        "message": "'play' is never reassigned. Use 'const' instead.",
+        "line": 203,
+        "column": 9,
+        "nodeType": "Identifier",
+        "messageId": "useConst",
+        "endLine": 203,
+        "endColumn": 13
+      },
+      {
+        "ruleId": "prefer-const",
+        "severity": 2,
+        "message": "'out' is never reassigned. Use 'const' instead.",
+        "line": 212,
+        "column": 11,
+        "nodeType": "Identifier",
+        "messageId": "useConst",
+        "endLine": 212,
+        "endColumn": 14,
+        "fix": {
+          "range": [
+            5655,
+            5680
+          ],
+          "text": "const out = this.advance();"
+        }
+      }
+    ],
+    "suppressedMessages": [],
+    "errorCount": 6,
+    "fatalErrorCount": 0,
+    "warningCount": 6,
+    "fixableErrorCount": 5,
+    "fixableWarningCount": 0,
+    "source": "import {parse}                   from \"../../parser/parse.mts\";\nimport {CharacterCursor, Cursor} from \"../../core/cursor/cursor.mts\";\n\nclass ParserDomSvg {\n  private svg: any;\n  constructor(svg) {\n    this.svg = svg;\n  }\n\n  draw(text) {\n    const svg = this.svg;\n    const gs  = svg.selectAll('g')\n                   .data(text.split('').map((c, i) => ({text: c, offset: i})))\n                   .join(d => {\n                           const g = d.append('g');\n                           g.append('rect');\n                           g.append('text')\n                           return g;\n                         },\n                         d => {\n                           return d;\n                         },\n                         d => d.remove())\n                   .classed('char', true);\n\n    let newlines = 0;\n    let x        = 0;\n    let map      = new Map;\n    gs.select('rect')\n      .attr('x', d => {\n        const val = x++ * 1.7;\n        map.set(d, {...(map.get(d) || {}), x: val});\n        if (d.text === '\\n') {\n          x = 0;\n        }\n        return val + 'ch';\n      })\n      .attr('width', d => d.text === '\\n' ? '2.5ch' : '1.5ch')\n      .attr('height', '1.5rem')\n      .style('fill', 'white')\n      .attr('y', d => {\n        const val = (2 * newlines);\n        if (d.text === '\\n') {\n          newlines++;\n          x = 0;\n        }\n        map.set(d, {...(map.get(d) || {}), y: val});\n        return val + 'rem';\n      });\n    gs.select('text')\n      .text(d => `${d.text === '\\n' ? '\\\\n' : d.text}`)\n      .attr('x', d => map.get(d).x + 'ch')\n      .attr('y', d => (map.get(d).y + 1) + 'rem')\n      .attr('dx', '.2ch')\n      .style('text-align', 'center')\n  }\n}\n\nexport class ParserDom {\n  private output: any;\n  private form: any;\n  private controls: any;\n  private state: any;\n\n  private svg: ParserDomSvg;\n  constructor({form, controls, output}) {\n    const state   = {\n      error:     null,\n      generator: undefined,\n      text:      '',\n      tokens:    [],\n      chars:     [],\n      yielded:   []\n    };\n    this.output   = output;\n    this.form     = form;\n    this.controls = controls;\n    this.state    = state;\n    this.reset();\n  }\n\n  reset() {\n    const text = this.form.elements.formInput.value;\n\n    this.resetGeneratorControlDisplay();\n\n    this.state.text            = text;\n    this.state.error           = null;\n    this.state.generator       = parse(text, {asGenerator: true});\n    this.state.tokens          = [];\n    this.state.chars           = [];\n    this.state.yielded         = [];\n    this.output.text.value     = '';\n    this.output.text.className = '';\n\n    this.svg = new ParserDomSvg(this.output.svg)\n    this.svg.draw(text || '');\n\n    this.form.onsubmit = event => {\n      event?.preventDefault();\n      this.reset();\n    }\n  }\n\n\n  resetPlayButton() {\n    this.controls.play.innerText = 'play';\n    this.controls.play.onclick   = () => {\n      this.reset();\n      this.play();\n    };\n  }\n\n  resetAdvanceButton() {\n    let played;\n    this.controls.forward.onclick = () => {\n      if (!played) {\n        this.reset();\n        played = true;\n      }\n      this.advance();\n    }\n  }\n\n  resetGeneratorControlDisplay() {\n    this.controls.forward.style.display = 'block';\n    this.controls.play.style.display    = 'block';\n    this.controls.submit.style.display  = 'none';\n    this.controls.play.focus();\n\n    this.resetPlayButton();\n    this.resetAdvanceButton();\n  }\n\n  handleCompletion() {\n    let out = {\n      identities: this.state.tokens.map(n => n.identity),\n      tokens:     this.state.tokens.map(n => n.toJSON()),\n      // chars: this.state.chars\n    };\n    console.log(this.state.tokens.map(n => n.identity));\n    console.log(out);\n    this.output.text.value = JSON.stringify(out, null, 3);\n    this.resetGeneratorControlDisplay();\n  }\n\n  advance() {\n    const generator = this.state.generator;\n\n    if (!generator || this.state.error) {\n      return {\n        done: true\n      }\n    }\n\n    let _yielded, status = 'success';\n    let done             = false;\n\n    try {\n      let {value: out, done: _done} = generator.next();\n      if (_done) {\n        done = _done;\n      } else {\n        _yielded = out;\n        if (out === false) {\n          throw new Error('parser returned false');\n        }\n      }\n    } catch (e: any) {\n      this.state.error = true;\n      console.log(e);\n      _yielded = e.message;\n      status   = 'error';\n    }\n\n\n    this.output.text.className = status;\n    if (this.state.error || done) {\n      this.handleCompletion();\n    } else {\n      this.output.text.value = JSON.stringify(_yielded, null, 3);\n      if (CharacterCursor.isCharacterCursor(_yielded)) {\n        this.state.tokens.push(_yielded.token());\n      } else if (Cursor.isCursorPosition(_yielded)) {\n        this.state.chars.push(_yielded);\n        _yielded && this.output.svg.selectAll('.char')\n                        .style('fill', d => (d.offset === _yielded.offset) ? 'white' : 'black')\n                        .select('rect')\n                        .style('fill', d => (d.offset === _yielded.offset) ? 'red' : 'white');\n      } else {\n        if (typeof _yielded === 'string') {\n          this.state.yielded.push(_yielded);\n        }\n        this.advance();\n      }\n    }\n\n    return {value: _yielded, status, done: done};\n  }\n\n  play() {\n    let paused;\n    let play;\n    this.controls.play.innerText = 'pause';\n    this.controls.play.onclick   = () => {\n      this.controls.play.innerText = 'play';\n      paused                       = true;\n      this.controls.play.onclick   = play;\n    }\n    play                         = () => setTimeout(() => {\n      if (paused) return;\n      let out = this.advance();\n      if (out.value === false) {\n        paused = true;\n        return;\n      }\n      if (out.done) return;\n      play && play();\n    }, 10);\n    play()\n  }\n}",
+    "usedDeprecatedRules": []
+  },
+  {
+    "filePath": "/Users/samwashington/Home/Development/_repos/spw/spw-parser/src/runtime/web/lib/d3.js",
+    "messages": [],
+    "suppressedMessages": [
+      {
+        "ruleId": "no-undef",
+        "severity": 2,
+        "message": "'exports' is not defined.",
+        "line": 5,
+        "column": 72,
+        "nodeType": "Identifier",
+        "messageId": "undef",
+        "endLine": 5,
+        "endColumn": 79,
+        "suppressions": [
+          {
+            "kind": "directive",
+            "justification": ""
+          }
+        ]
+      },
+      {
+        "ruleId": "no-undef",
+        "severity": 2,
+        "message": "'define' is not defined.",
+        "line": 6,
+        "column": 33,
+        "nodeType": "Identifier",
+        "messageId": "undef",
+        "endLine": 6,
+        "endColumn": 39,
+        "suppressions": [
+          {
+            "kind": "directive",
+            "justification": ""
+          }
+        ]
+      },
+      {
+        "ruleId": "no-undef",
+        "severity": 2,
+        "message": "'define' is not defined.",
+        "line": 6,
+        "column": 46,
+        "nodeType": "Identifier",
+        "messageId": "undef",
+        "endLine": 6,
+        "endColumn": 52,
+        "suppressions": [
+          {
+            "kind": "directive",
+            "justification": ""
+          }
+        ]
+      },
+      {
+        "ruleId": "no-undef",
+        "severity": 2,
+        "message": "'globalThis' is not defined.",
+        "line": 7,
+        "column": 47,
+        "nodeType": "Identifier",
+        "messageId": "undef",
+        "endLine": 7,
+        "endColumn": 57,
+        "suppressions": [
+          {
+            "kind": "directive",
+            "justification": ""
+          }
+        ]
+      },
+      {
+        "ruleId": "no-undef",
+        "severity": 2,
+        "message": "'self' is not defined.",
+        "line": 7,
+        "column": 70,
+        "nodeType": "Identifier",
+        "messageId": "undef",
+        "endLine": 7,
+        "endColumn": 74,
+        "suppressions": [
+          {
+            "kind": "directive",
+            "justification": ""
+          }
+        ]
+      },
+      {
+        "ruleId": "no-constant-condition",
+        "severity": 2,
+        "message": "Unexpected constant condition.",
+        "line": 148,
+        "column": 10,
+        "nodeType": "Literal",
+        "messageId": "unexpected",
+        "endLine": 148,
+        "endColumn": 14,
+        "suppressions": [
+          {
+            "kind": "directive",
+            "justification": ""
+          }
+        ]
+      },
+      {
+        "ruleId": "no-cond-assign",
+        "severity": 2,
+        "message": "Expected a conditional expression and instead saw an assignment.",
+        "line": 272,
+        "column": 11,
+        "nodeType": "AssignmentExpression",
+        "messageId": "missing",
+        "endLine": 272,
+        "endColumn": 25,
+        "suppressions": [
+          {
+            "kind": "directive",
+            "justification": ""
+          }
+        ]
+      },
+      {
+        "ruleId": "no-cond-assign",
+        "severity": 2,
+        "message": "Expected a conditional expression and instead saw an assignment.",
+        "line": 279,
+        "column": 11,
+        "nodeType": "AssignmentExpression",
+        "messageId": "missing",
+        "endLine": 279,
+        "endColumn": 51,
+        "suppressions": [
+          {
+            "kind": "directive",
+            "justification": ""
+          }
+        ]
+      },
+      {
+        "ruleId": "no-cond-assign",
+        "severity": 2,
+        "message": "Expected a conditional expression and instead saw an assignment.",
+        "line": 494,
+        "column": 7,
+        "nodeType": "AssignmentExpression",
+        "messageId": "missing",
+        "endLine": 494,
+        "endColumn": 29,
+        "suppressions": [
+          {
+            "kind": "directive",
+            "justification": ""
+          }
+        ]
+      },
+      {
+        "ruleId": "no-constant-condition",
+        "severity": 2,
+        "message": "Unexpected constant condition.",
+        "line": 538,
+        "column": 10,
+        "nodeType": "Literal",
+        "messageId": "unexpected",
+        "endLine": 538,
+        "endColumn": 14,
+        "suppressions": [
+          {
+            "kind": "directive",
+            "justification": ""
+          }
+        ]
+      },
+      {
+        "ruleId": "no-cond-assign",
+        "severity": 2,
+        "message": "Expected a conditional expression and instead saw an assignment.",
+        "line": 1064,
+        "column": 11,
+        "nodeType": "AssignmentExpression",
+        "messageId": "missing",
+        "endLine": 1064,
+        "endColumn": 25,
+        "suppressions": [
+          {
+            "kind": "directive",
+            "justification": ""
+          }
+        ]
+      },
+      {
+        "ruleId": "no-cond-assign",
+        "severity": 2,
+        "message": "Expected a conditional expression and instead saw an assignment.",
+        "line": 1071,
+        "column": 11,
+        "nodeType": "AssignmentExpression",
+        "messageId": "missing",
+        "endLine": 1071,
+        "endColumn": 51,
+        "suppressions": [
+          {
+            "kind": "directive",
+            "justification": ""
+          }
+        ]
+      },
+      {
+        "ruleId": "no-undef",
+        "severity": 2,
+        "message": "'window' is not defined.",
+        "line": 1272,
+        "column": 49,
+        "nodeType": "Identifier",
+        "messageId": "undef",
+        "endLine": 1272,
+        "endColumn": 55,
+        "suppressions": [
+          {
+            "kind": "directive",
+            "justification": ""
+          }
+        ]
+      },
+      {
+        "ruleId": "@typescript-eslint/no-empty-function",
+        "severity": 2,
+        "message": "Unexpected empty method 'value'.",
+        "line": 1410,
+        "column": 28,
+        "nodeType": "ArrowFunctionExpression",
+        "messageId": "unexpected",
+        "endLine": 1410,
+        "endColumn": 30,
+        "suppressions": [
+          {
+            "kind": "directive",
+            "justification": ""
+          }
+        ]
+      },
+      {
+        "ruleId": "no-prototype-builtins",
+        "severity": 2,
+        "message": "Do not access Object.prototype method 'hasOwnProperty' from target object.",
+        "line": 1428,
+        "column": 21,
+        "nodeType": "CallExpression",
+        "messageId": "prototypeBuildIn",
+        "endLine": 1428,
+        "endColumn": 35,
+        "suppressions": [
+          {
+            "kind": "directive",
+            "justification": ""
+          }
+        ]
+      },
+      {
+        "ruleId": "no-cond-assign",
+        "severity": 2,
+        "message": "Expected a conditional expression and instead saw an assignment.",
+        "line": 1452,
+        "column": 11,
+        "nodeType": "AssignmentExpression",
+        "messageId": "missing",
+        "endLine": 1452,
+        "endColumn": 37,
+        "suppressions": [
+          {
+            "kind": "directive",
+            "justification": ""
+          }
+        ]
+      },
+      {
+        "ruleId": "no-prototype-builtins",
+        "severity": 2,
+        "message": "Do not access Object.prototype method 'hasOwnProperty' from target object.",
+        "line": 1465,
+        "column": 17,
+        "nodeType": "CallExpression",
+        "messageId": "prototypeBuildIn",
+        "endLine": 1465,
+        "endColumn": 31,
+        "suppressions": [
+          {
+            "kind": "directive",
+            "justification": ""
+          }
+        ]
+      },
+      {
+        "ruleId": "no-prototype-builtins",
+        "severity": 2,
+        "message": "Do not access Object.prototype method 'hasOwnProperty' from target object.",
+        "line": 1469,
+        "column": 17,
+        "nodeType": "CallExpression",
+        "messageId": "prototypeBuildIn",
+        "endLine": 1469,
+        "endColumn": 31,
+        "suppressions": [
+          {
+            "kind": "directive",
+            "justification": ""
+          }
+        ]
+      },
+      {
+        "ruleId": "no-prototype-builtins",
+        "severity": 2,
+        "message": "Do not access Object.prototype method 'hasOwnProperty' from target object.",
+        "line": 1506,
+        "column": 21,
+        "nodeType": "CallExpression",
+        "messageId": "prototypeBuildIn",
+        "endLine": 1506,
+        "endColumn": 35,
+        "suppressions": [
+          {
+            "kind": "directive",
+            "justification": ""
+          },
+          {
+            "kind": "directive",
+            "justification": ""
+          }
+        ]
+      },
+      {
+        "ruleId": "@typescript-eslint/no-empty-function",
+        "severity": 2,
+        "message": "Unexpected empty function 'none$2'.",
+        "line": 1532,
+        "column": 19,
+        "nodeType": "FunctionDeclaration",
+        "messageId": "unexpected",
+        "endLine": 1532,
+        "endColumn": 21,
+        "suppressions": [
+          {
+            "kind": "directive",
+            "justification": ""
+          }
+        ]
+      },
+      {
+        "ruleId": "no-cond-assign",
+        "severity": 2,
+        "message": "Expected a conditional expression and instead saw an assignment.",
+        "line": 1587,
+        "column": 11,
+        "nodeType": "AssignmentExpression",
+        "messageId": "missing",
+        "endLine": 1587,
+        "endColumn": 26,
+        "suppressions": [
+          {
+            "kind": "directive",
+            "justification": ""
+          }
+        ]
+      },
+      {
+        "ruleId": "no-cond-assign",
+        "severity": 2,
+        "message": "Expected a conditional expression and instead saw an assignment.",
+        "line": 1697,
+        "column": 9,
+        "nodeType": "AssignmentExpression",
+        "messageId": "missing",
+        "endLine": 1697,
+        "endColumn": 24,
+        "suppressions": [
+          {
+            "kind": "directive",
+            "justification": ""
+          }
+        ]
+      },
+      {
+        "ruleId": "no-cond-assign",
+        "severity": 2,
+        "message": "Expected a conditional expression and instead saw an assignment.",
+        "line": 1707,
+        "column": 9,
+        "nodeType": "AssignmentExpression",
+        "messageId": "missing",
+        "endLine": 1707,
+        "endColumn": 24,
+        "suppressions": [
+          {
+            "kind": "directive",
+            "justification": ""
+          }
+        ]
+      },
+      {
+        "ruleId": "no-cond-assign",
+        "severity": 2,
+        "message": "Expected a conditional expression and instead saw an assignment.",
+        "line": 1725,
+        "column": 9,
+        "nodeType": "AssignmentExpression",
+        "messageId": "missing",
+        "endLine": 1725,
+        "endColumn": 24,
+        "suppressions": [
+          {
+            "kind": "directive",
+            "justification": ""
+          }
+        ]
+      },
+      {
+        "ruleId": "no-cond-assign",
+        "severity": 2,
+        "message": "Expected a conditional expression and instead saw an assignment.",
+        "line": 1740,
+        "column": 9,
+        "nodeType": "AssignmentExpression",
+        "messageId": "missing",
+        "endLine": 1740,
+        "endColumn": 44,
+        "suppressions": [
+          {
+            "kind": "directive",
+            "justification": ""
+          }
+        ]
+      },
+      {
+        "ruleId": "no-cond-assign",
+        "severity": 2,
+        "message": "Expected a conditional expression and instead saw an assignment.",
+        "line": 1786,
+        "column": 11,
+        "nodeType": "AssignmentExpression",
+        "messageId": "missing",
+        "endLine": 1786,
+        "endColumn": 36,
+        "suppressions": [
+          {
+            "kind": "directive",
+            "justification": ""
+          }
+        ]
+      },
+      {
+        "ruleId": "@typescript-eslint/no-this-alias",
+        "severity": 2,
+        "message": "Unexpected aliasing of 'this' to local variable.",
+        "line": 1817,
+        "column": 29,
+        "nodeType": "Identifier",
+        "messageId": "thisAssignment",
+        "endLine": 1817,
+        "endColumn": 35,
+        "suppressions": [
+          {
+            "kind": "directive",
+            "justification": ""
+          }
+        ]
+      },
+      {
+        "ruleId": "no-cond-assign",
+        "severity": 2,
+        "message": "Expected a conditional expression and instead saw an assignment.",
+        "line": 1837,
+        "column": 11,
+        "nodeType": "AssignmentExpression",
+        "messageId": "missing",
+        "endLine": 1837,
+        "endColumn": 40,
+        "suppressions": [
+          {
+            "kind": "directive",
+            "justification": ""
+          }
+        ]
+      },
+      {
+        "ruleId": "no-cond-assign",
+        "severity": 2,
+        "message": "Expected a conditional expression and instead saw an assignment.",
+        "line": 1854,
+        "column": 11,
+        "nodeType": "AssignmentExpression",
+        "messageId": "missing",
+        "endLine": 1854,
+        "endColumn": 26,
+        "suppressions": [
+          {
+            "kind": "directive",
+            "justification": ""
+          }
+        ]
+      },
+      {
+        "ruleId": "no-cond-assign",
+        "severity": 2,
+        "message": "Expected a conditional expression and instead saw an assignment.",
+        "line": 1873,
+        "column": 11,
+        "nodeType": "AssignmentExpression",
+        "messageId": "missing",
+        "endLine": 1873,
+        "endColumn": 26,
+        "suppressions": [
+          {
+            "kind": "directive",
+            "justification": ""
+          }
+        ]
+      },
+      {
+        "ruleId": "@typescript-eslint/no-unused-vars",
+        "severity": 1,
+        "message": "'node' is assigned a value but never used.",
+        "line": 1912,
+        "column": 14,
+        "nodeType": "Identifier",
+        "messageId": "unusedVar",
+        "endLine": 1912,
+        "endColumn": 18,
+        "suppressions": [
+          {
+            "kind": "directive",
+            "justification": ""
+          }
+        ]
+      },
+      {
+        "ruleId": "no-cond-assign",
+        "severity": 2,
+        "message": "Expected a conditional expression and instead saw an assignment.",
+        "line": 1924,
+        "column": 11,
+        "nodeType": "AssignmentExpression",
+        "messageId": "missing",
+        "endLine": 1924,
+        "endColumn": 26,
+        "suppressions": [
+          {
+            "kind": "directive",
+            "justification": ""
+          }
+        ]
+      },
+      {
+        "ruleId": "no-cond-assign",
+        "severity": 2,
+        "message": "Expected a conditional expression and instead saw an assignment.",
+        "line": 2352,
+        "column": 11,
+        "nodeType": "AssignmentExpression",
+        "messageId": "missing",
+        "endLine": 2352,
+        "endColumn": 26,
+        "suppressions": [
+          {
+            "kind": "directive",
+            "justification": ""
+          }
+        ]
+      },
+      {
+        "ruleId": "no-undef",
+        "severity": 2,
+        "message": "'document' is not defined.",
+        "line": 2365,
+        "column": 28,
+        "nodeType": "Identifier",
+        "messageId": "undef",
+        "endLine": 2365,
+        "endColumn": 36,
+        "suppressions": [
+          {
+            "kind": "directive",
+            "justification": ""
+          }
+        ]
+      },
+      {
+        "ruleId": "no-undef",
+        "severity": 2,
+        "message": "'document' is not defined.",
+        "line": 2413,
+        "column": 27,
+        "nodeType": "Identifier",
+        "messageId": "undef",
+        "endLine": 2413,
+        "endColumn": 35,
+        "suppressions": [
+          {
+            "kind": "directive",
+            "justification": ""
+          }
+        ]
+      },
+      {
+        "ruleId": "no-undef",
+        "severity": 2,
+        "message": "'document' is not defined.",
+        "line": 2413,
+        "column": 64,
+        "nodeType": "Identifier",
+        "messageId": "undef",
+        "endLine": 2413,
+        "endColumn": 72,
+        "suppressions": [
+          {
+            "kind": "directive",
+            "justification": ""
+          }
+        ]
+      },
+      {
+        "ruleId": "no-undef",
+        "severity": 2,
+        "message": "'document' is not defined.",
+        "line": 2418,
+        "column": 36,
+        "nodeType": "Identifier",
+        "messageId": "undef",
+        "endLine": 2418,
+        "endColumn": 44,
+        "suppressions": [
+          {
+            "kind": "directive",
+            "justification": ""
+          }
+        ]
+      },
+      {
+        "ruleId": "no-cond-assign",
+        "severity": 2,
+        "message": "Expected a conditional expression and instead saw an assignment.",
+        "line": 2451,
+        "column": 10,
+        "nodeType": "AssignmentExpression",
+        "messageId": "missing",
+        "endLine": 2451,
+        "endColumn": 41,
+        "suppressions": [
+          {
+            "kind": "directive",
+            "justification": ""
+          }
+        ]
+      },
+      {
+        "ruleId": "no-undef",
+        "severity": 2,
+        "message": "'document' is not defined.",
+        "line": 2485,
+        "column": 26,
+        "nodeType": "Identifier",
+        "messageId": "undef",
+        "endLine": 2485,
+        "endColumn": 34,
+        "suppressions": [
+          {
+            "kind": "directive",
+            "justification": ""
+          }
+        ]
+      },
+      {
+        "ruleId": "no-undef",
+        "severity": 2,
+        "message": "'document' is not defined.",
+        "line": 2485,
+        "column": 65,
+        "nodeType": "Identifier",
+        "messageId": "undef",
+        "endLine": 2485,
+        "endColumn": 73,
+        "suppressions": [
+          {
+            "kind": "directive",
+            "justification": ""
+          }
+        ]
+      },
+      {
+        "ruleId": "no-undef",
+        "severity": 2,
+        "message": "'setTimeout' is not defined.",
+        "line": 2519,
+        "column": 5,
+        "nodeType": "Identifier",
+        "messageId": "undef",
+        "endLine": 2519,
+        "endColumn": 15,
+        "suppressions": [
+          {
+            "kind": "directive",
+            "justification": ""
+          }
+        ]
+      },
+      {
+        "ruleId": "no-undef",
+        "severity": 2,
+        "message": "'navigator' is not defined.",
+        "line": 2574,
+        "column": 10,
+        "nodeType": "Identifier",
+        "messageId": "undef",
+        "endLine": 2574,
+        "endColumn": 19,
+        "suppressions": [
+          {
+            "kind": "directive",
+            "justification": ""
+          }
+        ]
+      },
+      {
+        "ruleId": "no-cond-assign",
+        "severity": 2,
+        "message": "Expected a conditional expression and instead saw an assignment.",
+        "line": 2640,
+        "column": 11,
+        "nodeType": "AssignmentExpression",
+        "messageId": "missing",
+        "endLine": 2640,
+        "endColumn": 86,
+        "suppressions": [
+          {
+            "kind": "directive",
+            "justification": ""
+          }
+        ]
+      },
+      {
+        "ruleId": "no-cond-assign",
+        "severity": 2,
+        "message": "Expected a conditional expression and instead saw an assignment.",
+        "line": 2652,
+        "column": 11,
+        "nodeType": "AssignmentExpression",
+        "messageId": "missing",
+        "endLine": 2652,
+        "endColumn": 52,
+        "suppressions": [
+          {
+            "kind": "directive",
+            "justification": ""
+          }
+        ]
+      },
+      {
+        "ruleId": "no-undef",
+        "severity": 2,
+        "message": "'clearTimeout' is not defined.",
+        "line": 2663,
+        "column": 22,
+        "nodeType": "Identifier",
+        "messageId": "undef",
+        "endLine": 2663,
+        "endColumn": 34,
+        "suppressions": [
+          {
+            "kind": "directive",
+            "justification": ""
+          }
+        ]
+      },
+      {
+        "ruleId": "no-undef",
+        "severity": 2,
+        "message": "'setTimeout' is not defined.",
+        "line": 2664,
+        "column": 19,
+        "nodeType": "Identifier",
+        "messageId": "undef",
+        "endLine": 2664,
+        "endColumn": 29,
+        "suppressions": [
+          {
+            "kind": "directive",
+            "justification": ""
+          }
+        ]
+      },
+      {
+        "ruleId": "no-cond-assign",
+        "severity": 2,
+        "message": "Expected a conditional expression and instead saw an assignment.",
+        "line": 2666,
+        "column": 11,
+        "nodeType": "AssignmentExpression",
+        "messageId": "missing",
+        "endLine": 2666,
+        "endColumn": 52,
+        "suppressions": [
+          {
+            "kind": "directive",
+            "justification": ""
+          }
+        ]
+      },
+      {
+        "ruleId": "@typescript-eslint/no-empty-function",
+        "severity": 2,
+        "message": "Unexpected empty function 'Color'.",
+        "line": 2759,
+        "column": 18,
+        "nodeType": "FunctionDeclaration",
+        "messageId": "unexpected",
+        "endLine": 2759,
+        "endColumn": 20,
+        "suppressions": [
+          {
+            "kind": "directive",
+            "justification": ""
+          }
+        ]
+      },
+      {
+        "ruleId": "no-cond-assign",
+        "severity": 2,
+        "message": "Expected a conditional expression and instead saw an assignment.",
+        "line": 2960,
+        "column": 11,
+        "nodeType": "AssignmentExpression",
+        "messageId": "missing",
+        "endLine": 2960,
+        "endColumn": 33,
+        "suppressions": [
+          {
+            "kind": "directive",
+            "justification": ""
+          }
+        ]
+      },
+      {
+        "ruleId": "no-cond-assign",
+        "severity": 2,
+        "message": "Expected a conditional expression and instead saw an assignment.",
+        "line": 2965,
+        "column": 10,
+        "nodeType": "AssignmentExpression",
+        "messageId": "missing",
+        "endLine": 2965,
+        "endColumn": 39,
+        "suppressions": [
+          {
+            "kind": "directive",
+            "justification": ""
+          }
+        ]
+      },
+      {
+        "ruleId": "no-cond-assign",
+        "severity": 2,
+        "message": "Expected a conditional expression and instead saw an assignment.",
+        "line": 2966,
+        "column": 10,
+        "nodeType": "AssignmentExpression",
+        "messageId": "missing",
+        "endLine": 2966,
+        "endColumn": 39,
+        "suppressions": [
+          {
+            "kind": "directive",
+            "justification": ""
+          }
+        ]
+      },
+      {
+        "ruleId": "no-cond-assign",
+        "severity": 2,
+        "message": "Expected a conditional expression and instead saw an assignment.",
+        "line": 2967,
+        "column": 10,
+        "nodeType": "AssignmentExpression",
+        "messageId": "missing",
+        "endLine": 2967,
+        "endColumn": 40,
+        "suppressions": [
+          {
+            "kind": "directive",
+            "justification": ""
+          }
+        ]
+      },
+      {
+        "ruleId": "no-cond-assign",
+        "severity": 2,
+        "message": "Expected a conditional expression and instead saw an assignment.",
+        "line": 2968,
+        "column": 10,
+        "nodeType": "AssignmentExpression",
+        "messageId": "missing",
+        "endLine": 2968,
+        "endColumn": 40,
+        "suppressions": [
+          {
+            "kind": "directive",
+            "justification": ""
+          }
+        ]
+      },
+      {
+        "ruleId": "no-cond-assign",
+        "severity": 2,
+        "message": "Expected a conditional expression and instead saw an assignment.",
+        "line": 2969,
+        "column": 10,
+        "nodeType": "AssignmentExpression",
+        "messageId": "missing",
+        "endLine": 2969,
+        "endColumn": 39,
+        "suppressions": [
+          {
+            "kind": "directive",
+            "justification": ""
+          }
+        ]
+      },
+      {
+        "ruleId": "no-cond-assign",
+        "severity": 2,
+        "message": "Expected a conditional expression and instead saw an assignment.",
+        "line": 2970,
+        "column": 10,
+        "nodeType": "AssignmentExpression",
+        "messageId": "missing",
+        "endLine": 2970,
+        "endColumn": 40,
+        "suppressions": [
+          {
+            "kind": "directive",
+            "justification": ""
+          }
+        ]
+      },
+      {
+        "ruleId": "no-prototype-builtins",
+        "severity": 2,
+        "message": "Do not access Object.prototype method 'hasOwnProperty' from target object.",
+        "line": 2971,
+        "column": 15,
+        "nodeType": "CallExpression",
+        "messageId": "prototypeBuildIn",
+        "endLine": 2971,
+        "endColumn": 29,
+        "suppressions": [
+          {
+            "kind": "directive",
+            "justification": ""
+          },
+          {
+            "kind": "directive",
+            "justification": ""
+          }
+        ]
+      },
+      {
+        "ruleId": "no-cond-assign",
+        "severity": 2,
+        "message": "Expected a conditional expression and instead saw an assignment.",
+        "line": 3585,
+        "column": 28,
+        "nodeType": "AssignmentExpression",
+        "messageId": "missing",
+        "endLine": 3585,
+        "endColumn": 40,
+        "suppressions": [
+          {
+            "kind": "directive",
+            "justification": ""
+          }
+        ]
+      },
+      {
+        "ruleId": "no-cond-assign",
+        "severity": 2,
+        "message": "Expected a conditional expression and instead saw an assignment.",
+        "line": 3628,
+        "column": 7,
+        "nodeType": "AssignmentExpression",
+        "messageId": "missing",
+        "endLine": 3628,
+        "endColumn": 40,
+        "suppressions": [
+          {
+            "kind": "directive",
+            "justification": ""
+          }
+        ]
+      },
+      {
+        "ruleId": "no-cond-assign",
+        "severity": 2,
+        "message": "Expected a conditional expression and instead saw an assignment.",
+        "line": 3629,
+        "column": 7,
+        "nodeType": "AssignmentExpression",
+        "messageId": "missing",
+        "endLine": 3629,
+        "endColumn": 28,
+        "suppressions": [
+          {
+            "kind": "directive",
+            "justification": ""
+          }
+        ]
+      },
+      {
+        "ruleId": "no-cond-assign",
+        "severity": 2,
+        "message": "Expected a conditional expression and instead saw an assignment.",
+        "line": 3630,
+        "column": 7,
+        "nodeType": "AssignmentExpression",
+        "messageId": "missing",
+        "endLine": 3630,
+        "endColumn": 40,
+        "suppressions": [
+          {
+            "kind": "directive",
+            "justification": ""
+          }
+        ]
+      },
+      {
+        "ruleId": "no-undef",
+        "severity": 2,
+        "message": "'DOMMatrix' is not defined.",
+        "line": 3646,
+        "column": 52,
+        "nodeType": "Identifier",
+        "messageId": "undef",
+        "endLine": 3646,
+        "endColumn": 61,
+        "suppressions": [
+          {
+            "kind": "directive",
+            "justification": ""
+          },
+          {
+            "kind": "directive",
+            "justification": ""
+          }
+        ]
+      },
+      {
+        "ruleId": "no-undef",
+        "severity": 2,
+        "message": "'WebKitCSSMatrix' is not defined.",
+        "line": 3646,
+        "column": 64,
+        "nodeType": "Identifier",
+        "messageId": "undef",
+        "endLine": 3646,
+        "endColumn": 79,
+        "suppressions": [
+          {
+            "kind": "directive",
+            "justification": ""
+          },
+          {
+            "kind": "directive",
+            "justification": ""
+          }
+        ]
+      },
+      {
+        "ruleId": "no-undef",
+        "severity": 2,
+        "message": "'document' is not defined.",
+        "line": 3652,
+        "column": 27,
+        "nodeType": "Identifier",
+        "messageId": "undef",
+        "endLine": 3652,
+        "endColumn": 35,
+        "suppressions": [
+          {
+            "kind": "directive",
+            "justification": ""
+          },
+          {
+            "kind": "directive",
+            "justification": ""
+          }
+        ]
+      },
+      {
+        "ruleId": "no-undef",
+        "severity": 2,
+        "message": "'performance' is not defined.",
+        "line": 3896,
+        "column": 48,
+        "nodeType": "Identifier",
+        "messageId": "undef",
+        "endLine": 3896,
+        "endColumn": 59,
+        "suppressions": [
+          {
+            "kind": "directive",
+            "justification": ""
+          },
+          {
+            "kind": "directive",
+            "justification": ""
+          }
+        ]
+      },
+      {
+        "ruleId": "no-undef",
+        "severity": 2,
+        "message": "'performance' is not defined.",
+        "line": 3896,
+        "column": 66,
+        "nodeType": "Identifier",
+        "messageId": "undef",
+        "endLine": 3896,
+        "endColumn": 77,
+        "suppressions": [
+          {
+            "kind": "directive",
+            "justification": ""
+          },
+          {
+            "kind": "directive",
+            "justification": ""
+          }
+        ]
+      },
+      {
+        "ruleId": "no-undef",
+        "severity": 2,
+        "message": "'window' is not defined.",
+        "line": 3897,
+        "column": 46,
+        "nodeType": "Identifier",
+        "messageId": "undef",
+        "endLine": 3897,
+        "endColumn": 52,
+        "suppressions": [
+          {
+            "kind": "directive",
+            "justification": ""
+          },
+          {
+            "kind": "directive",
+            "justification": ""
+          }
+        ]
+      },
+      {
+        "ruleId": "no-undef",
+        "severity": 2,
+        "message": "'window' is not defined.",
+        "line": 3897,
+        "column": 77,
+        "nodeType": "Identifier",
+        "messageId": "undef",
+        "endLine": 3897,
+        "endColumn": 83,
+        "suppressions": [
+          {
+            "kind": "directive",
+            "justification": ""
+          },
+          {
+            "kind": "directive",
+            "justification": ""
+          }
+        ]
+      },
+      {
+        "ruleId": "no-undef",
+        "severity": 2,
+        "message": "'window' is not defined.",
+        "line": 3897,
+        "column": 111,
+        "nodeType": "Identifier",
+        "messageId": "undef",
+        "endLine": 3897,
+        "endColumn": 117,
+        "suppressions": [
+          {
+            "kind": "directive",
+            "justification": ""
+          },
+          {
+            "kind": "directive",
+            "justification": ""
+          }
+        ]
+      },
+      {
+        "ruleId": "no-undef",
+        "severity": 2,
+        "message": "'setTimeout' is not defined.",
+        "line": 3897,
+        "column": 135,
+        "nodeType": "Identifier",
+        "messageId": "undef",
+        "endLine": 3897,
+        "endColumn": 145,
+        "suppressions": [
+          {
+            "kind": "directive",
+            "justification": ""
+          },
+          {
+            "kind": "directive",
+            "justification": ""
+          }
+        ]
+      },
+      {
+        "ruleId": "@typescript-eslint/no-this-alias",
+        "severity": 2,
+        "message": "Unexpected aliasing of 'this' to local variable.",
+        "line": 3920,
+        "column": 12,
+        "nodeType": "Identifier",
+        "messageId": "thisAssignment",
+        "endLine": 3920,
+        "endColumn": 20,
+        "suppressions": [
+          {
+            "kind": "directive",
+            "justification": ""
+          }
+        ]
+      },
+      {
+        "ruleId": "@typescript-eslint/no-this-alias",
+        "severity": 2,
+        "message": "Unexpected aliasing of 'this' to local variable.",
+        "line": 3921,
+        "column": 7,
+        "nodeType": "Identifier",
+        "messageId": "thisAssignment",
+        "endLine": 3921,
+        "endColumn": 15,
+        "suppressions": [
+          {
+            "kind": "directive",
+            "justification": ""
+          }
+        ]
+      },
+      {
+        "ruleId": "no-undef",
+        "severity": 2,
+        "message": "'clearTimeout' is not defined.",
+        "line": 3987,
+        "column": 30,
+        "nodeType": "Identifier",
+        "messageId": "undef",
+        "endLine": 3987,
+        "endColumn": 42,
+        "suppressions": [
+          {
+            "kind": "directive",
+            "justification": ""
+          },
+          {
+            "kind": "directive",
+            "justification": ""
+          }
+        ]
+      },
+      {
+        "ruleId": "no-undef",
+        "severity": 2,
+        "message": "'setTimeout' is not defined.",
+        "line": 3990,
+        "column": 38,
+        "nodeType": "Identifier",
+        "messageId": "undef",
+        "endLine": 3990,
+        "endColumn": 48,
+        "suppressions": [
+          {
+            "kind": "directive",
+            "justification": ""
+          },
+          {
+            "kind": "directive",
+            "justification": ""
+          }
+        ]
+      },
+      {
+        "ruleId": "no-undef",
+        "severity": 2,
+        "message": "'clearInterval' is not defined.",
+        "line": 3991,
+        "column": 34,
+        "nodeType": "Identifier",
+        "messageId": "undef",
+        "endLine": 3991,
+        "endColumn": 47,
+        "suppressions": [
+          {
+            "kind": "directive",
+            "justification": ""
+          },
+          {
+            "kind": "directive",
+            "justification": ""
+          }
+        ]
+      },
+      {
+        "ruleId": "no-undef",
+        "severity": 2,
+        "message": "'setInterval' is not defined.",
+        "line": 3993,
+        "column": 60,
+        "nodeType": "Identifier",
+        "messageId": "undef",
+        "endLine": 3993,
+        "endColumn": 71,
+        "suppressions": [
+          {
+            "kind": "directive",
+            "justification": ""
+          },
+          {
+            "kind": "directive",
+            "justification": ""
+          }
+        ]
+      },
+      {
+        "ruleId": "no-cond-assign",
+        "severity": 2,
+        "message": "Expected a conditional expression and instead saw an assignment.",
+        "line": 4143,
+        "column": 11,
+        "nodeType": "AssignmentExpression",
+        "messageId": "missing",
+        "endLine": 4143,
+        "endColumn": 84,
+        "suppressions": [
+          {
+            "kind": "directive",
+            "justification": ""
+          }
+        ]
+      },
+      {
+        "ruleId": "no-cond-assign",
+        "severity": 2,
+        "message": "Expected a conditional expression and instead saw an assignment.",
+        "line": 4288,
+        "column": 10,
+        "nodeType": "AssignmentExpression",
+        "messageId": "missing",
+        "endLine": 4288,
+        "endColumn": 22,
+        "suppressions": [
+          {
+            "kind": "directive",
+            "justification": ""
+          }
+        ]
+      },
+      {
+        "ruleId": "no-cond-assign",
+        "severity": 2,
+        "message": "Expected a conditional expression and instead saw an assignment.",
+        "line": 4500,
+        "column": 11,
+        "nodeType": "AssignmentExpression",
+        "messageId": "missing",
+        "endLine": 4500,
+        "endColumn": 40,
+        "suppressions": [
+          {
+            "kind": "directive",
+            "justification": ""
+          }
+        ]
+      },
+      {
+        "ruleId": "no-cond-assign",
+        "severity": 2,
+        "message": "Expected a conditional expression and instead saw an assignment.",
+        "line": 4583,
+        "column": 11,
+        "nodeType": "AssignmentExpression",
+        "messageId": "missing",
+        "endLine": 4583,
+        "endColumn": 26,
+        "suppressions": [
+          {
+            "kind": "directive",
+            "justification": ""
+          }
+        ]
+      },
+      {
+        "ruleId": "no-cond-assign",
+        "severity": 2,
+        "message": "Expected a conditional expression and instead saw an assignment.",
+        "line": 4585,
+        "column": 15,
+        "nodeType": "AssignmentExpression",
+        "messageId": "missing",
+        "endLine": 4585,
+        "endColumn": 34,
+        "suppressions": [
+          {
+            "kind": "directive",
+            "justification": ""
+          }
+        ]
+      },
+      {
+        "ruleId": "no-cond-assign",
+        "severity": 2,
+        "message": "Expected a conditional expression and instead saw an assignment.",
+        "line": 4755,
+        "column": 11,
+        "nodeType": "AssignmentExpression",
+        "messageId": "missing",
+        "endLine": 4755,
+        "endColumn": 26,
+        "suppressions": [
+          {
+            "kind": "directive",
+            "justification": ""
+          }
+        ]
+      },
+      {
+        "ruleId": "@typescript-eslint/no-this-alias",
+        "severity": 2,
+        "message": "Unexpected aliasing of 'this' to local variable.",
+        "line": 4771,
+        "column": 17,
+        "nodeType": "Identifier",
+        "messageId": "thisAssignment",
+        "endLine": 4771,
+        "endColumn": 21,
+        "suppressions": [
+          {
+            "kind": "directive",
+            "justification": ""
+          }
+        ]
+      },
+      {
+        "ruleId": "no-cond-assign",
+        "severity": 2,
+        "message": "Expected a conditional expression and instead saw an assignment.",
+        "line": 5093,
+        "column": 11,
+        "nodeType": "AssignmentExpression",
+        "messageId": "missing",
+        "endLine": 5093,
+        "endColumn": 26,
+        "suppressions": [
+          {
+            "kind": "directive",
+            "justification": ""
+          }
+        ]
+      },
+      {
+        "ruleId": "no-undef",
+        "severity": 2,
+        "message": "'navigator' is not defined.",
+        "line": 5264,
+        "column": 10,
+        "nodeType": "Identifier",
+        "messageId": "undef",
+        "endLine": 5264,
+        "endColumn": 19,
+        "suppressions": [
+          {
+            "kind": "directive",
+            "justification": ""
+          },
+          {
+            "kind": "directive",
+            "justification": ""
+          }
+        ]
+      },
+      {
+        "ruleId": "@typescript-eslint/no-this-alias",
+        "severity": 2,
+        "message": "Unexpected aliasing of 'this' to local variable.",
+        "line": 5362,
+        "column": 17,
+        "nodeType": "Identifier",
+        "messageId": "thisAssignment",
+        "endLine": 5362,
+        "endColumn": 21,
+        "suppressions": [
+          {
+            "kind": "directive",
+            "justification": ""
+          }
+        ]
+      },
+      {
+        "ruleId": "@typescript-eslint/no-this-alias",
+        "severity": 2,
+        "message": "Unexpected aliasing of 'this' to local variable.",
+        "line": 5380,
+        "column": 17,
+        "nodeType": "Identifier",
+        "messageId": "thisAssignment",
+        "endLine": 5380,
+        "endColumn": 21,
+        "suppressions": [
+          {
+            "kind": "directive",
+            "justification": ""
+          }
+        ]
+      },
+      {
+        "ruleId": "@typescript-eslint/no-this-alias",
+        "severity": 2,
+        "message": "Unexpected aliasing of 'this' to local variable.",
+        "line": 5480,
+        "column": 9,
+        "nodeType": "Identifier",
+        "messageId": "thisAssignment",
+        "endLine": 5480,
+        "endColumn": 13,
+        "suppressions": [
+          {
+            "kind": "directive",
+            "justification": ""
+          }
+        ]
+      },
+      {
+        "ruleId": "no-undef",
+        "severity": 2,
+        "message": "'clearTimeout' is not defined.",
+        "line": 5639,
+        "column": 26,
+        "nodeType": "Identifier",
+        "messageId": "undef",
+        "endLine": 5639,
+        "endColumn": 38,
+        "suppressions": [
+          {
+            "kind": "directive",
+            "justification": ""
+          },
+          {
+            "kind": "directive",
+            "justification": ""
+          }
+        ]
+      },
+      {
+        "ruleId": "no-undef",
+        "severity": 2,
+        "message": "'setTimeout' is not defined.",
+        "line": 5640,
+        "column": 23,
+        "nodeType": "Identifier",
+        "messageId": "undef",
+        "endLine": 5640,
+        "endColumn": 33,
+        "suppressions": [
+          {
+            "kind": "directive",
+            "justification": ""
+          },
+          {
+            "kind": "directive",
+            "justification": ""
+          }
+        ]
+      },
+      {
+        "ruleId": "no-cond-assign",
+        "severity": 2,
+        "message": "Expected a conditional expression and instead saw an assignment.",
+        "line": 6180,
+        "column": 23,
+        "nodeType": "AssignmentExpression",
+        "messageId": "missing",
+        "endLine": 6180,
+        "endColumn": 54,
+        "suppressions": [
+          {
+            "kind": "directive",
+            "justification": ""
+          }
+        ]
+      },
+      {
+        "ruleId": "@typescript-eslint/no-empty-function",
+        "severity": 2,
+        "message": "Unexpected empty function 'noop$2'.",
+        "line": 6206,
+        "column": 19,
+        "nodeType": "FunctionDeclaration",
+        "messageId": "unexpected",
+        "endLine": 6206,
+        "endColumn": 21,
+        "suppressions": [
+          {
+            "kind": "directive",
+            "justification": ""
+          }
+        ]
+      },
+      {
+        "ruleId": "@typescript-eslint/no-array-constructor",
+        "severity": 2,
+        "message": "The array literal notation [] is preferable.",
+        "line": 6278,
+        "column": 27,
+        "nodeType": "NewExpression",
+        "messageId": "useLiteral",
+        "endLine": 6278,
+        "endColumn": 36,
+        "fix": {
+          "range": [
+            172996,
+            173005
+          ],
+          "text": "[]"
+        },
+        "suppressions": [
+          {
+            "kind": "directive",
+            "justification": ""
+          }
+        ]
+      },
+      {
+        "ruleId": "@typescript-eslint/no-array-constructor",
+        "severity": 2,
+        "message": "The array literal notation [] is preferable.",
+        "line": 6279,
+        "column": 25,
+        "nodeType": "NewExpression",
+        "messageId": "useLiteral",
+        "endLine": 6279,
+        "endColumn": 34,
+        "fix": {
+          "range": [
+            173031,
+            173040
+          ],
+          "text": "[]"
+        },
+        "suppressions": [
+          {
+            "kind": "directive",
+            "justification": ""
+          }
+        ]
+      },
+      {
+        "ruleId": "no-cond-assign",
+        "severity": 2,
+        "message": "Expected a conditional expression and instead saw an assignment.",
+        "line": 6322,
+        "column": 11,
+        "nodeType": "AssignmentExpression",
+        "messageId": "missing",
+        "endLine": 6322,
+        "endColumn": 40,
+        "suppressions": [
+          {
+            "kind": "directive",
+            "justification": ""
+          }
+        ]
+      },
+      {
+        "ruleId": "no-cond-assign",
+        "severity": 2,
+        "message": "Expected a conditional expression and instead saw an assignment.",
+        "line": 6323,
+        "column": 13,
+        "nodeType": "AssignmentExpression",
+        "messageId": "missing",
+        "endLine": 6323,
+        "endColumn": 42,
+        "suppressions": [
+          {
+            "kind": "directive",
+            "justification": ""
+          }
+        ]
+      },
+      {
+        "ruleId": "no-cond-assign",
+        "severity": 2,
+        "message": "Expected a conditional expression and instead saw an assignment.",
+        "line": 6337,
+        "column": 18,
+        "nodeType": "AssignmentExpression",
+        "messageId": "missing",
+        "endLine": 6337,
+        "endColumn": 47,
+        "suppressions": [
+          {
+            "kind": "directive",
+            "justification": ""
+          }
+        ]
+      },
+      {
+        "ruleId": "no-cond-assign",
+        "severity": 2,
+        "message": "Expected a conditional expression and instead saw an assignment.",
+        "line": 6338,
+        "column": 13,
+        "nodeType": "AssignmentExpression",
+        "messageId": "missing",
+        "endLine": 6338,
+        "endColumn": 42,
+        "suppressions": [
+          {
+            "kind": "directive",
+            "justification": ""
+          }
+        ]
+      },
+      {
+        "ruleId": "no-unexpected-multiline",
+        "severity": 2,
+        "message": "Unexpected newline between function and ( of function call.",
+        "line": 6512,
+        "column": 7,
+        "nodeType": "CallExpression",
+        "messageId": "function",
+        "endLine": 6512,
+        "endColumn": 8,
+        "suppressions": [
+          {
+            "kind": "directive",
+            "justification": ""
+          }
+        ]
+      },
+      {
+        "ruleId": "no-constant-condition",
+        "severity": 2,
+        "message": "Unexpected constant condition.",
+        "line": 7115,
+        "column": 16,
+        "nodeType": "Literal",
+        "messageId": "unexpected",
+        "endLine": 7115,
+        "endColumn": 20,
+        "suppressions": [
+          {
+            "kind": "directive",
+            "justification": ""
+          }
+        ]
+      },
+      {
+        "ruleId": "no-constant-condition",
+        "severity": 2,
+        "message": "Unexpected constant condition.",
+        "line": 7297,
+        "column": 16,
+        "nodeType": "Literal",
+        "messageId": "unexpected",
+        "endLine": 7297,
+        "endColumn": 20,
+        "suppressions": [
+          {
+            "kind": "directive",
+            "justification": ""
+          }
+        ]
+      },
+      {
+        "ruleId": "no-cond-assign",
+        "severity": 2,
+        "message": "Expected a conditional expression and instead saw an assignment.",
+        "line": 7526,
+        "column": 16,
+        "nodeType": "AssignmentExpression",
+        "messageId": "missing",
+        "endLine": 7526,
+        "endColumn": 61,
+        "suppressions": [
+          {
+            "kind": "directive",
+            "justification": ""
+          }
+        ]
+      },
+      {
+        "ruleId": "no-constant-condition",
+        "severity": 2,
+        "message": "Unexpected constant condition.",
+        "line": 7623,
+        "column": 12,
+        "nodeType": "Literal",
+        "messageId": "unexpected",
+        "endLine": 7623,
+        "endColumn": 16,
+        "suppressions": [
+          {
+            "kind": "directive",
+            "justification": ""
+          }
+        ]
+      },
+      {
+        "ruleId": "no-cond-assign",
+        "severity": 2,
+        "message": "Expected a conditional expression and instead saw an assignment.",
+        "line": 7637,
+        "column": 9,
+        "nodeType": "AssignmentExpression",
+        "messageId": "missing",
+        "endLine": 7637,
+        "endColumn": 48,
+        "suppressions": [
+          {
+            "kind": "directive",
+            "justification": ""
+          }
+        ]
+      },
+      {
+        "ruleId": "no-cond-assign",
+        "severity": 2,
+        "message": "Expected a conditional expression and instead saw an assignment.",
+        "line": 7638,
+        "column": 9,
+        "nodeType": "AssignmentExpression",
+        "messageId": "missing",
+        "endLine": 7638,
+        "endColumn": 70,
+        "suppressions": [
+          {
+            "kind": "directive",
+            "justification": ""
+          }
+        ]
+      },
+      {
+        "ruleId": "no-cond-assign",
+        "severity": 2,
+        "message": "Expected a conditional expression and instead saw an assignment.",
+        "line": 7639,
+        "column": 9,
+        "nodeType": "AssignmentExpression",
+        "messageId": "missing",
+        "endLine": 7639,
+        "endColumn": 35,
+        "suppressions": [
+          {
+            "kind": "directive",
+            "justification": ""
+          }
+        ]
+      },
+      {
+        "ruleId": "no-cond-assign",
+        "severity": 2,
+        "message": "Expected a conditional expression and instead saw an assignment.",
+        "line": 8147,
+        "column": 14,
+        "nodeType": "AssignmentExpression",
+        "messageId": "missing",
+        "endLine": 8147,
+        "endColumn": 124,
+        "suppressions": [
+          {
+            "kind": "directive",
+            "justification": ""
+          }
+        ]
+      },
+      {
+        "ruleId": "no-undef",
+        "severity": 2,
+        "message": "'fetch' is not defined.",
+        "line": 8166,
+        "column": 10,
+        "nodeType": "Identifier",
+        "messageId": "undef",
+        "endLine": 8166,
+        "endColumn": 15,
+        "suppressions": [
+          {
+            "kind": "directive",
+            "justification": ""
+          },
+          {
+            "kind": "directive",
+            "justification": ""
+          }
+        ]
+      },
+      {
+        "ruleId": "no-undef",
+        "severity": 2,
+        "message": "'fetch' is not defined.",
+        "line": 8175,
+        "column": 10,
+        "nodeType": "Identifier",
+        "messageId": "undef",
+        "endLine": 8175,
+        "endColumn": 15,
+        "suppressions": [
+          {
+            "kind": "directive",
+            "justification": ""
+          },
+          {
+            "kind": "directive",
+            "justification": ""
+          }
+        ]
+      },
+      {
+        "ruleId": "no-undef",
+        "severity": 2,
+        "message": "'fetch' is not defined.",
+        "line": 8184,
+        "column": 10,
+        "nodeType": "Identifier",
+        "messageId": "undef",
+        "endLine": 8184,
+        "endColumn": 15,
+        "suppressions": [
+          {
+            "kind": "directive",
+            "justification": ""
+          },
+          {
+            "kind": "directive",
+            "justification": ""
+          }
+        ]
+      },
+      {
+        "ruleId": "no-undef",
+        "severity": 2,
+        "message": "'Image' is not defined.",
+        "line": 8209,
+        "column": 21,
+        "nodeType": "Identifier",
+        "messageId": "undef",
+        "endLine": 8209,
+        "endColumn": 26,
+        "suppressions": [
+          {
+            "kind": "directive",
+            "justification": ""
+          },
+          {
+            "kind": "directive",
+            "justification": ""
+          }
+        ]
+      },
+      {
+        "ruleId": "no-undef",
+        "severity": 2,
+        "message": "'fetch' is not defined.",
+        "line": 8224,
+        "column": 10,
+        "nodeType": "Identifier",
+        "messageId": "undef",
+        "endLine": 8224,
+        "endColumn": 15,
+        "suppressions": [
+          {
+            "kind": "directive",
+            "justification": ""
+          },
+          {
+            "kind": "directive",
+            "justification": ""
+          }
+        ]
+      },
+      {
+        "ruleId": "no-undef",
+        "severity": 2,
+        "message": "'DOMParser' is not defined.",
+        "line": 8229,
+        "column": 24,
+        "nodeType": "Identifier",
+        "messageId": "undef",
+        "endLine": 8229,
+        "endColumn": 33,
+        "suppressions": [
+          {
+            "kind": "directive",
+            "justification": ""
+          },
+          {
+            "kind": "directive",
+            "justification": ""
+          }
+        ]
+      },
+      {
+        "ruleId": "no-cond-assign",
+        "severity": 2,
+        "message": "Expected a conditional expression and instead saw an assignment.",
+        "line": 8309,
+        "column": 9,
+        "nodeType": "AssignmentExpression",
+        "messageId": "missing",
+        "endLine": 8309,
+        "endColumn": 42,
+        "suppressions": [
+          {
+            "kind": "directive",
+            "justification": ""
+          }
+        ]
+      },
+      {
+        "ruleId": "no-cond-assign",
+        "severity": 2,
+        "message": "Expected a conditional expression and instead saw an assignment.",
+        "line": 8310,
+        "column": 9,
+        "nodeType": "AssignmentExpression",
+        "messageId": "missing",
+        "endLine": 8310,
+        "endColumn": 43,
+        "suppressions": [
+          {
+            "kind": "directive",
+            "justification": ""
+          }
+        ]
+      },
+      {
+        "ruleId": "no-cond-assign",
+        "severity": 2,
+        "message": "Expected a conditional expression and instead saw an assignment.",
+        "line": 8322,
+        "column": 9,
+        "nodeType": "AssignmentExpression",
+        "messageId": "missing",
+        "endLine": 8322,
+        "endColumn": 42,
+        "suppressions": [
+          {
+            "kind": "directive",
+            "justification": ""
+          }
+        ]
+      },
+      {
+        "ruleId": "no-cond-assign",
+        "severity": 2,
+        "message": "Expected a conditional expression and instead saw an assignment.",
+        "line": 8323,
+        "column": 9,
+        "nodeType": "AssignmentExpression",
+        "messageId": "missing",
+        "endLine": 8323,
+        "endColumn": 43,
+        "suppressions": [
+          {
+            "kind": "directive",
+            "justification": ""
+          }
+        ]
+      },
+      {
+        "ruleId": "no-cond-assign",
+        "severity": 2,
+        "message": "Expected a conditional expression and instead saw an assignment.",
+        "line": 8411,
+        "column": 55,
+        "nodeType": "AssignmentExpression",
+        "messageId": "missing",
+        "endLine": 8411,
+        "endColumn": 71,
+        "suppressions": [
+          {
+            "kind": "directive",
+            "justification": ""
+          }
+        ]
+      },
+      {
+        "ruleId": "no-cond-assign",
+        "severity": 2,
+        "message": "Expected a conditional expression and instead saw an assignment.",
+        "line": 8453,
+        "column": 10,
+        "nodeType": "AssignmentExpression",
+        "messageId": "missing",
+        "endLine": 8453,
+        "endColumn": 25,
+        "suppressions": [
+          {
+            "kind": "directive",
+            "justification": ""
+          }
+        ]
+      },
+      {
+        "ruleId": "no-cond-assign",
+        "severity": 2,
+        "message": "Expected a conditional expression and instead saw an assignment.",
+        "line": 8475,
+        "column": 11,
+        "nodeType": "AssignmentExpression",
+        "messageId": "missing",
+        "endLine": 8475,
+        "endColumn": 41,
+        "suppressions": [
+          {
+            "kind": "directive",
+            "justification": ""
+          }
+        ]
+      },
+      {
+        "ruleId": "no-constant-condition",
+        "severity": 2,
+        "message": "Unexpected constant condition.",
+        "line": 8525,
+        "column": 27,
+        "nodeType": "Literal",
+        "messageId": "unexpected",
+        "endLine": 8525,
+        "endColumn": 31,
+        "suppressions": [
+          {
+            "kind": "directive",
+            "justification": ""
+          }
+        ]
+      },
+      {
+        "ruleId": "no-cond-assign",
+        "severity": 2,
+        "message": "Expected a conditional expression and instead saw an assignment.",
+        "line": 8526,
+        "column": 9,
+        "nodeType": "AssignmentExpression",
+        "messageId": "missing",
+        "endLine": 8526,
+        "endColumn": 42,
+        "suppressions": [
+          {
+            "kind": "directive",
+            "justification": ""
+          }
+        ]
+      },
+      {
+        "ruleId": "no-cond-assign",
+        "severity": 2,
+        "message": "Expected a conditional expression and instead saw an assignment.",
+        "line": 8527,
+        "column": 9,
+        "nodeType": "AssignmentExpression",
+        "messageId": "missing",
+        "endLine": 8527,
+        "endColumn": 43,
+        "suppressions": [
+          {
+            "kind": "directive",
+            "justification": ""
+          }
+        ]
+      },
+      {
+        "ruleId": "no-cond-assign",
+        "severity": 2,
+        "message": "Expected a conditional expression and instead saw an assignment.",
+        "line": 8535,
+        "column": 7,
+        "nodeType": "AssignmentExpression",
+        "messageId": "missing",
+        "endLine": 8535,
+        "endColumn": 23,
+        "suppressions": [
+          {
+            "kind": "directive",
+            "justification": ""
+          }
+        ]
+      },
+      {
+        "ruleId": "no-cond-assign",
+        "severity": 2,
+        "message": "Expected a conditional expression and instead saw an assignment.",
+        "line": 8569,
+        "column": 41,
+        "nodeType": "AssignmentExpression",
+        "messageId": "missing",
+        "endLine": 8569,
+        "endColumn": 57,
+        "suppressions": [
+          {
+            "kind": "directive",
+            "justification": ""
+          }
+        ]
+      },
+      {
+        "ruleId": "no-cond-assign",
+        "severity": 2,
+        "message": "Expected a conditional expression and instead saw an assignment.",
+        "line": 8577,
+        "column": 10,
+        "nodeType": "AssignmentExpression",
+        "messageId": "missing",
+        "endLine": 8577,
+        "endColumn": 25,
+        "suppressions": [
+          {
+            "kind": "directive",
+            "justification": ""
+          }
+        ]
+      },
+      {
+        "ruleId": "no-cond-assign",
+        "severity": 2,
+        "message": "Expected a conditional expression and instead saw an assignment.",
+        "line": 8580,
+        "column": 11,
+        "nodeType": "AssignmentExpression",
+        "messageId": "missing",
+        "endLine": 8580,
+        "endColumn": 26,
+        "suppressions": [
+          {
+            "kind": "directive",
+            "justification": ""
+          }
+        ]
+      },
+      {
+        "ruleId": "no-cond-assign",
+        "severity": 2,
+        "message": "Expected a conditional expression and instead saw an assignment.",
+        "line": 8581,
+        "column": 11,
+        "nodeType": "AssignmentExpression",
+        "messageId": "missing",
+        "endLine": 8581,
+        "endColumn": 26,
+        "suppressions": [
+          {
+            "kind": "directive",
+            "justification": ""
+          }
+        ]
+      },
+      {
+        "ruleId": "no-cond-assign",
+        "severity": 2,
+        "message": "Expected a conditional expression and instead saw an assignment.",
+        "line": 8582,
+        "column": 11,
+        "nodeType": "AssignmentExpression",
+        "messageId": "missing",
+        "endLine": 8582,
+        "endColumn": 26,
+        "suppressions": [
+          {
+            "kind": "directive",
+            "justification": ""
+          }
+        ]
+      },
+      {
+        "ruleId": "no-cond-assign",
+        "severity": 2,
+        "message": "Expected a conditional expression and instead saw an assignment.",
+        "line": 8583,
+        "column": 11,
+        "nodeType": "AssignmentExpression",
+        "messageId": "missing",
+        "endLine": 8583,
+        "endColumn": 26,
+        "suppressions": [
+          {
+            "kind": "directive",
+            "justification": ""
+          }
+        ]
+      },
+      {
+        "ruleId": "no-cond-assign",
+        "severity": 2,
+        "message": "Expected a conditional expression and instead saw an assignment.",
+        "line": 8592,
+        "column": 10,
+        "nodeType": "AssignmentExpression",
+        "messageId": "missing",
+        "endLine": 8592,
+        "endColumn": 25,
+        "suppressions": [
+          {
+            "kind": "directive",
+            "justification": ""
+          }
+        ]
+      },
+      {
+        "ruleId": "no-cond-assign",
+        "severity": 2,
+        "message": "Expected a conditional expression and instead saw an assignment.",
+        "line": 8596,
+        "column": 11,
+        "nodeType": "AssignmentExpression",
+        "messageId": "missing",
+        "endLine": 8596,
+        "endColumn": 26,
+        "suppressions": [
+          {
+            "kind": "directive",
+            "justification": ""
+          }
+        ]
+      },
+      {
+        "ruleId": "no-cond-assign",
+        "severity": 2,
+        "message": "Expected a conditional expression and instead saw an assignment.",
+        "line": 8597,
+        "column": 11,
+        "nodeType": "AssignmentExpression",
+        "messageId": "missing",
+        "endLine": 8597,
+        "endColumn": 26,
+        "suppressions": [
+          {
+            "kind": "directive",
+            "justification": ""
+          }
+        ]
+      },
+      {
+        "ruleId": "no-cond-assign",
+        "severity": 2,
+        "message": "Expected a conditional expression and instead saw an assignment.",
+        "line": 8598,
+        "column": 11,
+        "nodeType": "AssignmentExpression",
+        "messageId": "missing",
+        "endLine": 8598,
+        "endColumn": 26,
+        "suppressions": [
+          {
+            "kind": "directive",
+            "justification": ""
+          }
+        ]
+      },
+      {
+        "ruleId": "no-cond-assign",
+        "severity": 2,
+        "message": "Expected a conditional expression and instead saw an assignment.",
+        "line": 8599,
+        "column": 11,
+        "nodeType": "AssignmentExpression",
+        "messageId": "missing",
+        "endLine": 8599,
+        "endColumn": 26,
+        "suppressions": [
+          {
+            "kind": "directive",
+            "justification": ""
+          }
+        ]
+      },
+      {
+        "ruleId": "no-cond-assign",
+        "severity": 2,
+        "message": "Expected a conditional expression and instead saw an assignment.",
+        "line": 8603,
+        "column": 10,
+        "nodeType": "AssignmentExpression",
+        "messageId": "missing",
+        "endLine": 8603,
+        "endColumn": 24,
+        "suppressions": [
+          {
+            "kind": "directive",
+            "justification": ""
+          }
+        ]
+      },
+      {
+        "ruleId": "no-cond-assign",
+        "severity": 2,
+        "message": "Expected a conditional expression and instead saw an assignment.",
+        "line": 8642,
+        "column": 10,
+        "nodeType": "AssignmentExpression",
+        "messageId": "missing",
+        "endLine": 8642,
+        "endColumn": 26,
+        "suppressions": [
+          {
+            "kind": "directive",
+            "justification": ""
+          }
+        ]
+      },
+      {
+        "ruleId": "no-cond-assign",
+        "severity": 2,
+        "message": "Expected a conditional expression and instead saw an assignment.",
+        "line": 8659,
+        "column": 10,
+        "nodeType": "AssignmentExpression",
+        "messageId": "missing",
+        "endLine": 8659,
+        "endColumn": 28,
+        "suppressions": [
+          {
+            "kind": "directive",
+            "justification": ""
+          }
+        ]
+      },
+      {
+        "ruleId": "no-cond-assign",
+        "severity": 2,
+        "message": "Expected a conditional expression and instead saw an assignment.",
+        "line": 8661,
+        "column": 11,
+        "nodeType": "AssignmentExpression",
+        "messageId": "missing",
+        "endLine": 8661,
+        "endColumn": 33,
+        "suppressions": [
+          {
+            "kind": "directive",
+            "justification": ""
+          }
+        ]
+      },
+      {
+        "ruleId": "no-cond-assign",
+        "severity": 2,
+        "message": "Expected a conditional expression and instead saw an assignment.",
+        "line": 9114,
+        "column": 14,
+        "nodeType": "AssignmentExpression",
+        "messageId": "missing",
+        "endLine": 9114,
+        "endColumn": 24,
+        "suppressions": [
+          {
+            "kind": "directive",
+            "justification": ""
+          }
+        ]
+      },
+      {
+        "ruleId": "no-cond-assign",
+        "severity": 2,
+        "message": "Expected a conditional expression and instead saw an assignment.",
+        "line": 9155,
+        "column": 14,
+        "nodeType": "AssignmentExpression",
+        "messageId": "missing",
+        "endLine": 9155,
+        "endColumn": 30,
+        "suppressions": [
+          {
+            "kind": "directive",
+            "justification": ""
+          }
+        ]
+      },
+      {
+        "ruleId": "@typescript-eslint/no-empty-function",
+        "severity": 2,
+        "message": "Unexpected empty function 'noop$1'.",
+        "line": 9682,
+        "column": 19,
+        "nodeType": "FunctionDeclaration",
+        "messageId": "unexpected",
+        "endLine": 9682,
+        "endColumn": 21,
+        "suppressions": [
+          {
+            "kind": "directive",
+            "justification": ""
+          }
+        ]
+      },
+      {
+        "ruleId": "no-prototype-builtins",
+        "severity": 2,
+        "message": "Do not access Object.prototype method 'hasOwnProperty' from target object.",
+        "line": 9685,
+        "column": 38,
+        "nodeType": "CallExpression",
+        "messageId": "prototypeBuildIn",
+        "endLine": 9685,
+        "endColumn": 52,
+        "suppressions": [
+          {
+            "kind": "directive",
+            "justification": ""
+          }
+        ]
+      },
+      {
+        "ruleId": "no-prototype-builtins",
+        "severity": 2,
+        "message": "Do not access Object.prototype method 'hasOwnProperty' from target object.",
+        "line": 9747,
+        "column": 34,
+        "nodeType": "CallExpression",
+        "messageId": "prototypeBuildIn",
+        "endLine": 9747,
+        "endColumn": 48,
+        "suppressions": [
+          {
+            "kind": "directive",
+            "justification": ""
+          }
+        ]
+      },
+      {
+        "ruleId": "no-cond-assign",
+        "severity": 2,
+        "message": "Expected a conditional expression and instead saw an assignment.",
+        "line": 10003,
+        "column": 7,
+        "nodeType": "AssignmentExpression",
+        "messageId": "missing",
+        "endLine": 10003,
+        "endColumn": 24,
+        "suppressions": [
+          {
+            "kind": "directive",
+            "justification": ""
+          }
+        ]
+      },
+      {
+        "ruleId": "no-cond-assign",
+        "severity": 2,
+        "message": "Expected a conditional expression and instead saw an assignment.",
+        "line": 10197,
+        "column": 11,
+        "nodeType": "AssignmentExpression",
+        "messageId": "missing",
+        "endLine": 10197,
+        "endColumn": 31,
+        "suppressions": [
+          {
+            "kind": "directive",
+            "justification": ""
+          }
+        ]
+      },
+      {
+        "ruleId": "no-constant-condition",
+        "severity": 2,
+        "message": "Unexpected constant condition.",
+        "line": 10412,
+        "column": 10,
+        "nodeType": "Literal",
+        "messageId": "unexpected",
+        "endLine": 10412,
+        "endColumn": 11,
+        "suppressions": [
+          {
+            "kind": "directive",
+            "justification": ""
+          }
+        ]
+      },
+      {
+        "ruleId": "no-prototype-builtins",
+        "severity": 2,
+        "message": "Do not access Object.prototype method 'hasOwnProperty' from target object.",
+        "line": 11266,
+        "column": 43,
+        "nodeType": "CallExpression",
+        "messageId": "prototypeBuildIn",
+        "endLine": 11266,
+        "endColumn": 57,
+        "suppressions": [
+          {
+            "kind": "directive",
+            "justification": ""
+          }
+        ]
+      },
+      {
+        "ruleId": "no-prototype-builtins",
+        "severity": 2,
+        "message": "Do not access Object.prototype method 'hasOwnProperty' from target object.",
+        "line": 11308,
+        "column": 40,
+        "nodeType": "CallExpression",
+        "messageId": "prototypeBuildIn",
+        "endLine": 11308,
+        "endColumn": 54,
+        "suppressions": [
+          {
+            "kind": "directive",
+            "justification": ""
+          }
+        ]
+      },
+      {
+        "ruleId": "@typescript-eslint/no-empty-function",
+        "severity": 2,
+        "message": "Unexpected empty function 'TransformStream'.",
+        "line": 11839,
+        "column": 28,
+        "nodeType": "FunctionDeclaration",
+        "messageId": "unexpected",
+        "endLine": 11839,
+        "endColumn": 30,
+        "suppressions": [
+          {
+            "kind": "directive",
+            "justification": ""
+          }
+        ]
+      },
+      {
+        "ruleId": "no-cond-assign",
+        "severity": 2,
+        "message": "Expected a conditional expression and instead saw an assignment.",
+        "line": 12740,
+        "column": 10,
+        "nodeType": "AssignmentExpression",
+        "messageId": "missing",
+        "endLine": 12740,
+        "endColumn": 34,
+        "suppressions": [
+          {
+            "kind": "directive",
+            "justification": ""
+          }
+        ]
+      },
+      {
+        "ruleId": "no-cond-assign",
+        "severity": 2,
+        "message": "Expected a conditional expression and instead saw an assignment.",
+        "line": 12746,
+        "column": 10,
+        "nodeType": "AssignmentExpression",
+        "messageId": "missing",
+        "endLine": 12746,
+        "endColumn": 34,
+        "suppressions": [
+          {
+            "kind": "directive",
+            "justification": ""
+          }
+        ]
+      },
+      {
+        "ruleId": "@typescript-eslint/no-this-alias",
+        "severity": 2,
+        "message": "Unexpected aliasing of 'this' to local variable.",
+        "line": 12825,
+        "column": 7,
+        "nodeType": "Identifier",
+        "messageId": "thisAssignment",
+        "endLine": 12825,
+        "endColumn": 11,
+        "suppressions": [
+          {
+            "kind": "directive",
+            "justification": ""
+          }
+        ]
+      },
+      {
+        "ruleId": "no-cond-assign",
+        "severity": 2,
+        "message": "Expected a conditional expression and instead saw an assignment.",
+        "line": 12826,
+        "column": 10,
+        "nodeType": "AssignmentExpression",
+        "messageId": "missing",
+        "endLine": 12826,
+        "endColumn": 28,
+        "suppressions": [
+          {
+            "kind": "directive",
+            "justification": ""
+          }
+        ]
+      },
+      {
+        "ruleId": "no-cond-assign",
+        "severity": 2,
+        "message": "Expected a conditional expression and instead saw an assignment.",
+        "line": 12828,
+        "column": 9,
+        "nodeType": "AssignmentExpression",
+        "messageId": "missing",
+        "endLine": 12828,
+        "endColumn": 33,
+        "suppressions": [
+          {
+            "kind": "directive",
+            "justification": ""
+          }
+        ]
+      },
+      {
+        "ruleId": "@typescript-eslint/no-this-alias",
+        "severity": 2,
+        "message": "Unexpected aliasing of 'this' to local variable.",
+        "line": 12838,
+        "column": 7,
+        "nodeType": "Identifier",
+        "messageId": "thisAssignment",
+        "endLine": 12838,
+        "endColumn": 11,
+        "suppressions": [
+          {
+            "kind": "directive",
+            "justification": ""
+          }
+        ]
+      },
+      {
+        "ruleId": "no-cond-assign",
+        "severity": 2,
+        "message": "Expected a conditional expression and instead saw an assignment.",
+        "line": 12839,
+        "column": 10,
+        "nodeType": "AssignmentExpression",
+        "messageId": "missing",
+        "endLine": 12839,
+        "endColumn": 28,
+        "suppressions": [
+          {
+            "kind": "directive",
+            "justification": ""
+          }
+        ]
+      },
+      {
+        "ruleId": "no-cond-assign",
+        "severity": 2,
+        "message": "Expected a conditional expression and instead saw an assignment.",
+        "line": 12841,
+        "column": 9,
+        "nodeType": "AssignmentExpression",
+        "messageId": "missing",
+        "endLine": 12841,
+        "endColumn": 33,
+        "suppressions": [
+          {
+            "kind": "directive",
+            "justification": ""
+          }
+        ]
+      },
+      {
+        "ruleId": "no-cond-assign",
+        "severity": 2,
+        "message": "Expected a conditional expression and instead saw an assignment.",
+        "line": 12847,
+        "column": 10,
+        "nodeType": "AssignmentExpression",
+        "messageId": "missing",
+        "endLine": 12847,
+        "endColumn": 27,
+        "suppressions": [
+          {
+            "kind": "directive",
+            "justification": ""
+          }
+        ]
+      },
+      {
+        "ruleId": "@typescript-eslint/no-this-alias",
+        "severity": 2,
+        "message": "Unexpected aliasing of 'this' to local variable.",
+        "line": 12881,
+        "column": 7,
+        "nodeType": "Identifier",
+        "messageId": "thisAssignment",
+        "endLine": 12881,
+        "endColumn": 12,
+        "suppressions": [
+          {
+            "kind": "directive",
+            "justification": ""
+          }
+        ]
+      },
+      {
+        "ruleId": "@typescript-eslint/no-this-alias",
+        "severity": 2,
+        "message": "Unexpected aliasing of 'this' to local variable.",
+        "line": 12912,
+        "column": 7,
+        "nodeType": "Identifier",
+        "messageId": "thisAssignment",
+        "endLine": 12912,
+        "endColumn": 11,
+        "suppressions": [
+          {
+            "kind": "directive",
+            "justification": ""
+          }
+        ]
+      },
+      {
+        "ruleId": "no-cond-assign",
+        "severity": 2,
+        "message": "Expected a conditional expression and instead saw an assignment.",
+        "line": 12913,
+        "column": 10,
+        "nodeType": "AssignmentExpression",
+        "messageId": "missing",
+        "endLine": 12913,
+        "endColumn": 28,
+        "suppressions": [
+          {
+            "kind": "directive",
+            "justification": ""
+          }
+        ]
+      },
+      {
+        "ruleId": "@typescript-eslint/no-this-alias",
+        "severity": 2,
+        "message": "Unexpected aliasing of 'this' to local variable.",
+        "line": 12934,
+        "column": 7,
+        "nodeType": "Identifier",
+        "messageId": "thisAssignment",
+        "endLine": 12934,
+        "endColumn": 11,
+        "suppressions": [
+          {
+            "kind": "directive",
+            "justification": ""
+          }
+        ]
+      },
+      {
+        "ruleId": "@typescript-eslint/no-this-alias",
+        "severity": 2,
+        "message": "Unexpected aliasing of 'this' to local variable.",
+        "line": 12944,
+        "column": 7,
+        "nodeType": "Identifier",
+        "messageId": "thisAssignment",
+        "endLine": 12944,
+        "endColumn": 11,
+        "suppressions": [
+          {
+            "kind": "directive",
+            "justification": ""
+          }
+        ]
+      },
+      {
+        "ruleId": "no-cond-assign",
+        "severity": 2,
+        "message": "Expected a conditional expression and instead saw an assignment.",
+        "line": 12947,
+        "column": 12,
+        "nodeType": "AssignmentExpression",
+        "messageId": "missing",
+        "endLine": 12947,
+        "endColumn": 32,
+        "suppressions": [
+          {
+            "kind": "directive",
+            "justification": ""
+          }
+        ]
+      },
+      {
+        "ruleId": "no-cond-assign",
+        "severity": 2,
+        "message": "Expected a conditional expression and instead saw an assignment.",
+        "line": 12949,
+        "column": 11,
+        "nodeType": "AssignmentExpression",
+        "messageId": "missing",
+        "endLine": 12949,
+        "endColumn": 35,
+        "suppressions": [
+          {
+            "kind": "directive",
+            "justification": ""
+          }
+        ]
+      },
+      {
+        "ruleId": "no-cond-assign",
+        "severity": 2,
+        "message": "Expected a conditional expression and instead saw an assignment.",
+        "line": 12974,
+        "column": 10,
+        "nodeType": "AssignmentExpression",
+        "messageId": "missing",
+        "endLine": 12974,
+        "endColumn": 28,
+        "suppressions": [
+          {
+            "kind": "directive",
+            "justification": ""
+          }
+        ]
+      },
+      {
+        "ruleId": "no-cond-assign",
+        "severity": 2,
+        "message": "Expected a conditional expression and instead saw an assignment.",
+        "line": 13375,
+        "column": 9,
+        "nodeType": "AssignmentExpression",
+        "messageId": "missing",
+        "endLine": 13375,
+        "endColumn": 33,
+        "suppressions": [
+          {
+            "kind": "directive",
+            "justification": ""
+          }
+        ]
+      },
+      {
+        "ruleId": "no-cond-assign",
+        "severity": 2,
+        "message": "Expected a conditional expression and instead saw an assignment.",
+        "line": 13531,
+        "column": 11,
+        "nodeType": "AssignmentExpression",
+        "messageId": "missing",
+        "endLine": 13531,
+        "endColumn": 31,
+        "suppressions": [
+          {
+            "kind": "directive",
+            "justification": ""
+          }
+        ]
+      },
+      {
+        "ruleId": "no-cond-assign",
+        "severity": 2,
+        "message": "Expected a conditional expression and instead saw an assignment.",
+        "line": 13696,
+        "column": 10,
+        "nodeType": "AssignmentExpression",
+        "messageId": "missing",
+        "endLine": 13696,
+        "endColumn": 28,
+        "suppressions": [
+          {
+            "kind": "directive",
+            "justification": ""
+          }
+        ]
+      },
+      {
+        "ruleId": "no-cond-assign",
+        "severity": 2,
+        "message": "Expected a conditional expression and instead saw an assignment.",
+        "line": 13697,
+        "column": 9,
+        "nodeType": "AssignmentExpression",
+        "messageId": "missing",
+        "endLine": 13697,
+        "endColumn": 35,
+        "suppressions": [
+          {
+            "kind": "directive",
+            "justification": ""
+          }
+        ]
+      },
+      {
+        "ruleId": "no-cond-assign",
+        "severity": 2,
+        "message": "Expected a conditional expression and instead saw an assignment.",
+        "line": 14750,
+        "column": 11,
+        "nodeType": "AssignmentExpression",
+        "messageId": "missing",
+        "endLine": 14750,
+        "endColumn": 24,
+        "suppressions": [
+          {
+            "kind": "directive",
+            "justification": ""
+          }
+        ]
+      },
+      {
+        "ruleId": "no-empty",
+        "severity": 2,
+        "message": "Empty block statement.",
+        "line": 15463,
+        "column": 50,
+        "nodeType": "BlockStatement",
+        "messageId": "unexpected",
+        "endLine": 15463,
+        "endColumn": 52,
+        "suggestions": [
+          {
+            "messageId": "suggestComment",
+            "data": {
+              "type": "block"
+            },
+            "fix": {
+              "range": [
+                430987,
+                430987
+              ],
+              "text": " /* empty */ "
+            },
+            "desc": "Add comment inside empty block statement."
+          }
+        ],
+        "suppressions": [
+          {
+            "kind": "directive",
+            "justification": ""
+          },
+          {
+            "kind": "directive",
+            "justification": ""
+          }
+        ]
+      },
+      {
+        "ruleId": "no-empty",
+        "severity": 2,
+        "message": "Empty block statement.",
+        "line": 15465,
+        "column": 50,
+        "nodeType": "BlockStatement",
+        "messageId": "unexpected",
+        "endLine": 15465,
+        "endColumn": 52,
+        "suggestions": [
+          {
+            "messageId": "suggestComment",
+            "data": {
+              "type": "block"
+            },
+            "fix": {
+              "range": [
+                431108,
+                431108
+              ],
+              "text": " /* empty */ "
+            },
+            "desc": "Add comment inside empty block statement."
+          }
+        ],
+        "suppressions": [
+          {
+            "kind": "directive",
+            "justification": ""
+          },
+          {
+            "kind": "directive",
+            "justification": ""
+          }
+        ]
+      },
+      {
+        "ruleId": "no-cond-assign",
+        "severity": 2,
+        "message": "Expected a conditional expression and instead saw an assignment.",
+        "line": 15963,
+        "column": 15,
+        "nodeType": "AssignmentExpression",
+        "messageId": "missing",
+        "endLine": 15963,
+        "endColumn": 34,
+        "suppressions": [
+          {
+            "kind": "directive",
+            "justification": ""
+          }
+        ]
+      },
+      {
+        "ruleId": "no-cond-assign",
+        "severity": 2,
+        "message": "Expected a conditional expression and instead saw an assignment.",
+        "line": 17611,
+        "column": 13,
+        "nodeType": "AssignmentExpression",
+        "messageId": "missing",
+        "endLine": 17611,
+        "endColumn": 33,
+        "suppressions": [
+          {
+            "kind": "directive",
+            "justification": ""
+          }
+        ]
+      },
+      {
+        "ruleId": "no-cond-assign",
+        "severity": 2,
+        "message": "Expected a conditional expression and instead saw an assignment.",
+        "line": 17669,
+        "column": 13,
+        "nodeType": "AssignmentExpression",
+        "messageId": "missing",
+        "endLine": 17669,
+        "endColumn": 33,
+        "suppressions": [
+          {
+            "kind": "directive",
+            "justification": ""
+          }
+        ]
+      },
+      {
+        "ruleId": "@typescript-eslint/no-empty-function",
+        "severity": 2,
+        "message": "Unexpected empty method 'lineEnd'.",
+        "line": 17958,
+        "column": 13,
+        "nodeType": "FunctionExpression",
+        "messageId": "unexpected",
+        "endLine": 17958,
+        "endColumn": 15,
+        "suppressions": [
+          {
+            "kind": "directive",
+            "justification": ""
+          }
+        ]
+      },
+      {
+        "ruleId": "@typescript-eslint/no-empty-function",
+        "severity": 2,
+        "message": "Unexpected empty function 'noop'.",
+        "line": 18284,
+        "column": 17,
+        "nodeType": "FunctionDeclaration",
+        "messageId": "unexpected",
+        "endLine": 18284,
+        "endColumn": 19,
+        "suppressions": [
+          {
+            "kind": "directive",
+            "justification": ""
+          }
+        ]
+      },
+      {
+        "ruleId": "no-cond-assign",
+        "severity": 2,
+        "message": "Expected a conditional expression and instead saw an assignment.",
+        "line": 19260,
+        "column": 23,
+        "nodeType": "AssignmentExpression",
+        "messageId": "missing",
+        "endLine": 19260,
+        "endColumn": 40,
+        "suppressions": [
+          {
+            "kind": "directive",
+            "justification": ""
+          }
+        ]
+      },
+      {
+        "ruleId": "@typescript-eslint/no-this-alias",
+        "severity": 2,
+        "message": "Unexpected aliasing of 'this' to local variable.",
+        "line": 19382,
+        "column": 7,
+        "nodeType": "Identifier",
+        "messageId": "thisAssignment",
+        "endLine": 19382,
+        "endColumn": 8,
+        "suppressions": [
+          {
+            "kind": "directive",
+            "justification": ""
+          }
+        ]
+      },
+      {
+        "ruleId": "no-undef",
+        "severity": 2,
+        "message": "'SVGElement' is not defined.",
+        "line": 19383,
+        "column": 20,
+        "nodeType": "Identifier",
+        "messageId": "undef",
+        "endLine": 19383,
+        "endColumn": 30,
+        "suppressions": [
+          {
+            "kind": "directive",
+            "justification": ""
+          },
+          {
+            "kind": "directive",
+            "justification": ""
+          }
+        ]
+      },
+      {
+        "ruleId": "no-undef",
+        "severity": 2,
+        "message": "'navigator' is not defined.",
+        "line": 19403,
+        "column": 10,
+        "nodeType": "Identifier",
+        "messageId": "undef",
+        "endLine": 19403,
+        "endColumn": 19,
+        "suppressions": [
+          {
+            "kind": "directive",
+            "justification": ""
+          },
+          {
+            "kind": "directive",
+            "justification": ""
+          }
+        ]
+      },
+      {
+        "ruleId": "@typescript-eslint/no-this-alias",
+        "severity": 2,
+        "message": "Unexpected aliasing of 'this' to local variable.",
+        "line": 19524,
+        "column": 15,
+        "nodeType": "Identifier",
+        "messageId": "thisAssignment",
+        "endLine": 19524,
+        "endColumn": 19,
+        "suppressions": [
+          {
+            "kind": "directive",
+            "justification": ""
+          }
+        ]
+      },
+      {
+        "ruleId": "no-undef",
+        "severity": 2,
+        "message": "'clearTimeout' is not defined.",
+        "line": 19611,
+        "column": 7,
+        "nodeType": "Identifier",
+        "messageId": "undef",
+        "endLine": 19611,
+        "endColumn": 19,
+        "suppressions": [
+          {
+            "kind": "directive",
+            "justification": ""
+          },
+          {
+            "kind": "directive",
+            "justification": ""
+          }
+        ]
+      },
+      {
+        "ruleId": "no-undef",
+        "severity": 2,
+        "message": "'setTimeout' is not defined.",
+        "line": 19625,
+        "column": 15,
+        "nodeType": "Identifier",
+        "messageId": "undef",
+        "endLine": 19625,
+        "endColumn": 25,
+        "suppressions": [
+          {
+            "kind": "directive",
+            "justification": ""
+          },
+          {
+            "kind": "directive",
+            "justification": ""
+          }
+        ]
+      },
+      {
+        "ruleId": "no-undef",
+        "severity": 2,
+        "message": "'clearTimeout' is not defined.",
+        "line": 19695,
+        "column": 40,
+        "nodeType": "Identifier",
+        "messageId": "undef",
+        "endLine": 19695,
+        "endColumn": 52,
+        "suppressions": [
+          {
+            "kind": "directive",
+            "justification": ""
+          },
+          {
+            "kind": "directive",
+            "justification": ""
+          }
+        ]
+      },
+      {
+        "ruleId": "no-undef",
+        "severity": 2,
+        "message": "'setTimeout' is not defined.",
+        "line": 19698,
+        "column": 58,
+        "nodeType": "Identifier",
+        "messageId": "undef",
+        "endLine": 19698,
+        "endColumn": 68,
+        "suppressions": [
+          {
+            "kind": "directive",
+            "justification": ""
+          },
+          {
+            "kind": "directive",
+            "justification": ""
+          }
+        ]
+      },
+      {
+        "ruleId": "no-undef",
+        "severity": 2,
+        "message": "'clearTimeout' is not defined.",
+        "line": 19739,
+        "column": 22,
+        "nodeType": "Identifier",
+        "messageId": "undef",
+        "endLine": 19739,
+        "endColumn": 34,
+        "suppressions": [
+          {
+            "kind": "directive",
+            "justification": ""
+          },
+          {
+            "kind": "directive",
+            "justification": ""
+          }
+        ]
+      },
+      {
+        "ruleId": "no-undef",
+        "severity": 2,
+        "message": "'setTimeout' is not defined.",
+        "line": 19740,
+        "column": 19,
+        "nodeType": "Identifier",
+        "messageId": "undef",
+        "endLine": 19740,
+        "endColumn": 29,
+        "suppressions": [
+          {
+            "kind": "directive",
+            "justification": ""
+          },
+          {
+            "kind": "directive",
+            "justification": ""
+          }
+        ]
+      }
+    ],
+    "errorCount": 0,
+    "fatalErrorCount": 0,
+    "warningCount": 0,
+    "fixableErrorCount": 0,
+    "fixableWarningCount": 0,
+    "usedDeprecatedRules": []
+  }
+]
