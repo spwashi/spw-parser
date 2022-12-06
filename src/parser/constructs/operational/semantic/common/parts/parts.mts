@@ -1,7 +1,7 @@
-import {nominal}   from "../../../../nodal/nominal/generator.mts";
-import {numeric}   from "../../../../nodal/numeric/generator.mts";
-import {phrasal}   from "../../phrasal/generator.mts";
-import {container} from "../../../../nodal/container/generator.mts";
+import {nominal}   from "../../../../nodal/nominal/generator.mjs";
+import {numeric}   from "../../../../nodal/numeric/generator.mjs";
+import {phrasal}   from "../../phrasal/generator.mjs";
+import {container} from "../../../../nodal/container/generator.mjs";
 
 export const commonPartOptions = [
   nominal,

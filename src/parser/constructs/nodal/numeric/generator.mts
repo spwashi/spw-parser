@@ -1,5 +1,5 @@
-import {beginsNumeric}    from "./cursor/beginsNumeric.mts";
-import {continuesNumeric} from "./cursor/continuesNumeric.mts";
+import {beginsNumeric}    from "./cursor/beginsNumeric.mjs";
+import {continuesNumeric} from "./cursor/continuesNumeric.mjs";
 
 export function* numeric(start, prev) {
   const cursor = start.spawn(prev);

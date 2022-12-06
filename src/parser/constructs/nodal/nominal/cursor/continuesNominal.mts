@@ -1,4 +1,4 @@
-import {beginsNominal} from "./beginsNominal.mts";
+import {beginsNominal} from "./beginsNominal.mjs";
 
 export function continuesNominal(char) {
   if (!char) return false;

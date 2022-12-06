@@ -1,4 +1,4 @@
-import {literalDelimitingOperators} from "../parts/operators.mts";
+import {literalDelimitingOperators} from "../parts/operators.mjs";
 
 export function beginsLiteral(cursor) {
   const char = cursor.curr();

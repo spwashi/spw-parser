@@ -1,8 +1,8 @@
-import {isOrdinalDelimiter}         from "./cursor/checks/isOrdinalDelimiter.mts";
-import {ordinalPartOptions}         from "./parts/parts.mts";
-import {takeSpaces}                 from "../phrasal/cursor/motions/takeSpaces.mts";
-import {_operator}                  from "../../generator.builder.mts";
-import {ordinalDelimitingOperators} from "../operators.mts";
+import {isOrdinalDelimiter}         from "./cursor/checks/isOrdinalDelimiter.mjs";
+import {ordinalPartOptions}         from "./parts/parts.mjs";
+import {takeSpaces}                 from "../phrasal/cursor/motions/takeSpaces.mjs";
+import {_operator}                  from "../../generator.builder.mjs";
+import {ordinalDelimitingOperators} from "../operators.mjs";
 
 export function* ordinal(start, prev) {
   const cursor = start.spawn(prev);

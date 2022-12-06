@@ -1,4 +1,4 @@
-import {CharacterCursor} from "../cursor/cursor.mts";
+import {CharacterCursor} from "../cursor/cursor.mjs";
 
 
 export class Scanner {

@@ -4,6 +4,7 @@
   "dependencies": {
     "serve": "^13.0.2"
   },
+  "type": "module",
   "scripts": {
     "serve": "serve public",
     "build": "tsc",

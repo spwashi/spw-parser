@@ -1,5 +1,5 @@
-import {Lens}          from "../../lens/lens.mts";
-import {TokenFragment} from "../../lens/scope/scope.mts";
+import {Lens}          from "../../lens/lens.mjs";
+import {TokenFragment} from "../../lens/scope/scope.mjs";
 
 class RecursiveReductionLens extends Lens {
   static doFlatten = true;

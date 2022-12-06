@@ -1,5 +1,5 @@
-import {takeOperator} from "./pragmatic/cursor/takeOperator.mts";
-import {takeLabel}    from "./pragmatic/cursor/motions/takeLabel.mts";
+import {takeOperator} from "./pragmatic/cursor/takeOperator.mjs";
+import {takeLabel}    from "./pragmatic/cursor/motions/takeLabel.mjs";
 
 export function _operator(operators) {
   return function* (startingCursor) {

@@ -1,4 +1,4 @@
-import {container} from "../../container/generator.mts";
+import {container} from "../../container/generator.mjs";
 
 export function* definition(cursor) {
   const containers = new Map([]);

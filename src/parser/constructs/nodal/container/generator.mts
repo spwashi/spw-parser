@@ -1,8 +1,8 @@
-import {beginsContainer}              from "./cursor/beginsContainer.mts";
-import {takeSpaces}                   from "../../operational/semantic/phrasal/cursor/motions/takeSpaces.mts";
-import {_operator}                    from "../../operational/generator.builder.mts";
-import {containerPartOptions}         from "./parts/parts.mts";
-import {containerDelimitingOperators} from "./parts/operators.mts";
+import {beginsContainer}              from "./cursor/beginsContainer.mjs";
+import {takeSpaces}                   from "../../operational/semantic/phrasal/cursor/motions/takeSpaces.mjs";
+import {_operator}                    from "../../operational/generator.builder.mjs";
+import {containerPartOptions}         from "./parts/parts.mjs";
+import {containerDelimitingOperators} from "./parts/operators.mjs";
 
 export function* container(start, prev) {
   const cursor = start.spawn(prev);

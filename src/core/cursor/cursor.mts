@@ -1,5 +1,5 @@
-import {_debug} from "../../config.mts";
-import {Token}  from "./token/token.mts";
+import {_debug} from "../../config.mjs";
+import {Token}  from "./token/token.mjs";
 
 export class Cursor {
   #token;

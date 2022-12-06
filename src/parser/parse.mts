@@ -1,7 +1,7 @@
-import {Scanner}         from "../core/lens/scanner.mts";
-import {allConstructs}   from "./constructs/constructs.mts";
-import {Lens}            from "../core/lens/lens.mts";
-import {CharacterCursor} from "../core/cursor/cursor.mts";
+import {Scanner}         from "../core/lens/scanner.mjs";
+import {allConstructs}   from "./constructs/constructs.mjs";
+import {Lens}            from "../core/lens/lens.mjs";
+import {CharacterCursor} from "../core/cursor/cursor.mjs";
 
 
 class ParserLens extends Lens {
@@ -17,7 +17,7 @@ class ParserLens extends Lens {
  * @param config {object}
  * @param config.asGenerator {boolean?} Whether to loop through the generator or return it.
  */
-export function parse(input, {asGenerator = false} = {}) {
+export function parse(input: string, {asGenerator = false} = {}) {
   if (asGenerator) return parser();
   let end;
   for (const v of parser()) {

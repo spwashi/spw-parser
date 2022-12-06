@@ -1,11 +1,11 @@
-import {nominal}     from "../../nominal/generator.mts";
-import {numeric}     from "../../numeric/generator.mts";
-import {phrasal}     from "../../../operational/semantic/phrasal/generator.mts";
-import {common}      from "../../../operational/semantic/common/generator.mts";
-import {ordinal}     from "../../../operational/semantic/ordinal/generator.mts";
-import {container}   from "../generator.mts";
-import {operational} from "../../../operational/pragmatic/generator.mts";
-import {literal}     from "../../literal/generator.mts";
+import {nominal}     from "../../nominal/generator.mjs";
+import {numeric}     from "../../numeric/generator.mjs";
+import {phrasal}     from "../../../operational/semantic/phrasal/generator.mjs";
+import {common}      from "../../../operational/semantic/common/generator.mjs";
+import {ordinal}     from "../../../operational/semantic/ordinal/generator.mjs";
+import {container}   from "../generator.mjs";
+import {operational} from "../../../operational/pragmatic/generator.mjs";
+import {literal}     from "../../literal/generator.mjs";
 
 export const containerPartOptions = [
   nominal,

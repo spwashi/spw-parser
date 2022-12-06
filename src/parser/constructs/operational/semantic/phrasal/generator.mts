@@ -1,6 +1,6 @@
-import {isPhrasalDelimiter} from "./cursor/checks/isPhrasalDelimiter.mts";
-import {phrasalPartOptions} from "./parts/parts.mts";
-import {takeSpaces}         from "./cursor/motions/takeSpaces.mts";
+import {isPhrasalDelimiter} from "./cursor/checks/isPhrasalDelimiter.mjs";
+import {phrasalPartOptions} from "./parts/parts.mjs";
+import {takeSpaces}         from "./cursor/motions/takeSpaces.mjs";
 
 export function* phrasal(start, prev) {
   const cursor = start.spawn(prev);

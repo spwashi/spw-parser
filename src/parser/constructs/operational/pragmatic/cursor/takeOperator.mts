@@ -1,4 +1,4 @@
-import {pragmaticOperators} from "../parts/operators.mts";
+import {pragmaticOperators} from "../parts/operators.mjs";
 
 export function* takeOperator(cursor, operators = pragmaticOperators) {
   let char    = cursor.curr();

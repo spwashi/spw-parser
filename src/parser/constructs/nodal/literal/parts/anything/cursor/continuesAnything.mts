@@ -1,4 +1,4 @@
-import {beginsAnything} from "./beginsAnything.mts";
+import {beginsAnything} from "./beginsAnything.mjs";
 
 export function continuesAnything(char) {
   if (!char) return false;

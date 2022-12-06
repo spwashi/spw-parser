@@ -1,6 +1,6 @@
-import {nominal}   from "../../../../nodal/nominal/generator.mts";
-import {numeric}   from "../../../../nodal/numeric/generator.mts";
-import {container} from "../../../../nodal/container/generator.mts";
+import {nominal}   from "../../../../nodal/nominal/generator.mjs";
+import {numeric}   from "../../../../nodal/numeric/generator.mjs";
+import {container} from "../../../../nodal/container/generator.mjs";
 
 export function* takeLabel(cursor) {
   let labelCursor = false;

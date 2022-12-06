@@ -1,5 +1,5 @@
-import {Scope}  from "./scope/scope.mts";
-import {Cursor} from "../cursor/cursor.mts";
+import {Scope}  from "./scope/scope.mjs";
+import {Cursor} from "../cursor/cursor.mjs";
 
 export class Lens {
   generators = [];
@@ -9,7 +9,7 @@ export class Lens {
     this.source = source;
   }
 
-  source;
+  source: any;
 
   getCursor(input) {
     return new (this.Cursor)({input, generators: this.generators});

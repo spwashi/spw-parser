@@ -1,4 +1,4 @@
-import {parse} from "../parse.mts";
+import {parse} from "../parse.mjs";
 
 let out =/**/ Object.entries({
                                '--false':       [" ",],

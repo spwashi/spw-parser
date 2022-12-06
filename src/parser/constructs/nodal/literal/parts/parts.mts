@@ -1,4 +1,4 @@
-import {anything} from "./anything/generator.mts";
+import {anything} from "./anything/generator.mjs";
 
 export const literalPartOptions = [
   anything,

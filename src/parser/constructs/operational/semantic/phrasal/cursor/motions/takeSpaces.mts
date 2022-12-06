@@ -1,4 +1,4 @@
-import {isPhrasalDelimiter} from "../checks/isPhrasalDelimiter.mts";
+import {isPhrasalDelimiter} from "../checks/isPhrasalDelimiter.mjs";
 
 export function* takeSpaces(cursor) {
   const spaces = [];

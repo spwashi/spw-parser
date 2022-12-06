@@ -1,5 +1,5 @@
-import {beginsAnything}    from "./cursor/beginsAnything.mts";
-import {continuesAnything} from "./cursor/continuesAnything.mts";
+import {beginsAnything}    from "./cursor/beginsAnything.mjs";
+import {continuesAnything} from "./cursor/continuesAnything.mjs";
 
 export function* anything(start, prev) {
   const cursor = start.spawn(prev);

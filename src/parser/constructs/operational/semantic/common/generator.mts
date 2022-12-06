@@ -1,8 +1,8 @@
-import {isCommonDelimiter}         from "./cursor/checks/isCommonDelimiter.mts";
-import {commonPartOptions}         from "./parts/parts.mts";
-import {takeSpaces}                from "../phrasal/cursor/motions/takeSpaces.mts";
-import {_operator}                 from "../../generator.builder.mts";
-import {commonDelimitingOperators} from "../operators.mts";
+import {isCommonDelimiter}         from "./cursor/checks/isCommonDelimiter.mjs";
+import {commonPartOptions}         from "./parts/parts.mjs";
+import {takeSpaces}                from "../phrasal/cursor/motions/takeSpaces.mjs";
+import {_operator}                 from "../../generator.builder.mjs";
+import {commonDelimitingOperators} from "../operators.mjs";
 
 export function* common(start, prev) {
   const cursor = start.spawn(prev);

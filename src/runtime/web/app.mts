@@ -1,5 +1,5 @@
-import {parse}                   from "../../parser/parse.mts";
-import {CharacterCursor, Cursor} from "../../core/cursor/cursor.mts";
+import {parse}                   from "../../parser/parse.mjs";
+import {CharacterCursor, Cursor} from "../../core/cursor/cursor.mjs";
 
 class ParserDomSvg {
   private svg: any;
@@ -62,7 +62,7 @@ export class ParserDom {
   private controls: any;
   private state: any;
 
-  private svg: ParserDomSvg;
+  private svg: ParserDomSvg = null;
   constructor({form, controls, output}) {
     const state   = {
       error:     null,

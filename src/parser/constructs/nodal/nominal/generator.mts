@@ -1,6 +1,6 @@
-import {beginsNominal}    from "./cursor/beginsNominal.mts";
-import {continuesNominal} from "./cursor/continuesNominal.mts";
-import {takeDefinition}   from "./parts/definition.mts";
+import {beginsNominal}    from "./cursor/beginsNominal.mjs";
+import {continuesNominal} from "./cursor/continuesNominal.mjs";
+import {takeDefinition}   from "./parts/definition.mjs";
 
 
 export function* nominal(start, prev) {

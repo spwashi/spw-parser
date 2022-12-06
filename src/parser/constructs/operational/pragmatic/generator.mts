@@ -1,7 +1,7 @@
-import {operationalPartOptions} from "./parts/parts.mts";
-import {takeSpaces}             from "../semantic/phrasal/cursor/motions/takeSpaces.mts";
-import {pragmaticOperators}     from "./parts/operators.mts";
-import {_operator}              from "../generator.builder.mts";
+import {operationalPartOptions} from "./parts/parts.mjs";
+import {takeSpaces}             from "../semantic/phrasal/cursor/motions/takeSpaces.mjs";
+import {pragmaticOperators}     from "./parts/operators.mjs";
+import {_operator}              from "../generator.builder.mjs";
 
 export function* operational(start, prev, domain = pragmaticOperators) {
   const cursor = start.spawn(prev);

@@ -1,4 +1,4 @@
-import {containerDelimitingOperators} from "../parts/operators.mts";
+import {containerDelimitingOperators} from "../parts/operators.mjs";
 
 /**
  * Checks whether a cursor can begin a container token
