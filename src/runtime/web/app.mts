@@ -1,8 +1,9 @@
-import {parse}                   from "../../parser/parse.mjs";
-import {CharacterCursor, Cursor} from "../../core/cursor/cursor.mjs";
+import {parse} from '../../parser/parse.mjs';
+import {CharacterCursor, Cursor} from '../../core/cursor/cursor.mjs';
 
 class ParserDomSvg {
   private svg: any;
+
   constructor(svg) {
     this.svg = svg;
   }
@@ -25,7 +26,7 @@ class ParserDomSvg {
 
     let newlines = 0;
     let x        = 0;
-    const map      = new Map;
+    const map    = new Map;
     gs.select('rect')
       .attr('x', d => {
         const val = x++ * 1.7;
@@ -58,11 +59,15 @@ class ParserDomSvg {
 
 export class ParserDom {
   private output: any;
+
   private form: any;
+
   private controls: any;
+
   private state: any;
 
-  private svg: ParserDomSvg = null;
+  private svg: ParserDomSvg | null = null;
+
   constructor({form, controls, output}) {
     const state   = {
       error:     null,
@@ -70,7 +75,7 @@ export class ParserDom {
       text:      '',
       tokens:    [],
       chars:     [],
-      yielded:   []
+      yielded:   [],
     };
     this.output   = output;
     this.form     = form;
@@ -149,7 +154,7 @@ export class ParserDom {
 
     if (!generator || this.state.error) {
       return {
-        done: true
+        done: true,
       }
     }
 

@@ -4,9 +4,16 @@
   "dependencies": {
     "serve": "^13.0.2"
   },
+  "devDependencies": {
+    "@typescript-eslint/eslint-plugin": "^5.45.1",
+    "@typescript-eslint/parser": "^5.45.1",
+    "eslint": "^8.29.0",
+    "eslint-plugin-json-format": "^2.0.1",
+    "typescript": "^4.9.3"
+  },
   "type": "module",
   "scripts": {
-    "serve": "serve public",
+    "serve": "serve -p 5001 public",
     "build": "tsc",
     "watch": "tsc -w",
     "lint": "eslint src",
@@ -17,12 +24,5 @@
     "type": "git",
     "url": "https://github.com/spwashi/spw-parser.git"
   },
-  "license": "ISC",
-  "devDependencies": {
-    "@typescript-eslint/eslint-plugin": "^5.45.1",
-    "@typescript-eslint/parser": "^5.45.1",
-    "eslint": "^8.29.0",
-    "eslint-plugin-json-format": "^2.0.1",
-    "typescript": "^4.9.3"
-  }
+  "license": "ISC"
 }

@@ -66,7 +66,6 @@ class RecursiveReductionLens extends Lens {
 }
 
 export class Token {
-  // joins the token kind
   static kindJunctionStr = ' + ';
 
   _kind = [];
