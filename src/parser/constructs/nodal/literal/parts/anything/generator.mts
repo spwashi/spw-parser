@@ -1,5 +1,5 @@
-import {beginsAnything}    from "./cursor/beginsAnything.mjs";
-import {continuesAnything} from "./cursor/continuesAnything.mjs";
+import {beginsAnything} from './cursor/beginsAnything.mjs';
+import {continuesAnything} from './cursor/continuesAnything.mjs';
 
 export function* anything(start, prev) {
   const cursor = start.spawn(prev);
@@ -11,7 +11,7 @@ export function* anything(start, prev) {
   if (prev) {
     yield* cursor.log({
                         message: 'not anything',
-                        miss:    'cannot follow prev'
+                        miss:    'cannot follow prev',
                       });
     return prev;
   }
@@ -36,7 +36,7 @@ export function* anything(start, prev) {
 }
 
 function* loop(cursor) {
-  const key = [];
+  const key: any[] = [];
 
   {
     let started;

@@ -1,8 +1,8 @@
-import {beginsContainer}              from "./cursor/beginsContainer.mjs";
-import {takeSpaces}                   from "../../operational/semantic/phrasal/cursor/motions/takeSpaces.mjs";
-import {_operator}                    from "../../operational/generator.builder.mjs";
-import {containerPartOptions}         from "./parts/parts.mjs";
-import {containerDelimitingOperators} from "./parts/operators.mjs";
+import {beginsContainer} from './cursor/beginsContainer.mjs';
+import {takeSpaces} from '../../operational/semantic/phrasal/cursor/motions/takeSpaces.mjs';
+import {_operator} from '../../operational/generator.builder.mjs';
+import {containerPartOptions} from './parts/parts.mjs';
+import {containerDelimitingOperators} from './parts/operators.mjs';
 
 export function* container(start, prev) {
   const cursor = start.spawn(prev);
@@ -14,7 +14,7 @@ export function* container(start, prev) {
   if (prev) {
     yield* cursor.log({
                         message: 'not container',
-                        miss:    'prev'
+                        miss:    'prev',
                       });
     return prev;
   }
@@ -22,7 +22,7 @@ export function* container(start, prev) {
   if (!beginsContainer(start)) {
     yield* cursor.log({
                         message: 'not container',
-                        miss:    'cursor cannot start container'
+                        miss:    'cursor cannot start container',
                       });
     return false;
   }
@@ -39,9 +39,9 @@ export function* container(start, prev) {
 }
 
 function* loop(cursor) {
-  const open       = containerDelimitingOperators.open;
+  const open     = containerDelimitingOperators.open;
   const operator = yield* cursor.scan([_operator(open)]);
-  const head     = operator?.token();
+  const head     = operator?.getToken();
   const label    = head?.label?.key;
   const close    = containerDelimitingOperators.close._inverse[head.proto.key];
 
@@ -51,7 +51,7 @@ function* loop(cursor) {
 
   let started;
   let tail;
-  const body = [];
+  const body: any[] = [];
 
   while (cursor.curr()) {
     if ((!started) && (started = true)) yield* cursor.log({message: 'beginning container'});
@@ -59,7 +59,7 @@ function* loop(cursor) {
 
     const delimiterScanner = yield* cursor.scan([_operator({[close.key]: close})]);
 
-    const _delimiter = delimiterScanner?.token();
+    const _delimiter = delimiterScanner?.getToken();
     const tailLabel  = _delimiter?.label?.key;
     if (_delimiter) {
       if (tailLabel === label || !(tailLabel && label)) {
@@ -75,7 +75,7 @@ function* loop(cursor) {
     const statement = yield* cursor.scan(containerPartOptions);
     if (!statement) break;
 
-    body.push(statement?.token());
+    body.push(statement?.getToken());
 
     yield* takeSpaces(cursor);
   }

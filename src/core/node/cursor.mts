@@ -1,14 +1,16 @@
-import {_debug} from "../../config.mjs";
-import {Token}  from "./token/token.mjs";
+import {_debug} from '../../config.mjs';
+import {Token} from './token/token.mjs';
 
 export class Cursor {
+  readonly #parent;
   #token;
-  #parent;
-
   offset;
   start;
+  input;
+  generators: GeneratorFunction[] | undefined;
+  level;
 
-  constructor(parent, former = undefined) {
+  constructor(parent, former?: Cursor) {
     this.offset     = parent?.offset || 0;
     this.start      = former?.start ?? this.offset;
     this.input      = parent?.input;
@@ -19,7 +21,7 @@ export class Cursor {
   }
 
   spawn(former) {
-    const Constructor = this.constructor;
+    const Constructor = this.constructor as typeof Cursor;
     return new Constructor(this, former);
   }
 
@@ -35,28 +37,21 @@ export class Cursor {
     return this.input[this.offset];
   }
 
-  /**
-   *
-   * @param generators
-   * @param former
-   * @returns {Generator<*, undefined, *>}
-   */
-  * scan(generators = undefined, former = undefined) {
-    generators = generators ?? this.generators;
-
+  * scan(generatorArray = undefined, former?: Cursor) {
+    const generators = generatorArray ?? this.generators;
     if (!generators) throw new Error('Cannot scan without generators');
 
-    let activeCursor = former;
 
+    let activeCursor = former;
     for (const generator of generators) {
       const cursor = yield* generator(this, activeCursor);
-      const token  = cursor ? cursor.token() : false;
+      const token  = cursor ? cursor.getToken() : false;
 
       if (!token) continue;
 
       this.setOffset(cursor);
 
-      if (token !== activeCursor?.token()) {
+      if (token !== activeCursor?.getToken()) {
         yield cursor;
       }
 
@@ -73,7 +68,7 @@ export class Cursor {
    */
   * log(item) {
     if (_debug) {
-      const tabs          = '\t'.repeat(this.level);
+      const tabs        = '\t'.repeat(this.level);
       const tabbedLabel = `${tabs}${this}`;
       yield tabbedLabel;
       const tabbedMessage = `${tabs}\t${item.message}`;
@@ -81,21 +76,20 @@ export class Cursor {
       if (item.miss) yield `${tabs}\t\treason: ${item.miss}`;
     }
   }
-
+  
+  __log_taken: any[] = [];
   /**
    *
    * @returns {Generator<{offset, kind: string}, {offset, kind: string}, *>}
    */
   * take() {
     const pos = this.pos();
+    this.__log_taken.push(pos);
     yield pos;
     this.advance();
     return pos;
   }
 
-  /**
-   *
-   */
   advance() {
     this.offset = this.offset + 1;
   }
@@ -107,16 +101,16 @@ export class Cursor {
     };
   }
 
+  getToken() {
+    return this.#token;
+  }
+
   token(token) {
-    if (typeof token === "undefined") {
-      return this.#token;
-    }
     if (token === false) {
       this.#token = token;
       return this;
     }
     this.#token = this.#token ?? new Token(this);
-
     Object.assign(this.#token, token);
     return this;
   }
@@ -155,12 +149,12 @@ export class CharacterCursor extends Cursor {
       start: {
         line:   startLine,
         col:    (startSplit.pop()?.length || 1) - 1,
-        offset: this.start
+        offset: this.start,
       },
       end:   {
         line:   startLine + midSplit.length - 1,
         col:    (midSplit.pop()?.length || 1) - 1,
-        offset: offset
+        offset: offset,
       },
       text:  text,
       // parent: this.#parent?.level ? this.#parent : undefined

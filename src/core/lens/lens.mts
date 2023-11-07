@@ -1,15 +1,17 @@
-import {Scope}  from "./scope/scope.mjs";
-import {Cursor} from "../cursor/cursor.mjs";
+import {Scope} from './scope.mjs';
+import {Cursor} from '../node/cursor.mjs';
+import {ConstructGenerator} from '../../parser/constructs/constructs.mjs';
 
 export class Lens {
-  generators = [];
-  Cursor     = Cursor;
+  generators: ConstructGenerator[] = [];
 
-  constructor(source = undefined) {
-    this.source = source;
-  }
+  Cursor = Cursor;
 
   source: any;
+
+  constructor(source: any = undefined) {
+    this.source = source;
+  }
 
   getCursor(input) {
     return new (this.Cursor)({input, generators: this.generators});
@@ -18,9 +20,4 @@ export class Lens {
   * locate(element) {
     yield new Scope(element);
   }
-
-  * reduce(node, context) {
-    throw new Error('unimplemented')
-  }
 }
-

@@ -1,8 +1,8 @@
-import {isOrdinalDelimiter}         from "./cursor/checks/isOrdinalDelimiter.mjs";
-import {ordinalPartOptions}         from "./parts/parts.mjs";
-import {takeSpaces}                 from "../phrasal/cursor/motions/takeSpaces.mjs";
-import {_operator}                  from "../../generator.builder.mjs";
-import {ordinalDelimitingOperators} from "../operators.mjs";
+import {isOrdinalDelimiter} from './cursor/checks/isOrdinalDelimiter.mjs';
+import {ordinalPartOptions} from './parts/parts.mjs';
+import {takeSpaces} from '../phrasal/cursor/motions/takeSpaces.mjs';
+import {_operator} from '../../generator.builder.mjs';
+import {ordinalDelimitingOperators} from '../operators.mjs';
 
 export function* ordinal(start, prev) {
   const cursor = start.spawn(prev);
@@ -15,7 +15,7 @@ export function* ordinal(start, prev) {
   if (!operators.length) {
     yield* cursor.log({
                         message: 'not ordinal',
-                        miss:    'no operators'
+                        miss:    'no operators',
                       })
     return prev ?? false;
   }
@@ -36,9 +36,9 @@ const operational = _operator(ordinalDelimitingOperators);
 
 function* loop(cursor, prev) {
   yield* takeSpaces(cursor);
-  const head      = prev && prev.token();
-  const body      = [];
-  const operators = [];
+  const head             = prev && prev.getToken();
+  const body: any[]      = [];
+  const operators: any[] = [];
   let group;
   {
     let started = false;
@@ -47,14 +47,14 @@ function* loop(cursor, prev) {
       yield* takeSpaces(cursor);
 
       const operatorScanner = yield* cursor.scan([operational]);
-      const operator        = operatorScanner?.token();
+      const operator        = operatorScanner?.getToken();
       if (!operator) break;
       !group && operators.push(group = []);
       group.push(operator);
 
       yield* takeSpaces(cursor);
       const bodyScanner = yield* cursor.scan(ordinalPartOptions);
-      let token         = bodyScanner ? bodyScanner.token() : null;
+      let token         = bodyScanner ? bodyScanner.getToken() : null;
       if (!token) {
         token = null;
       } else {
@@ -66,5 +66,5 @@ function* loop(cursor, prev) {
   }
 
   const tail = body.pop();
-  return {head, body, tail, operators,};
+  return {head, body, tail, operators};
 }

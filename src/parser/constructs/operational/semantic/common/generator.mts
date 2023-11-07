@@ -1,8 +1,8 @@
-import {isCommonDelimiter}         from "./cursor/checks/isCommonDelimiter.mjs";
-import {commonPartOptions}         from "./parts/parts.mjs";
-import {takeSpaces}                from "../phrasal/cursor/motions/takeSpaces.mjs";
-import {_operator}                 from "../../generator.builder.mjs";
-import {commonDelimitingOperators} from "../operators.mjs";
+import {isCommonDelimiter} from './cursor/checks/isCommonDelimiter.mjs';
+import {commonPartOptions} from './parts/parts.mjs';
+import {takeSpaces} from '../phrasal/cursor/motions/takeSpaces.mjs';
+import {_operator} from '../../generator.builder.mjs';
+import {commonDelimitingOperators} from '../operators.mjs';
 
 export function* common(start, prev) {
   const cursor = start.spawn(prev);
@@ -15,7 +15,7 @@ export function* common(start, prev) {
   if (!operators.length) {
     yield* cursor.log({
                         message: 'not common',
-                        miss:    'no operators'
+                        miss:    'no operators',
                       });
     return prev ?? false;
   }
@@ -34,22 +34,22 @@ export function* common(start, prev) {
 
 function* bodyLoop(cursor, prev) {
   yield* takeSpaces(cursor);
-  const head      = prev && prev.token();
-  const body      = [];
-  const operators = [];
-  let started     = false;
+  const head             = prev && prev.getToken();
+  const body: any[]      = [];
+  const operators: any[] = [];
+  let started            = false;
   while (isCommonDelimiter(cursor)) {
     if ((!started) && (started = true)) yield* cursor.log({message: 'beginning common'});
     yield* takeSpaces(cursor);
 
     const operatorScanner = yield* cursor.scan([_operator(commonDelimitingOperators)]);
-    const operator        = operatorScanner?.token();
+    const operator        = operatorScanner?.getToken();
     if (!operator) break;
     operators.push(operator);
 
     yield* takeSpaces(cursor);
     const bodyScanner = yield* cursor.scan(commonPartOptions);
-    let token         = bodyScanner ? bodyScanner.token() : null;
+    let token         = bodyScanner ? bodyScanner.getToken() : null;
     if (!token) { token = null}
     body.push(token);
     yield* takeSpaces(cursor);

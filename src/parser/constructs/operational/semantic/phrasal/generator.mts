@@ -1,6 +1,6 @@
-import {isPhrasalDelimiter} from "./cursor/checks/isPhrasalDelimiter.mjs";
-import {phrasalPartOptions} from "./parts/parts.mjs";
-import {takeSpaces}         from "./cursor/motions/takeSpaces.mjs";
+import {isPhrasalDelimiter} from './cursor/checks/isPhrasalDelimiter.mjs';
+import {phrasalPartOptions} from './parts/parts.mjs';
+import {takeSpaces} from './cursor/motions/takeSpaces.mjs';
 
 export function* phrasal(start, prev) {
   const cursor = start.spawn(prev);
@@ -12,7 +12,7 @@ export function* phrasal(start, prev) {
     yield* cursor.log({
                         message: 'not phrasal',
                         miss:    'no head',
-                        cursors: {start, prev}
+                        cursors: {start, prev},
                       });
     return false;
   }
@@ -29,7 +29,7 @@ export function* phrasal(start, prev) {
                           body,
                           tail,
                           operators,
-                        }
+                        },
                       });
 
     return prev ?? false;
@@ -43,16 +43,16 @@ export function* phrasal(start, prev) {
                  head,
                  body,
                  tail,
-                 operators
+                 operators,
                });
 
   return cursor;
 }
 
 function* bodyLoop(cursor, prev) {
-  const head      = prev && prev.token();
-  const body      = [];
-  const operators = [];
+  const head             = prev && prev.getToken();
+  const body: any[]      = [];
+  const operators: any[] = [];
 
   {
     let started = false;
@@ -65,13 +65,12 @@ function* bodyLoop(cursor, prev) {
       yield* takeSpaces(cursor);
 
       const _cursor = yield* cursor.scan(phrasalPartOptions);
-      const token   = _cursor ? _cursor.token() : null;
+      const token   = _cursor ? _cursor.getToken() : null;
       if (!token) break;
       body.push(token);
     }
   }
-
   const tail = body.pop();
 
-  return {head, body, tail, operators,};
+  return {head, body, tail, operators};
 }

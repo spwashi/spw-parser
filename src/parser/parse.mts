@@ -1,7 +1,7 @@
-import {Scanner}         from "../core/lens/scanner.mjs";
+import {Scanner}         from "../core/scanner.mjs";
 import {allConstructs}   from "./constructs/constructs.mjs";
 import {Lens}            from "../core/lens/lens.mjs";
-import {CharacterCursor} from "../core/cursor/cursor.mjs";
+import {CharacterCursor} from "../core/node/cursor.mjs";
 
 
 class ParserLens extends Lens {

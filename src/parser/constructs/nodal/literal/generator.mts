@@ -1,8 +1,8 @@
-import {beginsLiteral}              from "./cursor/beginsLiteral.mjs";
-import {takeSpaces}                 from "../../operational/semantic/phrasal/cursor/motions/takeSpaces.mjs";
-import {_operator}                  from "../../operational/generator.builder.mjs";
-import {literalPartOptions}         from "./parts/parts.mjs";
-import {literalDelimitingOperators} from "./parts/operators.mjs";
+import {beginsLiteral} from './cursor/beginsLiteral.mjs';
+import {takeSpaces} from '../../operational/semantic/phrasal/cursor/motions/takeSpaces.mjs';
+import {_operator} from '../../operational/generator.builder.mjs';
+import {literalPartOptions} from './parts/parts.mjs';
+import {literalDelimitingOperators} from './parts/operators.mjs';
 
 export function* literal(start, prev) {
   const cursor = start.spawn(prev);
@@ -14,7 +14,7 @@ export function* literal(start, prev) {
   if (prev) {
     yield* cursor.log({
                         message: 'not literal',
-                        miss:    'prev'
+                        miss:    'prev',
                       });
     return prev;
   }
@@ -22,7 +22,7 @@ export function* literal(start, prev) {
   if (!beginsLiteral(start)) {
     yield* cursor.log({
                         message: 'not literal',
-                        miss:    'cursor cannot start literal'
+                        miss:    'cursor cannot start literal',
                       });
     return false;
   }
@@ -37,9 +37,9 @@ export function* literal(start, prev) {
 }
 
 function* loop(cursor) {
-  const open       = literalDelimitingOperators.open;
+  const open     = literalDelimitingOperators.open;
   const operator = yield* cursor.scan([_operator(open)]);
-  const head     = operator?.token();
+  const head     = operator?.getToken();
   const label    = head?.label?.key;
   const close    = literalDelimitingOperators.close._inverse[head.proto.key];
 
@@ -49,7 +49,7 @@ function* loop(cursor) {
 
   let started;
   let tail;
-  const body = [];
+  const body: any[] = [];
 
   while (cursor.curr()) {
     if ((!started) && (started = true)) yield* cursor.log({message: 'beginning literal'});
@@ -57,7 +57,7 @@ function* loop(cursor) {
 
     const nextCursor = yield* cursor.scan([_operator({[close.key]: close})]);
 
-    const _delimiter = nextCursor?.token();
+    const _delimiter = nextCursor?.getToken();
     const tailLabel  = _delimiter?.label?.key;
     if (_delimiter) {
       if (tailLabel === label || !(tailLabel && label)) {
@@ -73,7 +73,7 @@ function* loop(cursor) {
     const statement = yield* cursor.scan(literalPartOptions);
     if (!statement) break;
 
-    body.push(statement?.token());
+    body.push(statement?.getToken());
 
     yield* takeSpaces(cursor);
   }

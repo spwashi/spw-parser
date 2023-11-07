@@ -1,5 +1,5 @@
 import {parse} from '../../parser/parse.mjs';
-import {CharacterCursor, Cursor} from '../../core/cursor/cursor.mjs';
+import {CharacterCursor, Cursor} from '../../core/node/cursor.mjs';
 
 class ParserDomSvg {
   private svg: any;
@@ -167,6 +167,7 @@ export class ParserDom {
         done = _done;
       } else {
         _yielded = out;
+        console.log('yielded: ', _yielded)
         if (out === false) {
           throw new Error('parser returned false');
         }
@@ -185,7 +186,7 @@ export class ParserDom {
     } else {
       this.output.text.value = JSON.stringify(_yielded, null, 3);
       if (CharacterCursor.isCharacterCursor(_yielded)) {
-        this.state.tokens.push(_yielded.token());
+        this.state.tokens.push(_yielded.getToken());
       } else if (Cursor.isCursorPosition(_yielded)) {
         this.state.chars.push(_yielded);
         _yielded && this.output.svg.selectAll('.char')

@@ -1,10 +1,10 @@
-import {container} from "../../container/generator.mjs";
+import {container} from '../../container/generator.mjs';
 
 export function* definition(cursor) {
-  const containers = new Map([]);
+  const containers = new Map();
   let _container;
-  while ((_container = yield* cursor.scan([container])) && (_container = _container.token())) {
-    const set = containers.get(_container.head.proto) ?? [];
+  while ((_container = yield* cursor.scan([container])) && (_container = _container.getToken())) {
+    const set: any[] = containers.get(_container.head.proto) ?? [];
     set.push(_container)
     containers.set(_container.head.proto.name, set)
   }

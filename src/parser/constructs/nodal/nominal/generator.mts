@@ -1,6 +1,6 @@
-import {beginsNominal}    from "./cursor/beginsNominal.mjs";
-import {continuesNominal} from "./cursor/continuesNominal.mjs";
-import {takeDefinition}   from "./parts/definition.mjs";
+import {beginsNominal} from './cursor/beginsNominal.mjs';
+import {continuesNominal} from './cursor/continuesNominal.mjs';
+import {takeDefinition} from './parts/definition.mjs';
 
 
 export function* nominal(start, prev) {
@@ -13,7 +13,7 @@ export function* nominal(start, prev) {
   if (prev) {
     yield* cursor.log({
                         message: 'not nominal',
-                        miss:    'cannot follow prev'
+                        miss:    'cannot follow prev',
                       });
     return prev;
   }
@@ -40,7 +40,7 @@ export function* nominal(start, prev) {
 }
 
 function* loop(cursor) {
-  const key = [];
+  const key: any[] = [];
 
   {
     let started;

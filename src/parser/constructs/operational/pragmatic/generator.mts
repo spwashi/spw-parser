@@ -1,7 +1,7 @@
-import {operationalPartOptions} from "./parts/parts.mjs";
-import {takeSpaces}             from "../semantic/phrasal/cursor/motions/takeSpaces.mjs";
-import {pragmaticOperators}     from "./parts/operators.mjs";
-import {_operator}              from "../generator.builder.mjs";
+import {operationalPartOptions} from './parts/parts.mjs';
+import {takeSpaces} from '../semantic/phrasal/cursor/motions/takeSpaces.mjs';
+import {pragmaticOperators} from './parts/operators.mjs';
+import {_operator} from '../generator.builder.mjs';
 
 export function* operational(start, prev, domain = pragmaticOperators) {
   const cursor = start.spawn(prev);
@@ -9,11 +9,11 @@ export function* operational(start, prev, domain = pragmaticOperators) {
 
   yield* cursor.log({message: 'checking operational'});
 
-  let {head, body, tail, operators, initialProto,} = yield* loop(cursor, prev, domain);
+  let {head, body, tail, operators, initialProto} = yield* loop(cursor, prev, domain);
   if (!operators.length) {
     yield* cursor.log({
                         message: 'not operational',
-                        miss:    'no operators'
+                        miss:    'no operators',
                       });
     return false;
   }
@@ -41,8 +41,8 @@ export function* operational(start, prev, domain = pragmaticOperators) {
                         cursor:  cursor,
                         info:    {
                           head, body, tail,
-                          tok: cursor.token(),
-                        }
+                          tok: cursor.getToken(),
+                        },
                       });
 
     cursor.token(false);
@@ -52,7 +52,7 @@ export function* operational(start, prev, domain = pragmaticOperators) {
 
   yield* cursor.log({
                       message: 'resolving operational',
-                      cursor:  cursor
+                      cursor:  cursor,
                     });
 
   if (!head && !tail) {
@@ -69,23 +69,23 @@ export function* operational(start, prev, domain = pragmaticOperators) {
 }
 
 function* loop(cursor, prev, permittedOperators) {
-  const head = prev && prev.token();
-  const body = [];
+  const head             = prev && prev.getToken();
+  const body: any[]      = [];
+  const operators: any[] = [];
 
   if (!permittedOperators[' ']) {
     yield* takeSpaces(cursor);
   }
 
-  const operators = [];
   let operator, initialProto;
   while (operator = yield* cursor.scan([_operator(permittedOperators)])) {
     if (!operator) continue;
-    if (!operator?.token()) break;
+    if (!operator?.getToken()) break;
 
-    yield* cursor.log({message: 'beginning operational',});
-    operators.push(operator.token());
+    yield* cursor.log({message: 'beginning operational'});
+    operators.push(operator.getToken());
 
-    const proto = operator.token().proto;
+    const proto = operator.getToken().proto;
 
     initialProto = initialProto ? initialProto : proto;
 
@@ -98,7 +98,7 @@ function* loop(cursor, prev, permittedOperators) {
     }
 
     const _cursor = yield* cursor.scan(operationalPartOptions, proto.close ? operator : undefined);
-    const token     = _cursor ? _cursor.token() : null;
+    const token   = _cursor ? _cursor.getToken() : null;
     if (!token) break
     body.push(token);
     yield* takeSpaces(cursor);
@@ -111,7 +111,7 @@ function* loop(cursor, prev, permittedOperators) {
     tail: tail,
 
     operators:    operators,
-    initialProto: initialProto
+    initialProto: initialProto,
   };
 }
 

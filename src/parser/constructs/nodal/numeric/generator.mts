@@ -1,5 +1,5 @@
-import {beginsNumeric}    from "./cursor/beginsNumeric.mjs";
-import {continuesNumeric} from "./cursor/continuesNumeric.mjs";
+import {beginsNumeric} from './cursor/beginsNumeric.mjs';
+import {continuesNumeric} from './cursor/continuesNumeric.mjs';
 
 export function* numeric(start, prev) {
   const cursor = start.spawn(prev);
@@ -9,7 +9,7 @@ export function* numeric(start, prev) {
     yield* cursor.log({
                         message: 'not numeric',
                         miss:    'cannot follow prev',
-                        cursors: {start, prev}
+                        cursors: {start, prev},
                       });
     return prev;
   }
@@ -26,9 +26,9 @@ export function* numeric(start, prev) {
 
   yield* cursor.log({message: 'resolving numeric'});
 
-  const integral   = _integral.length ? parseInt(_integral.join('')) : _integral;
+  const integral   = _integral.length ? parseInt(_integral.join('')) : 0;
   const fractional = _fractional.length ? parseFloat(`.${_fractional.join()}`) : undefined;
-  const head       = {key: integral + fractional};
+  const head       = {key: integral + (fractional ?? 0)};
 
   cursor.token({
                  head:       head,
@@ -40,7 +40,7 @@ export function* numeric(start, prev) {
 }
 
 function* loop(cursor) {
-  const integral = [];
+  const integral: any[] = [];
   {
     let _check = beginsNumeric, started;
     while (_check(cursor)) {
@@ -48,7 +48,7 @@ function* loop(cursor) {
         _check = continuesNumeric;
         yield* cursor.log({
                             message: 'beginning numeric',
-                            info:    {component: 'integral'}
+                            info:    {component: 'integral'},
                           });
       }
 
@@ -57,7 +57,7 @@ function* loop(cursor) {
     }
   }
 
-  const fractional = [];
+  const fractional: any[] = [];
   {
     if (cursor.curr() === '.') {
       yield* cursor.take()
@@ -67,7 +67,7 @@ function* loop(cursor) {
           _check = continuesNumeric;
           yield* cursor.log({
                               message: 'continuing numeric',
-                              info:    {component: 'fractional'}
+                              info:    {component: 'fractional'},
                             });
         }
         fractional.push(cursor.curr());
@@ -77,6 +77,6 @@ function* loop(cursor) {
   }
   return {
     integral,
-    fractional
+    fractional,
   };
 }

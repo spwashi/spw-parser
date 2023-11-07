@@ -1,7 +1,7 @@
-import {isPhrasalDelimiter} from "../checks/isPhrasalDelimiter.mjs";
+import {isPhrasalDelimiter} from '../checks/isPhrasalDelimiter.mjs';
 
 export function* takeSpaces(cursor) {
-  const spaces = [];
+  const spaces: any[] = [];
   while (isPhrasalDelimiter(cursor)) {
     spaces.push({key: cursor.curr()});
     yield* cursor.take();

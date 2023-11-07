@@ -32,7 +32,7 @@ export function _operator(operators) {
     cursor.token({
                    body:      [{key: operatorChar}],
                    operators: underscore ? [underscore] : undefined,
-                   tail:      labelCursor ? labelCursor.token() : undefined
+                   tail:      labelCursor ? labelCursor.getToken() : undefined
                  });
 
     return cursor;

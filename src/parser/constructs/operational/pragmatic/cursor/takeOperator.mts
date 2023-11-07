@@ -1,9 +1,9 @@
-import {pragmaticOperators} from "../parts/operators.mjs";
+import {pragmaticOperators} from '../parts/operators.mjs';
 
 export function* takeOperator(cursor, operators = pragmaticOperators) {
-  let char    = cursor.curr();
-  let proto   = operators[char];
-  const chars = [];
+  let char           = cursor.curr();
+  let proto          = operators[char];
+  const chars: any[] = [];
   while (operators[char]) {
     chars.push(char);
     proto = operators[char];
