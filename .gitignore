@@ -1,4 +1,4 @@
 node_modules/
 src/runtime/web/lib/
-public/out/
+public/js/
 .idea/
