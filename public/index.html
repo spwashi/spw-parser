@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Title</title>
+    <title>Parser</title>
     <link rel="stylesheet" href="styles/app.css">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -10,40 +10,51 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/d3/7.3.0/d3.js"
             integrity="sha512-nkC97gUNsbPjaWQm5GVpreTVy9IJO+z13y1M8mM+1BJRjfp9sz+1ixWu4+1mOMUzIt72pVD9rwjxJKV8LdlvjA=="
             crossorigin="anonymous" referrerpolicy="no-referrer"></script>
-    <script src="/out/runtime/web/lib/d3.js"></script>
-    <script type="module" src="/out/runtime/web/app.mjs"></script>
+    <script src="js/runtime/web/lib/d3.js"></script>
+    <script type="module" src="js/runtime/web/app.mjs"></script>
 </head>
 <body>
     <div id="root"></div>
     <form id="form">
-        <h1>Please enter the string you want to parse</h1>
+        <h1>Spw Parser</h1>
         <label>
             <textarea autofocus
                       name="formInput"
-                      onfocus="this.value = window.localStorage.getItem('text-to-parse'); document.getElementById('submitButton').style.display='block'"
-                      onchange="window.localStorage.setItem('text-to-parse', this.value); "></textarea>
+                      onfocus="document.getElementById('submitButton').style.display='block'"
+                      ></textarea>
         </label>
         <br>
         <button id="submitButton" type="submit">parse</button>
         <button id="play" type="button">play</button>
         <button id="next" type="button">step</button>
-        <br>
-        <svg id="svg-output"></svg>
-        <output id="output" name="parsed"></output>
+        <button id="copy-to-clipboard">copy</button>
+        <div class="output-container">
+          <svg id="svg-output"></svg>
+          <output id="output" name="parsed"></output>
+        </div>
     </form>
     <script type="module">
-      import {ParserDom} from "/out/runtime/web/app.mjs";
+      import {ParserDom} from "./js/runtime/web/app.mjs";
+      import {parse} from "./js/parser/parse.mjs";
+
+      document.getElementsByName('formInput').forEach(el => {
+        el.value = window.localStorage.getItem('text-to-parse');
+        el.onchange = function() {
+          window.localStorage.setItem('text-to-parse', this.value);
+        }
+      });
 
       new ParserDom({
                       controls: {
                         forward: document.getElementById('next'),
                         play:    document.getElementById('play'),
-                        submit:  document.getElementById('submitButton')
+                        submit:  document.getElementById('submitButton'),
+                        copy:    document.getElementById('copy-to-clipboard'),
                       },
                       form:     document.getElementById('form'),
                       output:   {
                         text: document.getElementById('output'),
-                        svg:  d3.select('#svg-output').append('g'),
+                        svg:  d3.select('#svg-output'),
                       },
                     }
       );

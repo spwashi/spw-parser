@@ -34,9 +34,9 @@ export class RecursiveReductionLens extends Lens {
     const items: any[] = [];
     for (const item of scope.loop(node)) {
       const el = this.reduce(item, scope);
-      console.log({el})
       el && items.push(el);
     }
+
     const key  = RecursiveReductionLens.doFlatten ? items.flat() : items;
     const nest = RecursiveReductionLens.doFlatten ? false : !context.generation;
     return nest ? {kind: node.kind, key} : key;

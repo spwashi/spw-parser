@@ -22,7 +22,7 @@ export class AstNode {
     if (!node.tail) { return; }
 
     const isPrefixed = !!this._trailingOperator;
-    const fragmentHead = node.tail;
+    const fragmentHead = node.tail; 
 
     this._tail = new Tail(fragmentHead);
 
@@ -40,7 +40,6 @@ export class AstNode {
       items.push(new BodyItem(item, this._trailingOperator, false));
     }
 
-    debugger;
     this._body = new Body(items);
 
     return this._body;

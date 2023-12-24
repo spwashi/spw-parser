@@ -30,11 +30,11 @@ export class Token {
     const self = [this.head, this.body, this.tail];
     const kind = this.kind;
     function keys(curr) {
-      console.log({curr, self, kind});
+
       return curr.key ? curr.key
                       : (Array.isArray(curr) ? curr.map(keys).join('') : curr);
     }
-    console.log({all});
+
     return all.reduce((all, curr) => '' + all + keys(curr), '')
   }
 

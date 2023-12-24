@@ -7,7 +7,7 @@
     "downlevelIteration": true,
     "allowJs": true,
     "checkJs": false,
-    "outDir": "./public/out",
+    "outDir": "./public/js",
     "strict": true,
     "noImplicitAny": false,
     "moduleResolution": "node",

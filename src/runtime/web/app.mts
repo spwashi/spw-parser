@@ -10,7 +10,8 @@ class ParserDomSvg {
 
   draw(text) {
     const svg = this.svg;
-    const gs  = svg.selectAll('g')
+    const gs  = svg.append('g')
+                   .selectAll('g')
                    .data(text.split('').map((c, i) => ({text: c, offset: i})))
                    .join(d => {
                            const g = d.append('g');
@@ -28,30 +29,33 @@ class ParserDomSvg {
     let x        = 0;
     const map    = new Map;
     gs.select('rect')
+      .attr('font-size', '2rem')
       .attr('x', d => {
-        const val = x++ * 1.7;
+        const val = x++ * 2.5;
         map.set(d, {...(map.get(d) || {}), x: val});
         if (d.text === '\n') {
           x = 0;
         }
         return val + 'ch';
       })
-      .attr('width', d => d.text === '\n' ? '2.5ch' : '1.5ch')
-      .attr('height', '1.5rem')
+      .attr('width', d => d.text === '\n' ? '2.5ch' : '2ch')
+      .attr('height', '3rem')
       .style('fill', 'white')
       .attr('y', d => {
-        const val = (2 * newlines);
+        const val = (3.5 * newlines);
         if (d.text === '\n') {
           newlines++;
           x = 0;
         }
         map.set(d, {...(map.get(d) || {}), y: val});
+        this.svg.attr('height', (val+4) + 'rem')
         return val + 'rem';
       });
     gs.select('text')
       .text(d => `${d.text === '\n' ? '\\n' : d.text}`)
+      .attr('font-size', '2rem')
       .attr('x', d => map.get(d).x + 'ch')
-      .attr('y', d => (map.get(d).y + 1) + 'rem')
+      .attr('y', d => (map.get(d).y + 2) + 'rem')
       .attr('dx', '.2ch')
       .style('text-align', 'center')
   }
@@ -107,7 +111,18 @@ export class ParserDom {
     }
   }
 
-
+  resetCopyToClipboardButton() {
+    this.controls.copy.onclick = e => {
+      e.preventDefault();
+      const copyText = JSON.stringify(this.state.tokens);
+      console.log(this.state.tokens);
+      // @ts-ignore
+      navigator.clipboard.writeText(copyText).then(e => {
+        //@ts-ignore
+        alert('copied text')
+      });
+    }
+  }
   resetPlayButton() {
     this.controls.play.innerText = 'play';
     this.controls.play.onclick   = () => {
@@ -119,20 +134,17 @@ export class ParserDom {
   resetAdvanceButton() {
     let played;
     this.controls.forward.onclick = () => {
-      if (!played) {
-        this.reset();
-        played = true;
-      }
+      console.log('advance')
       this.advance();
     }
   }
 
   resetGeneratorControlDisplay() {
-    this.controls.forward.style.display = 'block';
+    this.controls.forward.style.display = 'block'; // this is not currently functional
     this.controls.play.style.display    = 'block';
     this.controls.submit.style.display  = 'none';
     this.controls.play.focus();
-
+    this.resetCopyToClipboardButton();
     this.resetPlayButton();
     this.resetAdvanceButton();
   }
@@ -167,7 +179,9 @@ export class ParserDom {
         done = _done;
       } else {
         _yielded = out;
-        console.log('yielded: ', _yielded)
+
+        // for verbose logging information during parsing
+        // console.log('yielded: ', _yielded)
         if (out === false) {
           throw new Error('parser returned false');
         }
@@ -190,9 +204,9 @@ export class ParserDom {
       } else if (Cursor.isCursorPosition(_yielded)) {
         this.state.chars.push(_yielded);
         _yielded && this.output.svg.selectAll('.char')
-                        .style('fill', d => (d.offset === _yielded.offset) ? 'white' : 'black')
+                        .style('fill', d => (d.offset === _yielded.offset) ? 'var(--filled-text)' : 'var(--unfilled-text)')
                         .select('rect')
-                        .style('fill', d => (d.offset === _yielded.offset) ? 'red' : 'white');
+                        .style('fill', d => (d.offset === _yielded.offset) ? 'var(--filled)' : 'var(--unfilled)');
       } else {
         if (typeof _yielded === 'string') {
           this.state.yielded.push(_yielded);
