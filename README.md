@@ -166,3 +166,12 @@ Meaning is an Identity that arises from Realizing Value
 ### Subjects
 
 A Subject is a Runtime Construct that has Identities and Values within a Frame.
+
+## Running tests
+
+After building the TypeScript sources, run the test suite with Node:
+
+```bash
+yarn build && node --test test
+```
+
