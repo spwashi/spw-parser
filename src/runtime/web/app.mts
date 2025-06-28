@@ -115,7 +115,6 @@ export class ParserDom {
     this.controls.copy.onclick = e => {
       e.preventDefault();
       const copyText = JSON.stringify(this.state.tokens);
-      console.log(this.state.tokens);
       // @ts-ignore
       navigator.clipboard.writeText(copyText).then(e => {
         //@ts-ignore
@@ -134,7 +133,6 @@ export class ParserDom {
   resetAdvanceButton() {
     let played;
     this.controls.forward.onclick = () => {
-      console.log('advance')
       this.advance();
     }
   }
@@ -155,8 +153,6 @@ export class ParserDom {
       tokens:     this.state.tokens.map(n => n.toJSON()),
       // chars: this.state.chars
     };
-    console.log(this.state.tokens.map(n => n.identity));
-    console.log(out);
     this.output.text.value = JSON.stringify(out, null, 3);
     this.resetGeneratorControlDisplay();
   }
@@ -188,7 +184,6 @@ export class ParserDom {
       }
     } catch (e: any) {
       this.state.error = true;
-      console.log(e);
       _yielded = e.message;
       status   = 'error';
     }
