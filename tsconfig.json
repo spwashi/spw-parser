@@ -1,23 +1,9 @@
 {
+  "extends": "./tsconfig.base.json",
   "compilerOptions": {
-    "target": "es2019",
-    "lib": [
-      "ES2019",
-      "DOM"
-    ],
-    "downlevelIteration": true,
-    "allowJs": true,
-    "checkJs": false,
     "outDir": "./public/js",
-    "strict": true,
-    "noImplicitAny": false,
-    "moduleResolution": "node",
     "baseUrl": "./",
-    "rootDirs": [
-      "src"
-    ],
-    "esModuleInterop": true,
-    "skipLibCheck": true,
-    "forceConsistentCasingInFileNames": true
-  }
+    "rootDirs": ["src"]
+  },
+  "include": ["src/**/*"]
 }

@@ -166,3 +166,12 @@ Meaning is an Identity that arises from Realizing Value
 ### Subjects
 
 A Subject is a Runtime Construct that has Identities and Values within a Frame.
+## Refactor Plan
+
+This repository will evolve into a workspace-based monorepo. A new
+`pnpm-workspace.yaml` file and base TypeScript configuration have been
+added to make future package extraction easier. Source files remain in
+`src/` for now, but subsequent refactors can move them under
+`packages/` as independent packages.
+
+
