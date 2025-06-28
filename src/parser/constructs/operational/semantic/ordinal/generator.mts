@@ -3,8 +3,9 @@ import {ordinalPartOptions} from './parts/parts.mjs';
 import {takeSpaces} from '../phrasal/cursor/motions/takeSpaces.mjs';
 import {_operator} from '../../generator.builder.mjs';
 import {ordinalDelimitingOperators} from '../operators.mjs';
+import type {GeneratorArgs} from '../../../constructs.mjs';
 
-export function* ordinal(start, prev) {
+export function* ordinal({start, prev}: GeneratorArgs) {
   const cursor = start.spawn(prev);
   cursor.token({kind: 'ordinal'});
 

@@ -2,8 +2,9 @@ import {operationalPartOptions} from './parts/parts.mjs';
 import {takeSpaces} from '../semantic/phrasal/cursor/motions/takeSpaces.mjs';
 import {pragmaticOperators} from './parts/operators.mjs';
 import {_operator} from '../generator.builder.mjs';
+import type {GeneratorArgs} from '../../constructs.mjs';
 
-export function* operational(start, prev, domain = pragmaticOperators) {
+export function* operational({start, prev, domain = pragmaticOperators}: GeneratorArgs & {domain?: any}) {
   const cursor = start.spawn(prev);
   cursor.token({kind: 'operational'});
 

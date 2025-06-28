@@ -1,7 +1,8 @@
 import {beginsAnything} from './cursor/beginsAnything.mjs';
 import {continuesAnything} from './cursor/continuesAnything.mjs';
+import type {GeneratorArgs} from '../../../../constructs.mjs';
 
-export function* anything(start, prev) {
+export function* anything({start, prev}: GeneratorArgs) {
   const cursor = start.spawn(prev);
 
   cursor.token({kind: 'anything'});

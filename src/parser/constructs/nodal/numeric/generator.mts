@@ -1,7 +1,8 @@
 import {beginsNumeric} from './cursor/beginsNumeric.mjs';
 import {continuesNumeric} from './cursor/continuesNumeric.mjs';
+import type {GeneratorArgs} from '../../constructs.mjs';
 
-export function* numeric(start, prev) {
+export function* numeric({start, prev}: GeneratorArgs) {
   const cursor = start.spawn(prev);
   cursor.token({kind: 'numeric'});
 
