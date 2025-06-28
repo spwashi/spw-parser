@@ -1,9 +1,10 @@
 import {beginsNominal} from './cursor/beginsNominal.mjs';
 import {continuesNominal} from './cursor/continuesNominal.mjs';
 import {takeDefinition} from './parts/definition.mjs';
+import type {GeneratorArgs} from '../../constructs.mjs';
 
 
-export function* nominal(start, prev) {
+export function* nominal({start, prev}: GeneratorArgs) {
   const cursor = start.spawn(prev);
 
   cursor.token({kind: 'nominal'});

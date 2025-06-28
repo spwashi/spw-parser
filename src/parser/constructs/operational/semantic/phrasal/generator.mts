@@ -1,8 +1,9 @@
 import {isPhrasalDelimiter} from './cursor/checks/isPhrasalDelimiter.mjs';
 import {phrasalPartOptions} from './parts/parts.mjs';
 import {takeSpaces} from './cursor/motions/takeSpaces.mjs';
+import type {GeneratorArgs} from '../../../constructs.mjs';
 
-export function* phrasal(start, prev) {
+export function* phrasal({start, prev}: GeneratorArgs) {
   const cursor = start.spawn(prev);
   cursor.token({kind: 'phrasal'});
 

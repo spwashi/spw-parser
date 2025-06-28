@@ -3,8 +3,9 @@ import {commonPartOptions} from './parts/parts.mjs';
 import {takeSpaces} from '../phrasal/cursor/motions/takeSpaces.mjs';
 import {_operator} from '../../generator.builder.mjs';
 import {commonDelimitingOperators} from '../operators.mjs';
+import type {GeneratorArgs} from '../../../constructs.mjs';
 
-export function* common(start, prev) {
+export function* common({start, prev}: GeneratorArgs) {
   const cursor = start.spawn(prev);
   cursor.token({kind: 'common'});
 

@@ -8,7 +8,12 @@ import {container} from './nodal/container/generator.mjs';
 import {literal} from './nodal/literal/generator.mjs';
 import {Cursor} from '../../core/node/cursor.mjs';
 
-export type ConstructGenerator = (start: Cursor, prev: Cursor) => Generator;
+export interface GeneratorArgs {
+  start: Cursor;
+  prev?: Cursor;
+}
+
+export type ConstructGenerator = (args: GeneratorArgs) => Generator;
 
 type ConstructGeneratorObj = { [key: string]: ConstructGenerator };
 

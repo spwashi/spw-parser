@@ -3,8 +3,9 @@ import {takeSpaces} from '../../operational/semantic/phrasal/cursor/motions/take
 import {_operator} from '../../operational/generator.builder.mjs';
 import {literalPartOptions} from './parts/parts.mjs';
 import {literalDelimitingOperators} from './parts/operators.mjs';
+import type {GeneratorArgs} from '../../constructs.mjs';
 
-export function* literal(start, prev) {
+export function* literal({start, prev}: GeneratorArgs) {
   const cursor = start.spawn(prev);
 
   cursor.token({kind: 'literal'});

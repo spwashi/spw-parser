@@ -41,10 +41,9 @@ export class Cursor {
     const generators = generatorArray ?? this.generators;
     if (!generators) throw new Error('Cannot scan without generators');
 
-
     let activeCursor = former;
     for (const generator of generators) {
-      const cursor = yield* generator(this, activeCursor);
+      const cursor = yield* generator({start: this, prev: activeCursor});
       const token  = cursor ? cursor.getToken() : false;
 
       if (!token) continue;

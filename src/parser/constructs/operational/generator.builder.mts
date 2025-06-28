@@ -2,8 +2,8 @@ import {takeOperator} from "./pragmatic/cursor/takeOperator.mjs";
 import {takeLabel}    from "./pragmatic/cursor/motions/takeLabel.mjs";
 
 export function _operator(operators) {
-  return function* (startingCursor) {
-    const cursor = startingCursor.spawn();
+  return function* ({start}) {
+    const cursor = start.spawn();
 
     cursor.token({kind: 'operator'});
 
@@ -21,8 +21,8 @@ export function _operator(operators) {
       yield* cursor.log({
                           message: 'not an operator',
                           miss:    'no prototype',
-                          cursors: {start: startingCursor},
-                          info:    {operators, curr: startingCursor.curr()}
+                          cursors: {start},
+                          info:    {operators, curr: start.curr()}
                         });
       return false;
     }
