@@ -1,0 +1,80 @@
+## 🌼 Parser Playground
+# A minimal yet exhaustive demo for regression testing.
+
+^app { parser_playground {
+
+  # ——————————————————————————
+  #  Constants 🔢
+  *TICK_MS        : int!   = 1_000
+  *HEX_MASK       : int!   = 0xBE_EF
+  *TARGET_TEMP    : float! = 37.5<°C>
+  *EARTH_RADIUS   : float! = 6_371<km>
+
+  # ——————————————————————————
+  #  Types 📐
+  ^type { Metric {
+    name  : string!,
+    value : float!<unit>,
+    ts    : datetime!
+  } }
+
+  ^type { Command {
+    kind : string!,
+    arg  : string!
+  } }
+
+  # ——————————————————————————
+  #  Channels 📡
+  <chan[Metric]>  metric_bus
+  <chan[Command]> command_bus
+  <chan[string]>  log_bus
+
+  # ——————————————————————————
+  #  Flows 🌊
+  ~flow { bootstrap {
+    log("🏁 bootstrapping…")
+    ~fiber { ticker }
+    ~fiber { echo }
+  } }
+
+  ~flow { ticker {
+    ~let mut *i : int! = 0
+    ~loop {
+      *metric : Metric = &{
+        name: "tick",
+        value: *i<cnt>,
+        ts: now()
+      }
+      metric_bus!> *metric
+      *i = *i + 1
+      sleep_ms(*TICK_MS)
+    }
+  } }
+
+  ~flow { echo {
+    ~loop {
+      ?<&metric_bus => (m : Metric)
+      log(f"🔔 {m.name} → {m.value}")
+      if (m.value % 5 == 0)? {
+        command_bus!> &{ kind: "milestone", arg: str(m.value) }
+      }
+    }
+  } }
+
+  # ——————————————————————————
+  #  Macros ✍️
+  #macro { log { &msg : string! {
+    log_bus!> f"[{now()}] {&msg}"
+  } } }
+
+  # ——————————————————————————
+  #  CLI View 🖥️
+  @view { cli {
+    .render {
+      <io>::out("🌳 Playground active — press Ctrl-C to quit\n")
+      ~for msg in log_bus { <io>::out(f"{msg}\n") }
+    }
+  } }
+} }
+
+# EOF
