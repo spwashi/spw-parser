@@ -17,7 +17,7 @@
     "serve": "serve -p 5001 public",
     "build": "tsc",
     "watch": "tsc -w",
-    "lint": "eslint src",
+    "lint": "eslint -c .eslintrc.cjs src",
     "prelint:write": "yarn -s lint -f json > status/eslint-results.json; exit 0",
     "lint:write": "yarn -s eslint --fix --plugin eslint-plugin-json-format status/*.json",
     "test": "yarn build && node --test test"

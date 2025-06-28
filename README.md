@@ -175,3 +175,9 @@ After building the TypeScript sources, run the test suite with Node:
 yarn build && node --test test
 ```
 
+This repository will evolve into a workspace-based monorepo. A new
+`pnpm-workspace.yaml` file and base TypeScript configuration have been
+added to make future package extraction easier. Source files remain in
+`src/` for now, but subsequent refactors can move them under
+`packages/` as independent packages.
+

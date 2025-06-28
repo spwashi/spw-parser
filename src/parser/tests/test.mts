@@ -16,4 +16,3 @@ let out: any =
 out = Object.fromEntries(out.map(([k, v]) => [k, v.map(str => parse(str, {asGenerator: false})?.kind ?? str)]));
 out = JSON.parse(JSON.stringify(out));
 console.log(out);
-debugger;
