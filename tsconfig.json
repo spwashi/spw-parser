@@ -3,7 +3,14 @@
   "compilerOptions": {
     "outDir": "./public/js",
     "baseUrl": "./",
-    "rootDirs": ["src"]
+    "rootDirs": [
+      "src"
+    ],
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+    "forceConsistentCasingInFileNames": true
   },
-  "include": ["src/**/*"]
+  "include": [
+    "src/**/*"
+  ]
 }
