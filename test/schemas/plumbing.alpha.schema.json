@@ -1,0 +1,14 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "required": ["type", "alpha", "legend"],
+  "properties": {
+    "type": {"const": "alpha"},
+    "alpha": {"type": "string", "maxLength": 64},
+    "legend": {
+      "type": "object",
+      "additionalProperties": {"type": "string"}
+    }
+  },
+  "additionalProperties": true
+}

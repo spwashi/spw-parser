@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg"
+     xmlns:spw="https://spw.quest/ns" viewBox="0 0 1000 1000">
+  <defs>
+    <spw:script><![CDATA[
+      ^seed[Scene.Meta v:0.1]{ lens:lighting budget{flicker<=3Hz fps<=12} }
+    ]]></spw:script>
+  </defs>
+
+  <g id="L-beam-01"
+     spw:tag="Beam(glide dur:1t ~c:cyan)?{quad:pts[[0.1,0.2],[0.9,0.7]]}[a@b; c=>d; {^}]"
+     spw:lens="~" spw:stage="t1..t3">
+    <title>Beam guide</title><desc>cyan diagonal, guides gaze ↘</desc>
+    <polygon points="100,240 875,720 590,720 385,240"/>
+  </g>
+</svg>

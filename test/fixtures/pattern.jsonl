@@ -1,0 +1,3 @@
+{"type":"beat","t":0,"id":"xhA3QW","role":"Beam","span":[0,3],"svg_id":"L-beam-01","budget":{"motion":0.42,"color":0.21}}
+{"type":"beat","t":1,"id":"xh0C9K","role":"Ports","svg_id":"R-port-1","event":"gate-1"}
+{"type":"alpha","alpha":"t0:Be~c-P~m.A","legend":{"Be":"Beam","P":"Port","A":"Anchor"}}
