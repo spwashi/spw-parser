@@ -1,0 +1,21 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "required": ["type", "t", "id", "role", "svg_id"],
+  "properties": {
+    "type": {"const": "beat"},
+    "t": {"type": "integer", "minimum": 0},
+    "id": {"type": "string", "minLength": 1},
+    "role": {"type": "string", "minLength": 1},
+    "span": {
+      "type": "array",
+      "items": {"type": "number"},
+      "minItems": 2,
+      "maxItems": 2
+    },
+    "svg_id": {"type": "string", "minLength": 1},
+    "budget": {"type": "object"},
+    "event": {"type": ["string", "number"]}
+  },
+  "additionalProperties": true
+}

@@ -1,0 +1,6 @@
+# N: <role>(ops)[k:v; ...]{payload} @xhShort
+0: <grammar>(spw){seed:v2025.10} @xh8YF3R0Q5
+1: Beam(glide dur:1t ~c:cyan){quad:pts[[.1,.2],[.9,.7]]} @xhA3QW
+2: Ports(glow ~c:magenta)[target:2] @xh0C9K
+*replicate Ports times:2 offset:[.0,.42] ids:[xh0C9K#1,xh0C9K#2];  // fractal-ish reuse
++include "./palettes/cyan-magenta.spw"
