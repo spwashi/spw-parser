@@ -6,6 +6,7 @@ import {ordinal}     from "../../../operational/semantic/ordinal/generator.mjs";
 import {container}   from "../generator.mjs";
 import {operational} from "../../../operational/pragmatic/generator.mjs";
 import {literal}     from "../../literal/generator.mjs";
+import {comment}     from "../../comment/generator.mjs";
 
 export const containerPartOptions = [
   nominal,
@@ -15,5 +16,6 @@ export const containerPartOptions = [
   phrasal,
   common,
   ordinal,
-  operational
+  operational,
+  comment,
 ];

@@ -1,3 +1,5 @@
 export function isPhrasalDelimiter(cursor) {
-  return cursor.curr() === ' ';
+  const char = cursor.curr();
+  if (!char) return false;
+  return /\s/.test(char);
 }

@@ -20,7 +20,7 @@
     "lint": "eslint src",
     "prelint:write": "yarn -s lint -f json > status/eslint-results.json; exit 0",
     "lint:write": "yarn -s eslint --fix --plugin eslint-plugin-json-format status/*.json",
-    "test": "yarn build && node --test test"
+    "test": "yarn build && node --test \"test/**/*.js\""
   },
   "repository": {
     "type": "git",

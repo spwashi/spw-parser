@@ -1,4 +1,4 @@
 export function beginsNominal(char) {
   if (!char) return false;
-  return /[a-zA-Z]/.test(char);
+  return /\p{L}/u.test(char) || ['↘', '↗', '↙', '↖', '↔', '↕', '→', '←', '↑', '↓', '%', '␠'].includes(char);
 }

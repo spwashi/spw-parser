@@ -28,6 +28,16 @@ export function* nominal(start, prev) {
     return false;
   }
 
+  if (/^\d+$/.test(key)) {
+    yield* cursor.log({
+                        message: 'not nominal',
+                        miss:    'numeric token',
+                      });
+    cursor.token(false);
+    cursor.offset = cursor.start;
+    return false;
+  }
+
   yield* cursor.log({message: 'resolving nominal'});
 
   const head = {key: key};

@@ -6,13 +6,14 @@ import {ordinal} from './operational/semantic/ordinal/generator.mjs';
 import {operational} from './operational/pragmatic/generator.mjs';
 import {container} from './nodal/container/generator.mjs';
 import {literal} from './nodal/literal/generator.mjs';
+import {comment} from './nodal/comment/generator.mjs';
 import {Cursor} from '../../core/node/cursor.mjs';
 
 export type ConstructGenerator = (start: Cursor, prev: Cursor) => Generator;
 
 type ConstructGeneratorObj = { [key: string]: ConstructGenerator };
 
-export const nodalConstructs: ConstructGeneratorObj     = {literal, container, nominal, numeric};
+export const nodalConstructs: ConstructGeneratorObj     = {literal, container, nominal, numeric, comment};
 export const pragmaticConstructs: ConstructGeneratorObj = {operational};
 export const semanticConstructs: ConstructGeneratorObj  = {phrasal, common, ordinal};
 
