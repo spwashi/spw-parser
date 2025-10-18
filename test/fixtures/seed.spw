@@ -1,0 +1,145 @@
+^seed[Spw.Language v:2025.10]{
+  @meta{author:"spwashi", license:"MIT", desc:"Symbolic grammar for motion across perception; print + web + audit."}
+
+  #atoms[~ # . ? ! * & @ ^ () [] {} <> = => -> : ; | ']
+  #units[t Hz bpm deg nm px mm %]
+  #channels[c a h t]                // visual, audio, haptic, text
+  #dims[x:0..1 y:0..1 z:0..9 t:0..N]
+
+  #fixity[
+    90: () [] {} <>                ; // enclosure
+    80: .                          ; // select
+    70: postfix[? ! ' °]           ; // query, accent, hold, snap
+    60: prefix[~ @ ^ # *]          ; // style/io/meta/beat/macro
+    50: infix[-> => = :]           ; // flow, produce, bind, kv
+    40: join[& |]                  ; // parallel / alternation
+    30: sequence[; ␠]              ; // list / whitespace
+  ]
+
+  #types[
+    Scalar, Vec2, Rect, Quad, Path, Text, Bool,
+    ColorOKLCH{L C H a}, Freq{Hz duty wave φ}, Time{dur:t ease:?},
+    Intent{guide|signal|texture|delight}, Role, Layer, Beat
+  ]
+
+  #defaults[
+    units:px, fps:12, tempo:bpm96, easing:cubic,
+    contrast:AA, flicker_guard:<3Hz, salience_max:1.0
+  ]
+
+  #palette[
+    teal{L:0.72 C:0.16 H:190deg a:1},
+    yellow{L:0.82 C:0.14 H:95deg a:1},
+    cyan{L:0.78 C:0.18 H:210deg a:.95},
+    magenta{L:0.75 C:0.24 H:330deg a:1},
+    lime{L:0.78 C:0.19 H:135deg a:1},
+    bone{L:0.93 C:0.02 H:100deg a:1},
+    ink{L:0.20 C:0.04 H:200deg a:1}
+  ]
+
+  #style[
+    stroke{c:ColorOKLCH w:px cap:round join:round},
+    fill{c:ColorOKLCH}, blend{mode:normal|multiply|screen|overlay|add},
+    mask{id}, filter{blur:px glow:px}, opacity:%
+    // compact color & frequency shorthands
+    ~c{L C H a} ~λ{nm} ~f{Hz duty wave:sine|square|tri φ}
+  ]
+
+  #motion[
+    glide{to:Vec2 Time}, pulse{amp:% Time}, orbit{r:% Time},
+    path{d:Path Time}, scan{dir:↘ width:% Time}, draw{Time}, write{Time},
+    morph{from:id to:id Time}, oscillate{axis:x|y amp:% Time},
+    hold{dur:t}
+  ]
+
+  #intent[
+    guide{eye_path:↘ dwell:0.4t}, signal{prio:high},
+    texture{prio:low}, delight{micro:true}
+  ]
+
+  #budget[
+    per_beat{salience<=1.0 motion<=0.6 color<=0.3}  // compiler-enforced
+  ]
+
+  #a11y[
+    caption:on, alt:auto, aria:role, haptic{map:@event -> Freq},
+    audio{map:@event -> Freq}, color_safe:{contrast:AA}
+  ]
+
+  #print[
+    page{unit:mm size:[260,260] bleed:3 dpi:300},
+    inks[CMYK SPOT{NeonMagenta Teal}],
+    seps{ role:Ports -> SPOT.NeonMagenta knockout:true;
+          role:Beam  -> SPOT.Teal;
+          role:Anchors -> K:80 trap:0.15mm },
+    fluids{ Beam{flow:0.35 ~blend:multiply screen:roundDot@85lpi angle:15deg} }
+  ]
+
+  #hash[
+    canon{sortKeys:true numQuant:1e-3 color:oklch@2dp},
+    struct:=Merkle(BLAKE3(node.kind, attrs, children))->u256,
+    paint:=SimHash(strokeVectors)->u64,
+    text :=SHA256(normalizeText)->u256,
+    image:=pHash64(render@128px),
+    shingles:=Subtrees[size=3..7], sketch:=MinHash64(shingles),
+    match{Jaccard(sketch)>=0.72 or Hamming(image)<=8}
+  ]
+
+  #targets[ web{svg canvas lottie} procreate{animation_assist} ae midi haptics pdfx:4 ]
+  #export[ svg:true png_seq:true json:true captions:vtt hashes:true ]
+
+  // ---------- Scene schema ----------
+  #model[
+    Scene{id slug dims channels layers:[] beats:[] assets:{} data:{}},
+    Layer{id role intent:? geom:? style:? motion:? a11y:? bind:? z:?},
+    Beat{t actions:[cmd], budget:?}, cmd:=any
+  ]
+
+  // ---------- Example A: Diagonal Beam ----------
+  ^scene[diag_beam v:0.2]{
+    roles[Border TiltedFrame Beam Ports Anchors Blossoms]
+    layers[
+      Border{z:3 [rect{x:0.02,y:0.02,w:0.96,h:0.96}] ~c{L:.82 C:.14 H:95deg} stroke{w:34}},
+      TiltedFrame{z:2 [rect{x:0.11,y:0.13,w:0.78,h:0.72}] ~c{L:1 C:0 H:0deg} stroke{w:18} ^fix{camera}},
+      Beam{z:1 [quad{pts:[[0.10,0.18],[0.88,0.74]] width:0.10}] ~c{L:.78 C:.18 H:210deg a:.35}
+           scan{dir:↘ width:0.10 Time{dur:6t}}},
+      Ports{z:2 [round{x:0.82,y:0.34,w:0.10,h:0.12,r:0.12},
+                 round{x:0.80,y:0.78,w:0.10,h:0.12,r:0.12}]
+            stroke{~c{L:.75 C:.24 H:330deg} w:18} filter{glow:6} ~f{Hz:8 duty:0.25}},
+      Anchors{z:2 #marks{pos:[[0.28,0.30],[0.50,0.52],[0.60,0.16]]} ~c{L:.78 C:.19 H:135deg} },
+      Blossoms{z:0 [splotch{pos:[0.09,0.86] r:0.04}], ~c{L:.55 C:.20 H:20deg a:.65}}
+    ]
+    beats[
+      t0{TiltedFrame !enter; Beam hold{dur:0.2t}},
+      t1{Anchors pulse{amp:0.06 Time{dur:0.5t}}},
+      t2{Ports ~intent{signal}; @event{name:"gate-1"}},
+      t3{Beam scan{dir:↘ width:0.10 Time{dur:2t}}},
+      t4{!freeze; @export[svg png_seq captions hashes]}
+    ]
+  }
+
+  // ---------- Example B: Comb → Tray → Chute ----------
+  ^scene[comb_tray_chute v:0.3]{
+    roles[Border Frame Comb Tray Chute Gauge Drips]
+    layers[
+      Border{z:0 [rect{x:0.05,y:0.06,w:0.90,h:0.86}] stroke{~c{L:.82 C:.14 H:95deg} w:22}},
+      Frame {z:1 [rect{x:0.10,y:0.10,w:0.80,h:0.78}] stroke{~c{L:.72 C:.16 H:190deg} w:14}},
+      Comb  {z:2 @repeat teeth:9 within[x:0.16..0.42,y:0.16..0.20] [round{xw:0.024,yh:0.036,r:0.012}]
+                  stroke{~c{L:.75 C:.24 H:330deg} w:15} pulse{amp:0.008 Time{dur:0.5t}}},
+      Tray  {z:2 [rect{x:0.18,y:0.24,w:0.48,h:0.10,r:0.03}]
+                  stroke{~c{L:.72 C:.16 H:190deg} w:18} oscillate{axis:x amp:0.02 Time{dur:2t}}},
+      Chute {z:2 [quad{pts:[[0.55,0.26],[0.76,0.31],[0.66,0.58],[0.42,0.52]]}]
+                  stroke{~c{L:.72 C:.16 H:190deg} w:18} morph{} ^fix{parent}},
+      Gauge {z:3 [rect{x:0.56,y:0.34,w:0.06,h:0.22}] fill{~c{L:.82 C:.14 H:95deg a:.55}}
+                  [rect{x:0.585,y:0.36,w:0.02,h:0.18}] fill{~c{L:1 C:0 H:0deg}} pulse{amp:0.4 Time{dur:1t}}},
+      Drips {z:3 @spawn every:2t from:[0.50,0.66] shape:tri{w:0.02,h:0.024}
+                  ~c{L:.78 C:.18 H:210deg} path{d:↘ Time{dur:1.2t}} }
+    ]
+    beats[
+      t0{Frame !enter; Comb !on},
+      t1{Tray oscillate{axis:x amp:0.02 Time{dur:2t}}; Gauge !pulse},
+      t3{Drips @event{name:"drop"}},
+      t5{!freeze; @export[png_seq svg hashes]}
+    ]
+  }
+}
